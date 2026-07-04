@@ -1,0 +1,17 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+build/
+target/
+.idea/
+.vscode/
+*.log
+
+# Do not commit raw enterprise datasets unless the team confirms they are allowed
+# to be stored in this private repository.
+data/raw/
+data/private/
+
