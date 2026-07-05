@@ -8,6 +8,7 @@
 | Sunny | Cloud Architect at Xyloc | AWS architecture, cloud infrastructure, reliability |
 | Feng Zhi-Sheng | Software Engineer at 閎博科技有限公司 | Software engineering |
 | Chen Jian-Ying | Software Engineer at 奕福穎科技股份有限公司 | Software engineering |
+| P5（姓名待補） | PM / 簡報 / 設計 | Presentation, storytelling, submission coordination, design sense |
 
 ## Team Strengths
 
@@ -34,5 +35,6 @@
 | AWS infra | Sunny | S3, Bedrock, API deployment, logs, IAM guardrails |
 | API/backend | Eddie | Dashboard API, anomaly explanation endpoint |
 | Dashboard/demo flow | Feng/Chen | Speed Loss dashboard, vessel detail, before-after comparison |
-| Presentation/story | Eddie + Sunny | Business value, architecture, demo script, Q&A |
+| Presentation/story + submission | **P5（主責）** + Eddie/Sunny 供素材 | Slides 主筆、demo script 導演、彩排計時、**官方七項提交物 owner**、Q&A 模擬主持 |
+| Q&A technical defense | Eddie（架構/API）、Sunny（AWS）、Feng/Chen（管線/演算法） | P5 主持演練，工程師答題 |
 

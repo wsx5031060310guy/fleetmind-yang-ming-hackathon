@@ -76,7 +76,7 @@ DynamoDB 不可用時的儲存 fallback：內嵌 H2 / 純記憶體 + S3 快照�
 | 計算 | core-calc（Java 純函式庫） | 見 §2.2；資料量小，全量重算 < 1 分鐘 |
 | 指標庫 | DynamoDB（fallback H2/記憶體） | 查詢模式固定，免 schema migration |
 | API + 前端 | Spring Boot 同源 serve React build | 團隊最強技能；消滅 CORS/HTTPS 整類問題 |
-| 圖表 | Recharts（用現成 dashboard template 起手） | 四人皆後端，不從零刻版面 |
+| 圖表 | Recharts（用現成 dashboard template 起手） | 工程四人皆後端，不從零刻版面；P5 供版面/文案設計意見 |
 | AI | Bedrock（Claude 系列，model-agnostic 封裝） | 賽制指定 AWS models only；換 model id 即可跑 |
 | 觀測 | CloudWatch logs + 基本 metrics（不設 alarm） | demo 用不到 alarm |
 
@@ -260,7 +260,9 @@ POST /admin/reprocess                        # 全量重算(冪等)
 
 ## 7. 三天執行計畫與分工
 
-團隊：Eddie（Backend/Java）、Sunny（AWS 架構）、Feng（Software Eng）、Chen（Software Eng）。
+團隊：Eddie（Backend/Java）、Sunny（AWS 架構）、Feng（Software Eng）、Chen（Software Eng）、**P5（PM/簡報/設計）**。
+
+**5 人分工原則**：工程四人鎖死 55% 硬盤（dashboard + FUEL_CONSUMP）與系統本體；P5 專職「簡報官＋提交官」——slides 主筆、demo script 導演、彩排計時、官方七項提交物 end-to-end owner、待確認清單記錄、Q&A 模擬主持。簡報線從 Day1 起與工程線**平行**推進（不再等 Day2 晚由工程師兼職），工程師只供截圖與數字。
 
 **官方議程對齊**（`01-event-rules.md`）：Day1 現場 build 時段是 13:00–17:00；Day3 現場 sprint 只有 11:30–14:30。計畫不假設不存在的開發時段；17:00 後與 Day3 清晨的場外工作明寫在表內。
 
@@ -269,25 +271,26 @@ POST /admin/reprocess                        # 全量重算(冪等)
 | 時段 | 內容 |
 | --- | --- |
 | 09:00–10:00 | 報到/開場（無開發時段） |
-| 10:00–10:40 | 企業命題與資料說明：全員記錄 schema + **評分提交格式**疑問（§10 清單逐題釐清，問不到就當場向主辦方書面提問） |
+| 09:40–10:00 | 上傳平台公布：**P5 主責記錄**欄位/格式限制、challenge link 定義（`12` §5） |
+| 10:00–10:40 | 企業命題與資料說明：工程四人專注 schema 技術細節；**P5 記錄全部 §10 待確認答案**（問不到就當場向主辦方書面提問） |
 | 10:40–11:00 | 環境說明：Sunny 跑 10 分鐘權限探測 checklist + **Bedrock smoke test**（§2.2） |
-| 11:00–12:00 | 提案討論時段內定 P1/P2 拍板 + API contract 草稿 + **凍結 Speed Loss 輸出 JSON schema（含假數值）** |
+| 11:00–12:00 | 提案討論時段內定 P1/P2 拍板 + API contract 草稿 + **凍結 Speed Loss 輸出 JSON schema（含假數值）**；P5 開 slides 骨架（冷開場留數字位） |
 | 13:00–14:00 | API contract 定稿（哪怕全假資料），前後端自此平行 |
 | 13:00–17:00 | 平行實作（下表） |
 | 晚間（場外，自願） | 各自收尾當日目標；Chen 產出第一版 FUEL_CONSUMP 提交檔 |
 
-| Day1 13:00–17:00 | Eddie | Sunny | Feng | Chen |
-| --- | --- | --- | --- | --- |
-| 任務 | Spring Boot 骨架 + API contract 假資料實作 + 接 DynamoDB | P1 部署跑通（App Runner/EC2）+ S3/DynamoDB/IAM + 前端 build 部署走通一次 | 真實資料 schema 驗證 + golden case 準備 + **FUEL_CONSUMP 提交 harness（owner）** | core-calc：品質旗標 + VLSFO 換算 + Daily FOC + 單元測試 |
+| Day1 13:00–17:00 | Eddie | Sunny | Feng | Chen | P5 |
+| --- | --- | --- | --- | --- | --- |
+| 任務 | Spring Boot 骨架 + API contract 假資料實作 + 接 DynamoDB | P1 部署跑通（App Runner/EC2）+ S3/DynamoDB/IAM + 前端 build 部署走通一次 | 真實資料 schema 驗證 + golden case 準備 + **FUEL_CONSUMP 提交 harness（owner）** | core-calc：品質旗標 + VLSFO 換算 + Daily FOC + 單元測試 | slides 骨架（評分表骨架頁+冷開場留位）+ 上傳平台規則文件化 + 16:00 抽籤結果入彩排排程 |
 
 ### Day2 07-15（remote）
 
-| 時段 | Eddie | Sunny | Feng | Chen |
-| --- | --- | --- | --- | --- |
-| 全天 | before-after API + ai-brief API + 後驗證 | Bedrock 整合 + fallback + CloudWatch + **端到端整合 owner** | Dashboard 三頁面（template 起手，最小圖表集合） | Speed Loss + 歸因 + 信心等級（core-calc） |
-| 12:00 sync | — | — | — | Speed Loss 首版數字落 DynamoDB |
-| 18:00 sync | 全員：端到端串真資料，走一次 demo 動線 | | | |
-| 晚間 | slides 主體定稿（Day3 只換真截圖）；第二版 FUEL_CONSUMP 提交檔驗證 | | | |
+| 時段 | Eddie | Sunny | Feng | Chen | P5 |
+| --- | --- | --- | --- | --- | --- |
+| 全天 | before-after API + ai-brief API + 後驗證 | Bedrock 整合 + fallback + CloudWatch + **端到端整合 owner** | Dashboard 三頁面（template 起手，最小圖表集合） | Speed Loss + 歸因 + 信心等級（core-calc） | slides 主體主筆（工程師只供截圖/數字）+ 企業資料應用說明初稿（Feng 供技術素材）+ demo script 三擊版初稿 |
+| 12:00 sync | — | — | — | Speed Loss 首版數字落 DynamoDB | — |
+| 18:00 sync | 全員：端到端串真資料，走一次 demo 動線（P5 掐錶） | | | | |
+| 晚間 | Q&A 附錄 10 題技術素材；第二版 FUEL_CONSUMP 提交檔驗證 | | | | slides 定稿（Day3 只換真截圖）+ 冷開場數字填入（來自 18:00 before-after 真資料） |
 
 Day2 環境風險：比賽用臨時帳號可能場外不可用/憑證過期（§10 待確認）。Plan B：全系統本機可跑（H2 + 本機檔案取代 S3/DynamoDB），Day2 本機開發、Day3 到場部署回 AWS——§2.2 的單服務設計天然支援這條路。
 
@@ -295,10 +298,10 @@ Day2 環境風險：比賽用臨時帳號可能場外不可用/憑證過期（§
 
 | 時段 | 內容 |
 | --- | --- |
-| 07:30–11:00（場外） | bug 修 + **demo 資料凍結成快照** + demo 船 AI 簡報預產快取 + **slides 換真截圖** + demo 錄影 + 彩排第 1 次 |
+| 07:30–11:00（場外） | 工程：bug 修 + **demo 資料凍結成快照** + demo 船 AI 簡報預產快取；P5：**slides 換真截圖** + 企業資料應用說明定稿 + demo 錄影導演 + 彩排第 1 次（P5 計時給修正意見） |
 | 11:30–12:00（現場） | 最後檢查 + feature freeze + 部署凍結 |
-| 12:00–14:00 | **上傳全部交付物（不等 14:30 死線）**：官方七項——deck / challenge link / 企業資料應用說明 / 架構文件 / repo / demo 連結 / 錄影。Sunny owner：repo README（架構圖、跑法、公式與測試說明）+ 七項提交物逐項核對（詳見 `12` §3 G5） |
-| 13:30–14:00 | 彩排第 2 次計時 |
+| 12:00–14:00 | **上傳全部交付物（不等 14:30 死線）**：官方七項——deck / challenge link / 企業資料應用說明 / 架構文件 / repo / demo 連結 / 錄影。**P5 owner：七項提交物逐項核對＋實際上傳**（詳見 `12` §3 G5）；Sunny：repo README（架構圖、跑法、公式與測試說明）+ 部署凍結 + warm-up 驗證 |
+| 13:30–14:00 | 彩排第 2 次（P5 計時 + 模擬 Q&A 快問） |
 | 15:00–17:00 | 上台 |
 
 關鍵原則：
@@ -328,7 +331,7 @@ Day2 環境風險：比賽用臨時帳號可能場外不可用/憑證過期（§
 | FUEL_CONSUMP 提交格式與假設不符 | 高 | 全量計算鐵律（§3.1）+ 雙版本預產 + Day1 當場釐清格式；Feng 專責 harness |
 | 真實資料欄位與簡報不符 | 高 | Day1 13:00 第一件事驗 schema；欄位映射獨立成 config |
 | 無船速/吃水欄位 | 中 | §4.3 fallback 表；頭牌仍叫 Speed Loss dashboard |
-| 四人皆後端、無前端專長，dashboard 佔 30% 評分 | 高 | template 起手 + 最小圖表集合 + Day1 前端 build/部署先走通一次（工具鏈風險提前引爆） |
+| 工程四人皆後端、無前端專長，dashboard 佔 30% 評分 | 高 | template 起手 + 最小圖表集合 + Day1 前端 build/部署先走通一次（工具鏈風險提前引爆）+ P5 以設計視角當 dashboard 第一使用者，持續點測回饋 |
 | AWS 環境權限受限 | 中 | P1 單服務路徑 + 權限探測 checklist 即時分叉；儲存 fallback H2 |
 | Bedrock 模型未開通/配額低 | 中 | Day1 上午 smoke test；model-agnostic 封裝換模型即跑；再不行確定性模板簡報 |
 | Day2 遠端環境不可用 | 中 | 全系統本機可跑 plan B（§7 Day2） |
