@@ -1,5 +1,7 @@
 # Solution Strategy
 
+> ⚠ **Partially superseded**: MoSCoW priorities have shifted — confidence indicator and ESG/cost estimates are now P0 must-dos (docs/13 §3), human review status flow is downgraded to could-have (docs/09 §6). Scheduling follows docs/09 §7 + docs/13 §3.3; this file is early background.
+
 ## Recommended Solution
 
 FleetMind: Fleet Efficiency Copilot with Speed Loss dashboard.

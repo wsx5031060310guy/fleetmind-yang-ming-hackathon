@@ -7,7 +7,11 @@ Before proposing or changing anything, read:
 1. `README.md`
 2. `ai-context/PROJECT_CONTEXT.md`
 3. `docs/03-yang-ming-briefing-notes.md`
-4. `docs/04-solution-strategy.md`
+4. `docs/09-architecture-and-execution-plan.md` (authoritative execution plan)
+5. `docs/12-requirements-fit-and-final-architecture.md` (finalized architecture v1.0)
+6. `docs/13-differentiation-strategy.md` (differentiation backlog)
+
+`docs/04` and `docs/05` are early background; on conflict, docs 09–14 win.
 
 ## Communication
 
@@ -33,7 +37,8 @@ Do not position AI as directly ordering captains to change routes. The credible 
 
 - Must use AWS-provided environment.
 - Must use AWS models and services only.
-- Favor AWS Bedrock, S3, Lambda/ECS, API Gateway, DynamoDB/Aurora, CloudWatch, and dashboard-friendly APIs.
+- Finalized architecture (docs/09 §2.2, docs/12 §4): core-calc Java pure-function library + single Spring Boot service (same-origin React dashboard) + S3 + DynamoDB + Bedrock + CloudWatch. Deliberately NOT using ECS/RDS/CloudFront/QuickSight/Bedrock Agents — six-route evaluation in docs/11. Do not re-propose eliminated services.
+- Iron rule: Daily FOC is computed for every row unconditionally; filters only set quality flags (protects the 25% auto-scored output).
 - Avoid custom ML training, heavy computer vision, video pipelines, and research-heavy optimization unless explicitly requested.
 - Prefer a narrow working MVP over broad unfinished architecture.
 
