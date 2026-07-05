@@ -12,6 +12,9 @@
    - Software Engineer at 閎博科技有限公司
 4. Chen Jian-Ying
    - Software Engineer at 奕福穎科技股份有限公司
+5. P5 (name TBD)
+   - PM / presentation / design
+   - Dedicated presentation-and-submission owner: slides author, demo script director, rehearsal timekeeper, official seven-item submission checklist owner, mock Q&A host
 
 Team strengths:
 
@@ -49,7 +52,7 @@ Constraints:
 - Use AWS-provided environment.
 - Use AWS models and services only.
 - Build during the competition window.
-- Submit GitHub repository, technical architecture, live demo, demo recording, and slides.
+- Submit **seven items**: proposal deck, challenge link, enterprise data application description, technical architecture, GitHub repository link, live demo link, demo recording link. Missing any = forfeit (docs/12 §3 G5).
 - Presentation is 8 minutes plus 4 minutes Q&A.
 
 Official scoring:
@@ -111,15 +114,17 @@ Daily FOC = ME_FULLSPEED_CONSUMP_VLSFO / HOURS_FULL_SPEED * 24
 
 Build a Fleet Efficiency Copilot with a Speed Loss dashboard.
 
+**Finalized architecture (authoritative — see docs/09 §2.2 and docs/12 §4):** core-calc as a Java pure-function library (no I/O, golden-case tested) embedded in a single Spring Boot service that also serves the React dashboard (same origin), backed by S3 + DynamoDB + Bedrock + CloudWatch. Deliberately NOT using ECS/RDS/CloudFront/QuickSight/Bedrock Agents (six-route evaluation in docs/11). Optional P2 bonus: the same core-calc jar triggered as an S3-event Lambda.
+
 Core flow:
 
-1. Ingest vessel noon reports and underwater event reports.
-2. Filter out extreme sailing/weather conditions.
-3. Normalize fuel consumption to daily VLSFO-equivalent FOC.
-4. Compare vessel performance before/after underwater cleaning or propeller polishing.
-5. Detect abnormal hull-efficiency degradation and speed loss.
+1. Ingest vessel noon reports and underwater event reports into S3.
+2. **Compute VLSFO normalization and Daily FOC for EVERY row unconditionally (iron rule — protects the 25% auto-scored FUEL_CONSUMP output). Filters only produce quality flags; no rows are dropped.**
+3. Speed Loss analysis uses only rows whose quality flags all pass (WIND_SCALE <= 4, HOURS_FULL_SPEED >= 22).
+4. Compare vessel performance before/after underwater cleaning or propeller polishing (same-denominator k-value comparison).
+5. Detect abnormal hull-efficiency degradation, speed loss, and fouling attribution.
 6. Show a dashboard with explainable trend lines and recommended maintenance review.
-7. Let Bedrock produce an operations-friendly explanation and action brief.
+7. Let Bedrock produce an operations-friendly explanation and action brief (numbers come only from deterministic calculation; Bedrock explains, never computes).
 
 Positioning:
 

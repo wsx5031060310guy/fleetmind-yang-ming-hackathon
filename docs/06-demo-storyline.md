@@ -1,5 +1,7 @@
 # Demo Storyline
 
+> ⚠ **Superseded for timing**: slide-by-slide plan and timing live in `docs/10` (live demo ≤ 3 minutes, three-click narrative per docs/13 P3). This file is the original full-length narrative; use the script below only as raw material. Tracking: docs/14 §2 G-b.
+
 ## 8-Minute Presentation Flow
 
 1. Business pain
@@ -36,7 +38,16 @@
    - AI does not replace maritime experts.
    - AI makes fleet-efficiency evidence faster, explainable, and operationally usable.
 
-## Live Demo Script
+## Live Demo Script (≤ 3 minutes, three-click version)
+
+Per docs/13 P3 — one vessel, three clicks, citation click-through as the climax:
+
+1. Click 1 — Fleet ranking: "This is the fleet overview, ranked by speed loss under comparable conditions. Vessel A is worst — we click in."
+2. Click 2 — Vessel detail: "Event markers show the last cleaning; the k-value drops right at the event date. The underwater-report-status × fuel relationship is visible at a glance."
+3. Click 3 — AI brief: "One click generates the operations brief (pre-generated cache, note the generated_at timestamp). Now the key move: click any number in the brief — it jumps back to the exact dashboard data point. Every AI statement is traceable."
+4. Close with before-after card: payback days and annualized fuel cost difference.
+
+## Original Full Script (raw material)
 
 1. "This is the fleet overview. We filtered out poor weather and incomplete full-speed days so vessels are compared fairly."
 2. "Vessel A is flagged because its Daily FOC increased while operating under comparable conditions."

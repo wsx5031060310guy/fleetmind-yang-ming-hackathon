@@ -16,9 +16,10 @@ FleetMind is an AI decision-support copilot for fleet efficiency. It helps opera
 
 For humans:
 
-1. Read [docs/00-quick-start.md](docs/00-quick-start.md).
-2. Read [docs/03-yang-ming-briefing-notes.md](docs/03-yang-ming-briefing-notes.md).
-3. Add new notes under `meetings/`, `decisions/`, or `docs/`.
+1. Read [docs/INDEX.md](docs/INDEX.md) — one-page master overview: doc map, role-based reading paths, glossary, submission checklist.
+2. New members: find your role in [docs/02-team.md](docs/02-team.md), then follow your reading path in INDEX.
+3. Authoritative plan = [docs/09](docs/09-architecture-and-execution-plan.md) (execution) + [docs/12](docs/12-requirements-fit-and-final-architecture.md) (final architecture). Older docs (04/05/06) are background; on conflict, 09–14 win.
+4. Add new notes under `meetings/`, `decisions/`, or `docs/`.
 
 For AI agents:
 
@@ -37,11 +38,15 @@ For AI agents:
 
 ## Deliverables
 
-- GitHub repository
+Official submission is **seven items** (missing any = forfeit under the 14:30 deadline rule; see docs/12 §3 G5). Owner: P5.
+
+- Complete proposal deck
+- Challenge link
+- Enterprise data and data application description
 - Technical architecture
-- Live demo
-- Demo recording
-- Presentation slides
+- GitHub repository link
+- Live demo link
+- Demo recording link
 
 Presentation format:
 

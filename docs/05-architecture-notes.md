@@ -1,5 +1,7 @@
 # Architecture Notes
 
+> ⚠ **Superseded**: architecture and pipeline are finalized in `docs/09` §2–§3 and `docs/12` §4 (core-calc Java pure library, single Spring Boot service, full-dataset FOC iron rule). This file is early background; on conflict, 09/12 win.
+
 ## Preferred AWS Architecture
 
 ```mermaid
@@ -19,14 +21,13 @@ flowchart LR
 
 1. Load noon reports.
 2. Validate required fields.
-3. Filter comparable sailing conditions:
+3. **Normalize fuel to VLSFO equivalent and calculate Daily FOC for EVERY row unconditionally** (iron rule — see docs/09 §3.1; protects the 25% auto-scored submission output).
+4. Set quality flags for comparable sailing conditions (no rows dropped):
    - `WIND_SCALE <= 4`
    - `HOURS_FULL_SPEED >= 22`
-4. Normalize fuel to VLSFO equivalent.
-5. Calculate Daily FOC.
-6. Join underwater events.
-7. Calculate vessel-level efficiency signals.
-8. Persist processed metrics for dashboard and AI explanation.
+5. Join underwater events.
+6. Calculate vessel-level efficiency signals using flag-passing rows only.
+7. Persist processed metrics for dashboard and AI explanation.
 
 ## AI Usage
 

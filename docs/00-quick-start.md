@@ -15,10 +15,12 @@ Current strongest MVP:
 ## What To Read First
 
 1. `README.md`
-2. `docs/03-yang-ming-briefing-notes.md`
-3. `docs/04-solution-strategy.md`
-4. `docs/05-architecture-notes.md`
-5. `docs/06-demo-storyline.md`
+2. `docs/INDEX.md` — master overview: doc map, role-based reading paths, glossary
+3. `docs/03-yang-ming-briefing-notes.md` — the challenge itself
+4. `docs/09-architecture-and-execution-plan.md` — authoritative execution plan
+5. `docs/12-requirements-fit-and-final-architecture.md` — finalized architecture
+
+Background (read for the "why", superseded on conflict): `docs/04`, `docs/05`, `docs/06`, `docs/11`.
 
 ## Where To Add New Information
 
