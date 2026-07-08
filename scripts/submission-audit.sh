@@ -108,6 +108,7 @@ required_files=(
   docs/18-submission-control-sheet.md
   docs/19-technical-architecture-submission.md
   docs/20-day1-schema-inventory.md
+  docs/21-day2-stretch-gate.md
   samples/schema-map.template.csv
   presentation/fleetmind-proposal-deck.pptx
   presentation/fleetmind-proposal-deck-preview.webp

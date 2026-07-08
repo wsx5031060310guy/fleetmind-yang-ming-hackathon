@@ -48,10 +48,10 @@ P1 小計 ≈ 10h（P0+P1 = 26h，**5 人分攤 ≈ 5h/人**，在預算內—�
 | G-a | `10-presentation-plan` 已回寫 `13` 呈現戰術；`15` 已補簡報賽前包；`presentation/fleetmind-proposal-deck.pptx` 已產出 | Day2/Day3 以凍結真資料替換 money number、商務價值、demo 截圖；保留 B1-B15 Q&A 備援 | 真資料凍結 |
 | G-b | `06-demo-storyline` 已有三擊 demo 草稿，但仍是 raw material | 以 `10` 的新版 demo 段為唯一彩排腳本，`06` 保留原始素材定位 | team review 通過 |
 | G-c | `07-judge-qna` 已擴到 15 題，並已在 `15` 轉成 backup slide 清單；`presentation/fleetmind-proposal-deck.pptx` 已含 B1-B15 | P5 連續問 15 題，工程四人按專長 40 秒內答完 | 彩排 |
-| G-d | `13` P0 產品項已併入 `09` §4.5；§7 分工表已補 D1–D4 owner 對位 | D5–D8 維持 P1 閘門項，Day2 18:00 視資料品質決定 | team review |
-| G-e | 累積劣化曲線仍標 stretch，避免未看真資料前擠壓 55% 硬盤 | Day2 18:00 若事件數與合格天足夠再升必做；否則保留 backup slide | team review 通過 |
+| G-d | `13` P0 產品項已併入 `09` §4.5；§7 分工表已補 D1–D4 owner 對位 | D5–D8 維持 P1 閘門項；Day2 18:00 依 `21-day2-stretch-gate.md` 決定做/砍 | 已補 gate |
+| G-e | 累積劣化曲線仍標 stretch，避免未看真資料前擠壓 55% 硬盤 | Day2 18:00 若事件數與合格天足夠再升必做；否則保留 backup slide | 已補 gate |
 
-**剩餘需要人拍板**：D5–D8 是否升必做、真實資料支不支援累積劣化曲線、Day2/Day3 最終數字與截圖。核心骨架、prompt guardrail、簡報賽前包、PPTX 骨架與 D1–D4 owner 已先回寫。
+**剩餘需要人拍板**：真實資料支不支援 D5–D8、Day2/Day3 最終數字與截圖。D5–D8 是否升必做已改由 `21-day2-stretch-gate.md` 判定，避免現場主觀拉扯。
 
 ## 3. 整體優化方向收斂（三層防線）
 

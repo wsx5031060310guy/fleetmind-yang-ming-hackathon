@@ -18,7 +18,7 @@ For humans:
 
 1. Read [docs/INDEX.md](docs/INDEX.md) — one-page master overview: doc map, role-based reading paths, glossary, submission checklist.
 2. New members: find your role in [docs/02-team.md](docs/02-team.md), then follow your reading path in INDEX.
-3. Authoritative plan = [docs/09](docs/09-architecture-and-execution-plan.md) (execution) + [docs/12](docs/12-requirements-fit-and-final-architecture.md) (final architecture) + [docs/15](docs/15-presentation-readiness-pack.md) (P5 presentation pack) + [docs/17](docs/17-enterprise-data-application.md) (enterprise data application) + [docs/18](docs/18-submission-control-sheet.md) (Day3 submission control) + [docs/19](docs/19-technical-architecture-submission.md) (technical architecture submission) + [docs/20](docs/20-day1-schema-inventory.md) (Day1 schema inventory) + [presentation](presentation/) (editable proposal deck). Older docs (04/05/06) are background; on conflict, 09–20 and `presentation/` win.
+3. Authoritative plan = [docs/09](docs/09-architecture-and-execution-plan.md) (execution) + [docs/12](docs/12-requirements-fit-and-final-architecture.md) (final architecture) + [docs/15](docs/15-presentation-readiness-pack.md) (P5 presentation pack) + [docs/17](docs/17-enterprise-data-application.md) (enterprise data application) + [docs/18](docs/18-submission-control-sheet.md) (Day3 submission control) + [docs/19](docs/19-technical-architecture-submission.md) (technical architecture submission) + [docs/20](docs/20-day1-schema-inventory.md) (Day1 schema inventory) + [docs/21](docs/21-day2-stretch-gate.md) (Day2 stretch gate) + [presentation](presentation/) (editable proposal deck). Older docs (04/05/06) are background; on conflict, 09–21 and `presentation/` win.
 4. Add new notes under `meetings/`, `decisions/`, or `docs/`.
 
 For AI agents:
@@ -31,7 +31,7 @@ For AI agents:
 
 Status as of 2026-07-08:
 
-- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, demo freeze snapshot script, FUEL_CONSUMP validator, and live demo warm-up script merged.
+- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, demo freeze snapshot script, FUEL_CONSUMP validator, live demo warm-up script, and Day2 stretch gate merged.
 - GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, Maven package, API smoke, Markdown links, and diff hygiene.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
 - Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
@@ -64,6 +64,7 @@ Merged work log:
 | #17 | Demo freeze snapshot | Added Day3 API snapshot capture with manifest and checksums for recording/deck freeze. |
 | #18 | FUEL_CONSUMP validator | Added export shape validator and wired it into local demo/CI smoke. |
 | #19 | Live demo warm-up | Added root/API warm-up script for Day3 live URL checks before judges open it. |
+| #20 | Day2 stretch gate | Added D5-D8/P1 decision gate to protect the 55% main score. |
 
 ## What Runs Now
 
@@ -145,7 +146,7 @@ Remaining open items:
 - Real dataset values still need to be inventoried with docs/20; official FUEL_CONSUMP precision/rounding still needs Day1 confirmation.
 - Bedrock model ID/region confirmation through `scripts/probe.sh`.
 - Deck finalization with Day2/Day3 frozen real values and screenshots.
-- Decide whether D5-D8 stretch items move into must-have after Day2 18:00 data review.
+- Decide D5-D8/P1 stretch only through [docs/21](docs/21-day2-stretch-gate.md) after Day2 18:00 data review.
 
 ## Important Dates
 
