@@ -53,14 +53,45 @@ public class DemoDataService {
     }
 
     public AiBriefDto aiBrief(String vesselId) {
+        List<CitedMetricDto> citations = aiBriefCitations(vesselId);
+        String text = aiBriefText();
+        return new AiBriefDto(
+                vesselId,
+                Instant.now(),
+                "deterministic-fallback",
+                text,
+                citations,
+                AiBriefGuardrail.validate(text, citations));
+    }
+
+    public AiBriefPromptDto aiBriefPrompt(String vesselId) {
+        List<CitedMetricDto> citations = aiBriefCitations(vesselId);
+        BeforeAfterDto beforeAfter = beforeAfter(vesselId, "event-2025-03-cleaning");
+        String text = aiBriefText();
+        return new AiBriefPromptDto(
+                AiBriefPrompt.systemPrompt(),
+                AiBriefPrompt.buildUserPrompt(vesselId, beforeAfter, underwaterEvents(vesselId), citations),
+                citations,
+                AiBriefGuardrail.validate(text, citations));
+    }
+
+    private List<CitedMetricDto> aiBriefCitations(String vesselId) {
+        String beforeAfterHref = "/api/vessels/" + vesselId + "/before-after?eventId=event-2025-03-cleaning";
         List<CitedMetricDto> citations = List.of(
                 new CitedMetricDto("latest_speed_loss_pct", "4.76", "/api/fleet/summary"),
-                new CitedMetricDto("payback_days", "20.53", "/api/vessels/" + vesselId + "/before-after?eventId=event-2025-03-cleaning"));
-        String text = "YM-DEMO-01 shows elevated speed loss under comparable conditions. "
-                + "The deterministic calculation estimates 4.76% speed loss and about 20.53 days payback "
+                new CitedMetricDto("median_k_before", "0.00763", beforeAfterHref),
+                new CitedMetricDto("median_k_after", "0.00722", beforeAfterHref),
+                new CitedMetricDto("recovery_pct", "5.37", beforeAfterHref),
+                new CitedMetricDto("payback_days", "20.53", beforeAfterHref));
+        return citations;
+    }
+
+    private String aiBriefText() {
+        return "YM-DEMO-01 shows elevated speed loss under comparable conditions. "
+                + "The deterministic calculation estimates 4.76% speed loss [latest_speed_loss_pct] "
+                + "and about 20.53 days payback [payback_days] "
                 + "under the stated fuel, carbon, and cleaning-cost assumptions. Recommend human review for inspection, "
                 + "then cleaning or propeller polishing if onboard evidence matches.";
-        return new AiBriefDto(vesselId, Instant.now(), "deterministic-fallback", text, citations);
     }
 
     public FuelConsumpExportDto fuelExport() {

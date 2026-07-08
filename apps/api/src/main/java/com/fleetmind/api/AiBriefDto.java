@@ -8,5 +8,6 @@ public record AiBriefDto(
         Instant generatedAt,
         String mode,
         String briefText,
-        List<CitedMetricDto> citedMetrics) {
+        List<CitedMetricDto> citedMetrics,
+        AiBriefGuardrailDto guardrail) {
 }
