@@ -49,16 +49,16 @@ public final class CoreCalcGoldenTest {
     }
 
     private static void businessImpactCases() {
-        BusinessImpactResult result = BusinessImpact.estimate(58.0, 61.0, 525.0, 40000.0, 80.0, 0.5);
+        BusinessImpactResult result = BusinessImpact.estimate(58.0, 61.0, 650.0, 40000.0, 90.0, 0.5);
         assertClose("extra fuel per day", 3.0, result.extraFuelMtPerDay());
-        assertClose("daily fuel cost", 1575.0, result.dailyFuelCostUsd());
-        assertClose("annual fuel cost", 574875.0, result.annualizedFuelCostUsd());
+        assertClose("daily fuel cost", 1950.0, result.dailyFuelCostUsd());
+        assertClose("annual fuel cost", 711750.0, result.annualizedFuelCostUsd());
         assertClose("daily CO2", 9.342, result.dailyCo2MetricTons());
         assertClose("annual CO2", 3409.83, result.annualizedCo2MetricTons());
-        assertClose("daily ETS cost", 373.68, result.dailyEuEtsCostUsd());
-        assertClose("payback days with ETS", 20.52671552, result.paybackDays());
+        assertClose("daily ETS cost", 420.39, result.dailyEuEtsCostUsd());
+        assertClose("payback days with ETS", 16.87486026, result.paybackDays());
         assertTrue("no penalty gives infinite payback",
-                Double.isInfinite(BusinessImpact.estimate(61.0, 58.0, 525.0, 40000.0, 80.0, 0.5).paybackDays()));
+                Double.isInfinite(BusinessImpact.estimate(61.0, 58.0, 650.0, 40000.0, 90.0, 0.5).paybackDays()));
     }
 
     private static void dailyMetricKeepsFlaggedRows() {

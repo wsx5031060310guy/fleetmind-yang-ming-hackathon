@@ -15,9 +15,9 @@ java -cp "$MAIN_CLASSES" com.fleetmind.corecalc.FuelConsumpExportCli \
 java -cp "$MAIN_CLASSES" com.fleetmind.corecalc.BusinessImpactCli \
   --baseline-daily-foc 58 \
   --observed-daily-foc 61 \
-  --fuel-price-usd-per-mt 525 \
+  --fuel-price-usd-per-mt 650 \
   --cleaning-cost-usd 40000 \
-  --carbon-price-usd-per-ton 80 \
+  --carbon-price-usd-per-ton 90 \
   --eu-ets-coverage-rate 0.5 \
   > "$OUT_DIR/business-impact.csv"
 

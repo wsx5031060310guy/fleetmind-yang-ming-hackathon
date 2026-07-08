@@ -37,15 +37,15 @@ rows, matching the project iron rule for the 25% `FUEL_CONSUMP` score.
 ./scripts/business-impact.sh \
   --baseline-daily-foc 58 \
   --observed-daily-foc 61 \
-  --fuel-price-usd-per-mt 525 \
+  --fuel-price-usd-per-mt 650 \
   --cleaning-cost-usd 40000
 ```
 
 Defaults intentionally use explicit assumptions:
 
-- fuel price: USD 525/MT
+- fuel price: USD 650/MT
 - cleaning cost: USD 40,000
-- carbon price: USD 80/tCO2
+- carbon price: USD 90/tCO2
 - EU ETS coverage: 50%
 
 Outputs are estimate fields for dashboard cards and slides, not official
