@@ -61,6 +61,8 @@ Implementation starter kit:
 - `scripts/demo-local.sh` runs the local golden checks and sample exports end to end.
 - `scripts/api-smoke.sh` checks the Spring Boot API once the service is running.
 - `scripts/probe.sh` smoke-tests AWS permissions for Day1.
+- `scripts/bedrock-models.sh` lists Bedrock Anthropic models and inference profiles available in the event account.
+- `scripts/cleanup-event-data.sh` dry-runs or executes post-event data cleanup.
 
 Local commands:
 
@@ -111,6 +113,7 @@ Day3:
 Remaining open items:
 
 - Actual AWS App Runner or EC2 deployment in event account.
+- App Runner is only a fast path if the event account already has access; otherwise use ECS Express Mode or EC2 docker fallback (see [docs/16](docs/16-day1-ops-runbook.md)).
 - Real dataset schema mapping and official FUEL_CONSUMP precision/rounding confirmation.
 - Bedrock model ID/region confirmation through `scripts/probe.sh`.
 - Actual PPTX/deck creation from docs/10 and docs/15.

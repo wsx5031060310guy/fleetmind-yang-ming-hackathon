@@ -21,12 +21,16 @@ while [[ $# -gt 0 ]]; do
       APPLY=true
       shift
       ;;
+    --bedrock-model-id)
+      BEDROCK_MODEL_ID="$2"
+      shift 2
+      ;;
     --keep)
       KEEP=true
       shift
       ;;
     -h|--help)
-      echo "Usage: scripts/probe.sh [--region ap-northeast-1] [--apply] [--keep]"
+      echo "Usage: scripts/probe.sh [--region ap-northeast-1] [--bedrock-model-id model-id] [--apply] [--keep]"
       exit 0
       ;;
     *)
@@ -67,11 +71,31 @@ check "lambda list functions" aws lambda list-functions --region "$REGION"
 check "apprunner list services" aws apprunner list-services --region "$REGION"
 check "bedrock list foundation models" aws bedrock list-foundation-models --region "$REGION"
 
+if aws bedrock list-foundation-models \
+  --region "$REGION" \
+  --by-provider Anthropic \
+  --query 'modelSummaries[*].[modelId,modelName,modelLifecycle.status]' \
+  --output table; then
+  info "listed Anthropic foundation models"
+else
+  info "could not list Anthropic foundation models with provider filter"
+fi
+
+if aws bedrock list-inference-profiles \
+  --region "$REGION" \
+  --type SYSTEM_DEFINED \
+  --query 'inferenceProfileSummaries[*].[inferenceProfileId,inferenceProfileName,status]' \
+  --output table; then
+  info "listed Bedrock system inference profiles"
+else
+  info "could not list Bedrock inference profiles; CLI version or IAM may not support this"
+fi
+
 if [[ -n "$BEDROCK_MODEL_ID" ]]; then
   BODY_FILE="/tmp/fleetmind-bedrock-body.json"
   OUT_FILE="/tmp/fleetmind-bedrock-output.json"
   cat > "$BODY_FILE" <<'JSON'
-{"messages":[{"role":"user","content":[{"text":"Return exactly: ok"}]}],"inferenceConfig":{"maxTokens":8,"temperature":0}}
+{"anthropic_version":"bedrock-2023-05-31","max_tokens":8,"temperature":0,"messages":[{"role":"user","content":"Return exactly: ok"}]}
 JSON
   check "bedrock invoke model $BEDROCK_MODEL_ID" \
     aws bedrock-runtime invoke-model \

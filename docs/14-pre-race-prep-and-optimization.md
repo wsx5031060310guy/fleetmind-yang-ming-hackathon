@@ -14,8 +14,8 @@
 | --- | --- | --- | --- | --- |
 | PR-1 | **core-calc 函式庫骨架 + 介面凍結** | 用假資料先寫好 `core-calc` 的公開介面（`filterFlags()`／`vlsfoEquiv()`／`dailyFOC()`／`speedLoss()`／`beforeAfter()`）與資料結構（NoonReportDaily／DailyMetric／VesselSummary）。純函式、無 I/O，Day1 拿到真欄位只改欄位映射 | Chen | 4h |
 | PR-2 | **golden case 測試先寫（假資料）** | VLSFO 換算與 Daily FOC 的 ≥10 個手算案例（多燃料、HOURS=0、邊界 22h、風力 4 級）先寫成單元測試，Day1 資料一到即可跑驗證 | Feng | 3h |
-| PR-3 | **權限探測 checklist 腳本預寫** | 一支 `probe.sh`：建 S3 bucket／建 DynamoDB table／建 IAM role／部署 hello Lambda／App Runner 可用性／Bedrock InvokeModel + 列可用模型，每項印 pass/fail。Day1 10:40 環境一到手立刻跑（`12` §5 已定，把它變成真腳本） | Sunny | 3h |
-| PR-4 | **Spring Boot + React skeleton 在自己帳號搭一次** | 同源 serve dashboard 的最小骨架已落在 `apps/api/`（Spring Boot + static dashboard + `/api/**` contract）。下一步是在自己帳號跑通 App Runner（或 EC2）部署一次，把部署鏈的坑在賽前引爆；Day2 可把 static dashboard 換成真正 React/Recharts build | Eddie + Sunny | 4h |
+| PR-3 | **權限探測 checklist 腳本預寫** | `probe.sh` + `bedrock-models.sh` 已涵蓋 S3/DynamoDB/IAM/Lambda/App Runner 可用性、Bedrock model/profile list 與 InvokeModel；Day1 10:40 環境一到手立刻跑 | Sunny | 3h |
+| PR-4 | **Spring Boot + React skeleton 在自己帳號搭一次** | 同源 serve dashboard 的最小骨架已落在 `apps/api/`（Spring Boot + static dashboard + `/api/**` contract）。部署路線改為既有 App Runner → ECS Express Mode → EC2 docker；Day2 可把 static dashboard 換成真正 React/Recharts build | Eddie + Sunny | 4h |
 | PR-5 | **FUEL_CONSUMP harness 骨架** | 提交檔輸出器骨架：吃 DailyMetric 列 → 輸出 CSV（欄位名/精度 Day1 確認後填），全量版與篩選版雙輸出。先跑假資料驗證列數不缺 | Feng | 2h |
 
 P0 小計 ≈ 16h。
@@ -37,7 +37,7 @@ P1 小計 ≈ 10h（P0+P1 = 26h，**5 人分攤 ≈ 5h/人**，在預算內—�
 
 - ISO 19030 / CII / EEXI 的公式與 rating 分級表（公開標準）— CII 引用已整理到 `15`。
 - VLSFO 市價、EU ETS、清潔成本區間 — 已整理到 `15`；demo 假設目前用 VLSFO USD 650/MT、carbon USD 90/tCO2、cleaning USD 40k。
-- Bedrock 在台灣區域（ap-*）可用的 Claude 模型清單 — 賽前查 AWS 文件先有預期。
+- Bedrock 在台灣區域（ap-*）可用的 Claude 模型清單 — 賽前查 AWS 文件先有預期；Day1 以 `scripts/bedrock-models.sh` / `scripts/probe.sh --bedrock-model-id` 實測為準。
 
 ## 2. 文件體系剩餘缺口（待回寫）
 
