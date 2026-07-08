@@ -32,7 +32,7 @@ For AI agents:
 Status as of 2026-07-08:
 
 - `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, demo freeze snapshot script, FUEL_CONSUMP validator, live demo warm-up script, Day2 stretch gate, AI fallback demo, and environment template merged.
-- GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, Maven package, API smoke, Markdown links, and diff hygiene.
+- GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, submission audit, Maven package, API smoke, Markdown links, and diff hygiene.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
 - Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
 - Enterprise data application draft is ready at [docs/17-enterprise-data-application.md](docs/17-enterprise-data-application.md); Day1/Day2 work is to fill real schema values, row counts, file names, and screenshot/data-retention constraints.
@@ -67,6 +67,8 @@ Merged work log:
 | #20 | Day2 stretch gate | Added D5-D8/P1 decision gate to protect the 55% main score. |
 | #21 | AI fallback demo | Added forced fallback query/button for Bedrock failure demonstration. |
 | #22 | Environment template | Added safe `.env.example` and audit allowlist for placeholders. |
+| #23 | Source-safe env template | Replaced shell-unsafe placeholders in `.env.example`. |
+| #24 | CI submission audit | Added submission audit to GitHub Actions. |
 
 ## What Runs Now
 
