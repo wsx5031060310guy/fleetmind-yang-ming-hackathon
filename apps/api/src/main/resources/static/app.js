@@ -54,6 +54,7 @@ function renderBrief(data) {
   const links = data.citedMetrics.map((metric) =>
     `<a href="${metric.href}" target="_blank">${metric.metricId}: ${metric.value}</a>`).join("");
   document.querySelector("#brief").innerHTML = `
+    <div class="brief-meta">${data.mode} · ${new Date(data.generatedAt).toLocaleString()}</div>
     <p>${data.briefText}</p>
     <div class="citations">${links}</div>
   `;
@@ -73,10 +74,14 @@ async function boot() {
   document.querySelector("#quality").textContent =
     `${quality.exportedRows}/${quality.totalRows} rows exported; flags: ${JSON.stringify(quality.flagCounts)}`;
 
-  document.querySelector("#generate").addEventListener("click", async () => {
+  async function loadBrief(forceFallback) {
     document.querySelector("#brief").textContent = "Generating...";
-    renderBrief(await getJson(`/api/vessels/${vesselId}/ai-brief`, { method: "POST" }));
-  });
+    const suffix = forceFallback ? "?forceFallback=true" : "";
+    renderBrief(await getJson(`/api/vessels/${vesselId}/ai-brief${suffix}`, { method: "POST" }));
+  }
+
+  document.querySelector("#generate").addEventListener("click", () => loadBrief(false));
+  document.querySelector("#force-fallback").addEventListener("click", () => loadBrief(true));
 }
 
 boot().catch((error) => {

@@ -24,6 +24,7 @@ check_contains fleet-summary GET "$BASE_URL/api/fleet/summary" "YM-DEMO-01"
 check_contains performance GET "$BASE_URL/api/vessels/YM-DEMO-01/performance" "dailyFoc"
 check_contains before-after GET "$BASE_URL/api/vessels/YM-DEMO-01/before-after?eventId=event-2025-03-cleaning" "paybackDays"
 check_contains ai-brief POST "$BASE_URL/api/vessels/YM-DEMO-01/ai-brief" '"passed":true'
+check_contains ai-brief-forced-fallback POST "$BASE_URL/api/vessels/YM-DEMO-01/ai-brief?forceFallback=true" "deterministic-forced-fallback"
 check_contains ai-brief-prompt GET "$BASE_URL/api/vessels/YM-DEMO-01/ai-brief/prompt" "systemPrompt"
 check_contains fuel-export GET "$BASE_URL/api/fuel-consump/export" "FUEL_CONSUMP"
 
