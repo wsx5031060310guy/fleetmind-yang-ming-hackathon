@@ -31,7 +31,7 @@ For AI agents:
 
 Status as of 2026-07-08:
 
-- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, and technical architecture submission draft merged.
+- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, and submission audit script merged.
 - GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, Maven package, API smoke, Markdown links, and diff hygiene.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
 - Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
@@ -58,6 +58,7 @@ Merged work log:
 | #12 | Enterprise data application | Added official submission draft for data sources, transformations, AI boundary, and data safety. |
 | #13 | Submission control sheet | Added Day3 seven-deliverable upload checklist, timing, fallback, and verification flow. |
 | #14 | Technical architecture submission | Added concise architecture draft for the official technical architecture deliverable. |
+| #15 | Submission audit script | Added repo safety and deliverable-source audit for Day3 upload readiness. |
 
 ## What Runs Now
 
@@ -73,6 +74,7 @@ Implementation starter kit:
 - `scripts/probe.sh` smoke-tests AWS permissions for Day1.
 - `scripts/bedrock-models.sh` lists Bedrock Anthropic models and inference profiles available in the event account.
 - `scripts/cleanup-event-data.sh` dry-runs or executes post-event data cleanup.
+- `scripts/submission-audit.sh` checks Day3 repo safety and required deliverable source files before upload.
 - `presentation/build-fleetmind-deck.mjs` regenerates the editable PPTX skeleton in a Codex artifact-tool runtime.
 
 Local commands:
