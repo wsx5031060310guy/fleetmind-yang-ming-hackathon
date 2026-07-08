@@ -86,6 +86,8 @@ Execute：
 
 ## 6. Day1 交付物核對
 
+Day3 七項提交物的完整管制表見 `18-submission-control-sheet.md`。
+
 | 時間 | 動作 | Owner |
 | --- | --- | --- |
 | 09:40-10:00 | 問 challenge link、提交格式、錄影格式、資料保留規定 | P5 |
