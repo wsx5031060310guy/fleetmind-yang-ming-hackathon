@@ -30,6 +30,8 @@ Day1 待填：
 | 是否允許截圖進 deck/recording | TBD |
 | 賽後資料保留/刪除規則 | TBD |
 
+Schema inventory 與欄位 mapping 步驟見 `20-day1-schema-inventory.md`。Day1 只提交 headers/row counts/mapping 結果，不提交 raw data。
+
 ## 3. 欄位如何被使用
 
 | 欄位/資料 | 使用方式 | 不符合條件時 |
@@ -135,7 +137,7 @@ FleetMind 的 AI 不是資料產生者。
 | 時間 | 動作 | Owner |
 | --- | --- | --- |
 | Day1 09:40-10:00 | 確認提交平台是否有此項模板、字數、檔案格式 | P5 |
-| Day1 10:00-10:40 | 記下實際 schema、欄位定義、資料期間與截圖限制 | P5 + Feng |
+| Day1 10:00-10:40 | 跑 `scripts/schema-inventory.sh`，填私有 schema map，記下實際 schema、欄位定義、資料期間與截圖限制 | P5 + Feng |
 | Day1 13:00 | 用真 schema 更新欄位表與 `FUEL_CONSUMP` 格式 | Feng |
 | Day2 晚 | 加入真列數、實際輸出檔名、demo 船數字來源 | Feng + P5 |
 | Day3 12:00 前 | 以此文件輸出官方提交格式，與 deck/repo/demo link 一起上傳 | P5 |
