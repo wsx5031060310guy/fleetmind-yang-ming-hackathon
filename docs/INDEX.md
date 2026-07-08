@@ -18,7 +18,7 @@
 | 需求符合度（22 項）與提交缺口 | `12` §1–§3 |
 | 差異化與優先級 | `13` §3 |
 | 賽前準備 | `14` §1 |
-| 簡報 | `10`（已吸收 `13` P0 呈現戰術；pptx 仍需套版） |
+| 簡報 | `10` + `15` + `presentation/fleetmind-proposal-deck.pptx`（9 頁正片 + B1-B15 備援；Day2/Day3 換真數字與截圖） |
 | 重大決策記錄 | `decisions/`（core-calc Java 單服務、全量計算鐵律） |
 
 ## 3. 文件地圖
@@ -42,10 +42,11 @@
 | 14 pre-race-prep | 賽前清單+待回寫追蹤 | ✅ 現行 |
 | 15 presentation-readiness-pack | P5 簡報賽前包：假設來源、冷開場、backup slides、提交問題 | ✅ 現行 |
 | 16 day1-ops-runbook | Day1 AWS/Bedrock/部署/資料清理執行手冊 | ✅ 現行 |
+| presentation/ | 可編輯提案 deck、preview、可重生 source | ✅ 骨架完成 |
 
 ## 4. 角色閱讀路徑
 
-- **P5 成員（簡報/提交）**：`02` 分工 → `10` 全文 → `15` 全文 → `13` §3.2 呈現項+§4 → `12` §3（G1/G4/G5 提交缺口）→ `09` §7 只看 P5 欄 → `14` PR-6/PR-9 → 本頁 §6 checklist。
+- **P5 成員（簡報/提交）**：`02` 分工 → `presentation/README.md` → `presentation/fleetmind-proposal-deck.pptx` → `10` 全文 → `15` 全文 → `13` §3.2 呈現項+§4 → `12` §3（G1/G4/G5 提交缺口）→ `09` §7 只看 P5 欄 → `14` PR-6/PR-9 → 本頁 §6 checklist。
 - **工程新人**：`00` → `03` → `09` 全文 → `12` → 背景 `05`/`11`。
 - **只看架構/部署**：`09` §2 → `12` §4 → `16` → `11` §1 計分板+§5 決策樹 → `decisions/`。
 - **賽前最後一天惡補**：README 評分表 → `10` → `13` §1+§5 → `07` 全部 15 題 → `09` §4.4 ISO 偏離表。
@@ -61,7 +62,7 @@
 
 | # | 項目 | 素材來源 |
 | --- | --- | --- |
-| 1 | 完整提案 deck | P5 主筆（`10` 計畫；Day3 換凍結快照真截圖） |
+| 1 | 完整提案 deck | `presentation/fleetmind-proposal-deck.pptx` 起手；Day2/Day3 換凍結數字與真截圖 |
 | 2 | Challenge link | **定義 Day1 09:40–10:00 向主辦方確認**（`12` G5） |
 | 3 | 企業資料與資料應用說明 | Feng 技術素材 + P5 編排（Day2 晚初稿） |
 | 4 | 技術架構 | `09` §2 圖 + `12` §4 定稿 |
@@ -84,6 +85,6 @@
 
 ## 8. 現況與追蹤
 
-- 已 merge：core-calc + golden checks、business impact、CI checks、single-service API skeleton、AI brief prompt/guardrail。
+- 已 merge：core-calc + golden checks、business impact、CI checks、single-service API skeleton、AI brief prompt/guardrail、Day1 ops runbook、proposal deck skeleton。
 - 本地可跑：`./scripts/test-core-calc.sh`、`./scripts/demo-local.sh`；GitHub Actions 會跑 Maven package 與 API smoke。
-- 待回寫（review 後執行）：`06` 狀態收斂、pptx 實際套版——追蹤 `14` §2；P5 賽前包見 `15`，Day1 ops 見 `16`。
+- 待回寫（review 後執行）：`06` 狀態收斂；deck 只剩 Day2/Day3 真資料與截圖替換。P5 賽前包見 `15`，Day1 ops 見 `16`。

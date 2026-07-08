@@ -1,7 +1,7 @@
 # 簡報賽前包（Presentation Readiness Pack）
 
 > Owner：P5。目的：把 `10` 的 slide 計畫、`07` 的 Q&A、`14` 的 PR-9 查證，整理成可直接套版與彩排的材料。
-> 狀態：可用假數字彩排；Day2 18:00 後換真資料與凍結截圖。
+> 狀態：PPTX 骨架已產於 `presentation/fleetmind-proposal-deck.pptx`（9 頁正片 + B1-B15）；可用假數字彩排，Day2 18:00 後換真資料與 Day3 凍結截圖。
 
 ## 1. 正片數字假設（2026-07-08 查證版）
 
@@ -36,6 +36,12 @@ Demo fake case 目前口徑：
 講法要求：慢，數字停頓；不要說「模型建議清潔」，只說「human review」。
 
 ## 3. Slide 套版填數表
+
+現行 PPTX：
+
+- `presentation/fleetmind-proposal-deck.pptx`
+- `presentation/fleetmind-proposal-deck-preview.webp`
+- `presentation/build-fleetmind-deck.mjs`
 
 | Slide | 必填素材 | 來源 | 凍結時間 |
 | --- | --- | --- | --- |
@@ -96,8 +102,8 @@ Day1 09:40-10:00 先問，P5 記錄：
 
 ## 7. P5 完成定義
 
-- Deck 初版：Day1 晚，有 9 頁正片骨架與來源註解。
-- Deck 主體：Day2 晚，只有真數字/截圖待換。
-- Backup：至少 B1-B12 有頁面；B13-B15 視彩排補。
+- Deck 初版：已完成，有 9 頁正片骨架與來源註解。
+- Deck 主體：已可用假數字彩排；Day2 晚只換真數字/截圖。
+- Backup：B1-B15 已有頁面；彩排後若新增問題再追加。
 - Day3 12:00 前：七項提交物全部有連結與備份。
 - 上台前：live URL、錄影 URL、repo、deck 開啟測試各跑一次。
