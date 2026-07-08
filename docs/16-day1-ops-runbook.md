@@ -17,6 +17,8 @@ java -jar apps/api/target/fleetmind-api-0.1.0-SNAPSHOT.jar
 
 ## 2. AWS 權限探測
 
+可先複製 `.env.example` 到本機 `.env` 填值；不要提交填好的 `.env`。
+
 ```bash
 export AWS_REGION=ap-northeast-1
 ./scripts/probe.sh --region "$AWS_REGION"

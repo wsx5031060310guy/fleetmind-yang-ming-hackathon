@@ -158,7 +158,9 @@ else
   echo "$tracked_raw" >&2
 fi
 
-tracked_sensitive_names="$(git ls-files | grep -E '(^|/)(\.env|\.env\..+|credentials|.*_rsa|.*_ed25519|.*\.pem|.*\.key)$' || true)"
+tracked_sensitive_names="$(git ls-files \
+  | grep -vE '(^|/)\.env\.example$' \
+  | grep -E '(^|/)(\.env|\.env\..+|credentials|.*_rsa|.*_ed25519|.*\.pem|.*\.key)$' || true)"
 if [[ -z "$tracked_sensitive_names" ]]; then
   pass "no tracked sensitive-looking filenames"
 else

@@ -65,7 +65,7 @@ Manual checks:
 | --- | --- |
 | raw enterprise data | repo 不含 `data/raw/`、企業 CSV/PDF、可識別原始截圖 |
 | schema mapping | `docs/17` 已用 `docs/20` 流程補檔名、row counts、欄位 mapping 與 FUEL_CONSUMP 格式 |
-| credentials | repo 不含 `.env`、AWS keys、tokens、cookies |
+| credentials | repo 不含填值 `.env`、AWS keys、tokens、cookies；只允許 `.env.example` |
 | branches | 遠端只保留 `origin/main`，已 merge feature branch 全刪 |
 | CI | main GitHub Actions `local-checks` green |
 | submission audit | `./scripts/submission-audit.sh` exits with `fail=0` |
