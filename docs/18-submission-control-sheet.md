@@ -48,6 +48,7 @@ Run before uploading repo link:
 
 ```bash
 ./scripts/submission-audit.sh
+BASE_URL=<live-demo-url> ./scripts/freeze-demo-snapshot.sh --out build/demo-freeze
 git status --short --branch
 git branch -r
 git log --oneline --decorate -5
@@ -66,6 +67,7 @@ Manual checks:
 | branches | 遠端只保留 `origin/main`，已 merge feature branch 全刪 |
 | CI | main GitHub Actions `local-checks` green |
 | submission audit | `./scripts/submission-audit.sh` exits with `fail=0` |
+| demo freeze | `build/demo-freeze/manifest.txt` exists; deck/recording numbers match captured outputs |
 | deck | final deck 可開啟，money number 與 dashboard/recording 一致 |
 | demo URL | 外部瀏覽器可打開，不依賴本機 session |
 | video URL | 外部瀏覽器可播放 |
