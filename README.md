@@ -31,7 +31,7 @@ For AI agents:
 
 Status as of 2026-07-08:
 
-- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, and Day1 schema inventory pack merged.
+- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, and demo freeze snapshot script merged.
 - GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, Maven package, API smoke, Markdown links, and diff hygiene.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
 - Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
@@ -61,6 +61,7 @@ Merged work log:
 | #14 | Technical architecture submission | Added concise architecture draft for the official technical architecture deliverable. |
 | #15 | Submission audit script | Added repo safety and deliverable-source audit for Day3 upload readiness. |
 | #16 | Day1 schema inventory | Added schema-only inventory script, mapping template, and Day1 data mapping runbook. |
+| #17 | Demo freeze snapshot | Added Day3 API snapshot capture with manifest and checksums for recording/deck freeze. |
 
 ## What Runs Now
 
@@ -78,6 +79,7 @@ Implementation starter kit:
 - `scripts/cleanup-event-data.sh` dry-runs or executes post-event data cleanup.
 - `scripts/submission-audit.sh` checks Day3 repo safety and required deliverable source files before upload.
 - `scripts/schema-inventory.sh` scans CSV/TSV headers and row counts without printing raw values.
+- `scripts/freeze-demo-snapshot.sh` captures live/local demo API outputs, AI brief, FUEL_CONSUMP, and checksums into ignored `build/`.
 - `samples/schema-map.template.csv` maps Day1 real fields to FleetMind/core-calc fields.
 - `presentation/build-fleetmind-deck.mjs` regenerates the editable PPTX skeleton in a Codex artifact-tool runtime.
 
@@ -87,6 +89,7 @@ Local commands:
 ./scripts/test-core-calc.sh
 ./scripts/demo-local.sh
 ./scripts/schema-inventory.sh samples/noon-reports.csv
+BASE_URL=http://localhost:8080 ./scripts/freeze-demo-snapshot.sh
 mvn -pl apps/api -am package
 java -jar apps/api/target/fleetmind-api-0.1.0-SNAPSHOT.jar
 ./scripts/api-smoke.sh
@@ -125,6 +128,7 @@ Day2:
 Day3:
 
 - Freeze demo data, regenerate final FUEL_CONSUMP, cache demo AI brief, record demo video, and swap final screenshots into deck.
+- Capture Day3 demo snapshot with `BASE_URL=<live-url> ./scripts/freeze-demo-snapshot.sh --out build/demo-freeze`.
 - Upload all seven official deliverables by 12:00-14:00, before the 14:30 hard deadline.
 - Run final warm-up: live URL, recording URL, repo, deck, and fallback demo.
 

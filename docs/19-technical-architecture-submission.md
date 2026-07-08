@@ -114,7 +114,7 @@ POST /admin/reprocess
 | Numeric post-validation | API extracts numeric claims and matches them to `citedMetrics` |
 | Human-in-the-loop | Brief says review/inspect/cleaning recommendation requires human maritime expert |
 | Fallback | If Bedrock model or quota fails, deterministic brief template still renders |
-| Demo stability | Demo vessel brief can be cached after Day3 data freeze and shown with `generated_at` |
+| Demo stability | Demo vessel brief can be cached after Day3 data freeze and captured with `scripts/freeze-demo-snapshot.sh` manifest/checksums |
 
 Standard framing:
 
