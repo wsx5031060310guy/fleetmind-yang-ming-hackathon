@@ -27,6 +27,13 @@ For AI agents:
 2. Read [ai-context/PROJECT_CONTEXT.md](ai-context/PROJECT_CONTEXT.md).
 3. Use [ai-context/ASK_AI_PROMPT.md](ai-context/ASK_AI_PROMPT.md) as the initial prompt when asking another AI tool.
 
+Implementation starter kit:
+
+- `core-calc/` contains the pure Java calculation seed and golden checks.
+- `scripts/test-core-calc.sh` runs local golden checks with `javac`.
+- `scripts/export-fuel-consump.sh` exports a first-pass `FUEL_CONSUMP` CSV skeleton without dropping rows.
+- `scripts/probe.sh` smoke-tests AWS permissions for Day1.
+
 ## Important Dates
 
 - 2026-07-03 15:30-16:30: Yang Ming online pre-briefing.
@@ -78,4 +85,3 @@ Yang Ming briefing scoring emphasis:
 - Do not commit raw enterprise datasets unless the team confirms repository storage is allowed.
 - If Yang Ming provides data only for the competition period, delete or archive it according to the official rules after the event.
 - Prefer short Markdown notes with source/date/context over screenshots alone.
-

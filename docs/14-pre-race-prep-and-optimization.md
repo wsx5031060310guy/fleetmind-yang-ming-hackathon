@@ -45,11 +45,11 @@ P1 小計 ≈ 10h（P0+P1 = 26h，**5 人分攤 ≈ 5h/人**，在預算內—�
 
 | # | 缺口 | 動作 | 阻塞 |
 | --- | --- | --- | --- |
-| G-a | `10-presentation-plan` 與 16 頁 pptx 未反映 `13` 呈現戰術 | 重排 slide：冷開場 money number 取代現行封面→痛點；評分表頁前置；ISO 偏離表進正片；三擊 demo script | team review 通過 |
-| G-b | `06-demo-storyline` 還是 8 分鐘全長版 | 剪裁出 ≤3 分鐘 live demo script（三擊敘事） | 同上 |
-| G-c | `07-judge-qna` 只有 7 題 | 擴到 15 題（= PR-6） | 可先做 |
-| G-d | `13` §3 backlog 尚未併入 `09` §4.5 dashboard 規格與 §7 分工表 | D1–D8 入 dashboard 規格、owner 對位入分工表 | team review 通過 |
-| G-e | `09` §4.5 的累積劣化曲線仍標 stretch | 依 `13` D5 升為必做 | team review 通過 |
+| G-a | `10-presentation-plan` 已回寫 `13` 呈現戰術；實際 pptx 仍需套版 | 依新版 slide 清單製作簡報：money number、評分表前置、三擊 demo、減法架構、ISO 偏離表進正片 | P5 套版 |
+| G-b | `06-demo-storyline` 已有三擊 demo 草稿，但仍是 raw material | 以 `10` 的新版 demo 段為唯一彩排腳本，`06` 保留原始素材定位 | team review 通過 |
+| G-c | `07-judge-qna` 已擴到 15 題 | 轉成 backup slides 並實際演練一次（= PR-6） | 可先做 |
+| G-d | `13` P0 產品項已併入 `09` §4.5；§7 分工表尚未細化 | 把 D1–D4 owner 對位回寫 Day2 任務表；D5–D8 維持 P1 閘門項 | team review 通過 |
+| G-e | 累積劣化曲線仍標 stretch，避免未看真資料前擠壓 55% 硬盤 | Day2 18:00 若事件數與合格天足夠再升必做；否則保留 backup slide | team review 通過 |
 
 **為何暫不自動回寫**：09/10 是團隊執行藍本，改動幅度大（重排簡報、升級必做項）應由團隊拍板；本文件把待辦列清，review 後一次性回寫，避免反覆。
 
@@ -73,5 +73,5 @@ P1 小計 ≈ 10h（P0+P1 = 26h，**5 人分攤 ≈ 5h/人**，在預算內—�
 
 1. 確認賽前準備 P0 五項的 owner 認領與時程（本週內）。
 2. 拍板 `13` §3 backlog 的 P0 項是否全收（CII 卡、ROI、信心徽章、行動三分級、冷開場、評分表骨架、三擊 demo、減法架構頁、ISO 偏離表進正片）。
-3. 通過後由我一次性回寫 09/10/06/07（G-a ~ G-e）。
+3. 通過後回寫 `09` dashboard 規格與分工；`10` 已先回寫，`06`/`07` 狀態需做收斂標記。
 4. 開賽日待確認清單（`09` §10 + `12` §5）列印成一頁隨身表。

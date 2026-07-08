@@ -200,12 +200,12 @@ Dashboard 歸因卡顯示三個數字：總 Speed Loss %、其中污損歸因 %�
 
 ### 4.5 Dashboard 規格（砍到評分必要的最小集合）
 
-1. **Fleet Overview**：15 船排名表（Speed Loss % / 污損歸因 % / 距上次清潔天數 / 資料品質分數 / 建議 review 優先序）。
-2. **Vessel Detail**：Daily FOC 趨勢、Speed Loss 趨勢 + 事件標記線、歸因卡（§4.2 三數字）。
-3. **Before-After**：事件前後對比卡（k 值口徑、換算年化燃油成本差）。
-4. **AI Ops Brief**：一鍵產生決策簡報（demo 船預先快取，見 §5）；「待人工審核」靜態標籤呈現 human-in-the-loop 定位。
+1. **Fleet Overview**：15 船排名表（Speed Loss % / 污損歸因 % / 距上次清潔天數 / 資料品質分數 / 建議 review 優先序 / 90 天 fuel penalty 外推欄位若資料支持）。
+2. **Vessel Detail**：Daily FOC 趨勢、Speed Loss 趨勢 + 事件標記線、歸因卡（§4.2 三數字）、「Speed Loss ± 信心區間 · 信心等級 · n=樣本數」主 KPI、CO₂/CII/EU ETS 影響卡（假設值標明）。
+3. **Before-After**：事件前後對比卡（k 值口徑、年化燃油成本差、清潔 ROI 回本天數、每延遲一天燃油代價）。
+4. **AI Ops Brief**：一鍵產生決策簡報（demo 船預先快取，見 §5）；固定輸出三分級建議（inspection → cleaning/polishing → observe）與「待人工審核」標籤。
 
-Stretch（時間有餘才做）：信心帶視覺化、合格天散點圖、累積劣化曲線。
+Stretch（時間有餘才做）：合格天散點圖、參考窗視覺化、累積劣化曲線、每船速度指數 n 擬合分佈。
 
 ## 5. Bedrock AI 協作設計
 
