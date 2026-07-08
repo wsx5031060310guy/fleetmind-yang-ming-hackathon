@@ -74,7 +74,7 @@
 ### 3.3 工時預算與排程
 
 - P0 合計 ≈ 13h（D1 4＋D2 2＋D3 2＋D4 1＋P1–P5 4.5）——分攤進 Day2（產品項）與 Day2 晚（呈現項），不動 Day1 與 55% 硬盤的既定任務。
-- P1 合計 ≈ 11.5h——Day2 18:00 sync 確認硬盤無滑點後才啟動；任何硬盤延誤，P1 全砍。
+- P1 合計 ≈ 11.5h——Day2 18:00 sync 依 `21-day2-stretch-gate.md` 確認硬盤無滑點後才啟動；任何硬盤延誤，P1 全砍。
 - P2 條件項不排程，觸發條件到了才做。
 - Owner 對位（5 人版）：D1/D2/D6（Chen，core-calc 輸出擴充）、D3/D5/D7（Feng，dashboard）、D4/D8/P8（Eddie，prompt＋API）、**P1–P6/P9（P5 主筆——slides/demo script/Q&A 附錄排版；Eddie 供技術素材、Sunny 供成本數字）**。P5 的加入讓 P 系列呈現項全部脫離工程師工時，13 §3.3 原「呈現項擠壓硬盤」的風險大幅下降。
 
