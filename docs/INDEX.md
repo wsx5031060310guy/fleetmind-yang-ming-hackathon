@@ -21,6 +21,7 @@
 | 簡報 | `10` + `15` + `presentation/fleetmind-proposal-deck.pptx`（9 頁正片 + B1-B15 備援；Day2/Day3 換真數字與截圖） |
 | 企業資料應用說明 | `17`（官方提交物草稿；Day1/Day2 補真 schema/列數/檔名） |
 | 官方提交控制 | `18`（七項提交物 owner/source/驗證/fallback） |
+| 技術架構提交稿 | `19`（短版架構圖、AWS 服務、資料流、AI 邊界、驗證） |
 | 重大決策記錄 | `decisions/`（core-calc Java 單服務、全量計算鐵律） |
 
 ## 3. 文件地圖
@@ -46,11 +47,12 @@
 | 16 day1-ops-runbook | Day1 AWS/Bedrock/部署/資料清理執行手冊 | ✅ 現行 |
 | 17 enterprise-data-application | 官方「企業資料與資料應用說明」提交草稿 | ✅ 骨架完成 |
 | 18 submission-control-sheet | Day3 七項提交物上傳管制表 | ✅ 骨架完成 |
+| 19 technical-architecture-submission | 官方「Technical architecture」短版提交稿 | ✅ 骨架完成 |
 | presentation/ | 可編輯提案 deck、preview、可重生 source | ✅ 骨架完成 |
 
 ## 4. 角色閱讀路徑
 
-- **P5 成員（簡報/提交）**：`02` 分工 → `18` 全文 → `presentation/README.md` → `presentation/fleetmind-proposal-deck.pptx` → `17` 全文 → `10` 全文 → `15` 全文 → `13` §3.2 呈現項+§4 → `12` §3（G1/G4/G5 提交缺口）→ `09` §7 只看 P5 欄 → `14` PR-6/PR-9 → 本頁 §6 checklist。
+- **P5 成員（簡報/提交）**：`02` 分工 → `18` 全文 → `presentation/README.md` → `presentation/fleetmind-proposal-deck.pptx` → `17` 全文 → `19` 全文 → `10` 全文 → `15` 全文 → `13` §3.2 呈現項+§4 → `12` §3（G1/G4/G5 提交缺口）→ `09` §7 只看 P5 欄 → `14` PR-6/PR-9 → 本頁 §6 checklist。
 - **工程新人**：`00` → `03` → `09` 全文 → `12` → 背景 `05`/`11`。
 - **只看架構/部署**：`09` §2 → `12` §4 → `16` → `11` §1 計分板+§5 決策樹 → `decisions/`。
 - **賽前最後一天惡補**：README 評分表 → `10` → `13` §1+§5 → `07` 全部 15 題 → `09` §4.4 ISO 偏離表。
@@ -71,7 +73,7 @@
 | 1 | 完整提案 deck | `presentation/fleetmind-proposal-deck.pptx` 起手；Day2/Day3 換凍結數字與真截圖 |
 | 2 | Challenge link | **定義 Day1 09:40–10:00 向主辦方確認**（`12` G5） |
 | 3 | 企業資料與資料應用說明 | `17` 起手；Day1/Day2 補真 schema、列數、檔名與截圖限制 |
-| 4 | 技術架構 | `09` §2 圖 + `12` §4 定稿 |
+| 4 | 技術架構 | `19` 起手；細節回查 `09` §2 + `12` §4 |
 | 5 | GitHub repo 連結 | 提交前檢查：無原始資料、無憑證（R19） |
 | 6 | Live demo 連結 | 雲端 URL（App Runner/EC2）；本機 fallback 只救上台不救此項 |
 | 7 | Demo 錄影連結 | Day3 07:30–11:00 場外錄（與 live demo 同一份凍結快照） |
@@ -91,6 +93,6 @@
 
 ## 8. 現況與追蹤
 
-- 已 merge：core-calc + golden checks、business impact、CI checks、single-service API skeleton、AI brief prompt/guardrail、Day1 ops runbook、proposal deck skeleton、enterprise data application draft、submission control sheet。
+- 已 merge：core-calc + golden checks、business impact、CI checks、single-service API skeleton、AI brief prompt/guardrail、Day1 ops runbook、proposal deck skeleton、enterprise data application draft、submission control sheet、technical architecture submission draft。
 - 本地可跑：`./scripts/test-core-calc.sh`、`./scripts/demo-local.sh`；GitHub Actions 會跑 Maven package 與 API smoke。
 - 待回寫（review 後執行）：`06` 狀態收斂；deck 只剩 Day2/Day3 真資料與截圖替換。P5 賽前包見 `15`，Day1 ops 見 `16`。
