@@ -66,6 +66,7 @@ Merged work log:
 | #19 | Live demo warm-up | Added root/API warm-up script for Day3 live URL checks before judges open it. |
 | #20 | Day2 stretch gate | Added D5-D8/P1 decision gate to protect the 55% main score. |
 | #21 | AI fallback demo | Added forced fallback query/button for Bedrock failure demonstration. |
+| #22 | Environment template | Added safe `.env.example` and audit allowlist for placeholders. |
 
 ## What Runs Now
 
@@ -87,6 +88,7 @@ Implementation starter kit:
 - `scripts/freeze-demo-snapshot.sh` captures live/local demo API outputs, AI brief, FUEL_CONSUMP, and checksums into ignored `build/`.
 - `samples/schema-map.template.csv` maps Day1 real fields to FleetMind/core-calc fields.
 - `scripts/warmup-live-demo.sh` warms and verifies the root dashboard plus key API paths before judging.
+- `.env.example` lists Day1/Day3 environment variables without secrets.
 - `presentation/build-fleetmind-deck.mjs` regenerates the editable PPTX skeleton in a Codex artifact-tool runtime.
 
 Local commands:
@@ -198,6 +200,7 @@ Yang Ming briefing scoring emphasis:
 
 - Keep this repository private.
 - Do not commit secrets, AWS credentials, personal tokens, or production keys.
+- Use `.env.example` as the only committed environment template; filled `.env` files stay local.
 - Do not commit raw enterprise datasets unless the team confirms repository storage is allowed.
 - If Yang Ming provides data only for the competition period, delete or archive it according to the official rules after the event.
 - Prefer short Markdown notes with source/date/context over screenshots alone.
