@@ -25,6 +25,9 @@ jobs:
       - name: Local demo smoke
         run: ./scripts/demo-local.sh
 
+      - name: Submission audit
+        run: ./scripts/submission-audit.sh --allow-non-main --skip-remote-branches
+
       - name: Maven package
         run: mvn -q -pl apps/api -am package
 
