@@ -36,7 +36,15 @@ public final class BusinessImpactResult {
         return extraFuelMtPerDay;
     }
 
+    public double getExtraFuelMtPerDay() {
+        return extraFuelMtPerDay;
+    }
+
     public double dailyFuelCostUsd() {
+        return dailyFuelCostUsd;
+    }
+
+    public double getDailyFuelCostUsd() {
         return dailyFuelCostUsd;
     }
 
@@ -44,7 +52,15 @@ public final class BusinessImpactResult {
         return annualizedFuelCostUsd;
     }
 
+    public double getAnnualizedFuelCostUsd() {
+        return annualizedFuelCostUsd;
+    }
+
     public double dailyCo2MetricTons() {
+        return dailyCo2MetricTons;
+    }
+
+    public double getDailyCo2MetricTons() {
         return dailyCo2MetricTons;
     }
 
@@ -52,7 +68,15 @@ public final class BusinessImpactResult {
         return annualizedCo2MetricTons;
     }
 
+    public double getAnnualizedCo2MetricTons() {
+        return annualizedCo2MetricTons;
+    }
+
     public double dailyEuEtsCostUsd() {
+        return dailyEuEtsCostUsd;
+    }
+
+    public double getDailyEuEtsCostUsd() {
         return dailyEuEtsCostUsd;
     }
 
@@ -60,11 +84,23 @@ public final class BusinessImpactResult {
         return annualizedEuEtsCostUsd;
     }
 
+    public double getAnnualizedEuEtsCostUsd() {
+        return annualizedEuEtsCostUsd;
+    }
+
     public double dailyAvoidableCostUsd() {
         return dailyAvoidableCostUsd;
     }
 
+    public double getDailyAvoidableCostUsd() {
+        return dailyAvoidableCostUsd;
+    }
+
     public double paybackDays() {
+        return paybackDays;
+    }
+
+    public double getPaybackDays() {
         return paybackDays;
     }
 }

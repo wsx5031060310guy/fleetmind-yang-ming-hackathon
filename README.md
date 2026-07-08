@@ -29,11 +29,13 @@ For AI agents:
 
 Implementation starter kit:
 
+- `apps/api/` contains the single-service Spring Boot skeleton that serves the static dashboard and `/api/**` from one origin.
 - `core-calc/` contains the pure Java calculation seed and golden checks.
 - `scripts/test-core-calc.sh` runs local golden checks with `javac`.
 - `scripts/export-fuel-consump.sh` exports a first-pass `FUEL_CONSUMP` CSV skeleton without dropping rows.
 - `scripts/business-impact.sh` estimates fuel cost, CO2, EU ETS, and cleaning payback days from explicit assumptions.
 - `scripts/demo-local.sh` runs the local golden checks and sample exports end to end.
+- `scripts/api-smoke.sh` checks the Spring Boot API once the service is running.
 - `scripts/probe.sh` smoke-tests AWS permissions for Day1.
 
 ## Important Dates

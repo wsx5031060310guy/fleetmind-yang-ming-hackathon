@@ -15,7 +15,7 @@
 | PR-1 | **core-calc 函式庫骨架 + 介面凍結** | 用假資料先寫好 `core-calc` 的公開介面（`filterFlags()`／`vlsfoEquiv()`／`dailyFOC()`／`speedLoss()`／`beforeAfter()`）與資料結構（NoonReportDaily／DailyMetric／VesselSummary）。純函式、無 I/O，Day1 拿到真欄位只改欄位映射 | Chen | 4h |
 | PR-2 | **golden case 測試先寫（假資料）** | VLSFO 換算與 Daily FOC 的 ≥10 個手算案例（多燃料、HOURS=0、邊界 22h、風力 4 級）先寫成單元測試，Day1 資料一到即可跑驗證 | Feng | 3h |
 | PR-3 | **權限探測 checklist 腳本預寫** | 一支 `probe.sh`：建 S3 bucket／建 DynamoDB table／建 IAM role／部署 hello Lambda／App Runner 可用性／Bedrock InvokeModel + 列可用模型，每項印 pass/fail。Day1 10:40 環境一到手立刻跑（`12` §5 已定，把它變成真腳本） | Sunny | 3h |
-| PR-4 | **Spring Boot + React skeleton 在自己帳號搭一次** | 同源 serve React build 的最小骨架，跑通 App Runner（或 EC2）部署一次——把前端工具鏈與部署鏈的坑在賽前引爆，不留到 Day1。dashboard 選定現成 admin template（Recharts）不自創 | Eddie + Sunny | 4h |
+| PR-4 | **Spring Boot + React skeleton 在自己帳號搭一次** | 同源 serve dashboard 的最小骨架已落在 `apps/api/`（Spring Boot + static dashboard + `/api/**` contract）。下一步是在自己帳號跑通 App Runner（或 EC2）部署一次，把部署鏈的坑在賽前引爆；Day2 可把 static dashboard 換成真正 React/Recharts build | Eddie + Sunny | 4h |
 | PR-5 | **FUEL_CONSUMP harness 骨架** | 提交檔輸出器骨架：吃 DailyMetric 列 → 輸出 CSV（欄位名/精度 Day1 確認後填），全量版與篩選版雙輸出。先跑假資料驗證列數不缺 | Feng | 2h |
 
 P0 小計 ≈ 16h。

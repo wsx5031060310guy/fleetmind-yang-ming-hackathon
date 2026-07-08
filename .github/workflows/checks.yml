@@ -25,6 +25,28 @@ jobs:
       - name: Local demo smoke
         run: ./scripts/demo-local.sh
 
+      - name: Maven package
+        run: mvn -q -pl apps/api -am package
+
+      - name: API smoke
+        run: |
+          java -jar apps/api/target/fleetmind-api-0.1.0-SNAPSHOT.jar > /tmp/fleetmind-api.log 2>&1 &
+          pid=$!
+          cleanup() { kill "$pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          for _ in $(seq 1 30); do
+            if curl -fsS http://localhost:8080/api/health >/dev/null; then
+              if ./scripts/api-smoke.sh; then
+                exit 0
+              fi
+              cat /tmp/fleetmind-api.log
+              exit 1
+            fi
+            sleep 2
+          done
+          cat /tmp/fleetmind-api.log
+          exit 1
+
       - name: Markdown local link check
         run: |
           ruby -e '
