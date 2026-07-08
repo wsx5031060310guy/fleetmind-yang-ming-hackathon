@@ -55,6 +55,7 @@ git log --oneline --decorate -5
 git diff --check
 ./scripts/test-core-calc.sh
 ./scripts/demo-local.sh
+./scripts/validate-fuel-consump.sh --input <final-fuel-consump.csv> --expected-rows <official-row-count>
 ```
 
 Manual checks:
@@ -68,6 +69,7 @@ Manual checks:
 | CI | main GitHub Actions `local-checks` green |
 | submission audit | `./scripts/submission-audit.sh` exits with `fail=0` |
 | demo freeze | `build/demo-freeze/manifest.txt` exists; deck/recording numbers match captured outputs |
+| FUEL_CONSUMP | validator passes; row count matches official scope; precision/rounding matches Day1 answer |
 | deck | final deck 可開啟，money number 與 dashboard/recording 一致 |
 | demo URL | 外部瀏覽器可打開，不依賴本機 session |
 | video URL | 外部瀏覽器可播放 |

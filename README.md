@@ -31,7 +31,7 @@ For AI agents:
 
 Status as of 2026-07-08:
 
-- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, and demo freeze snapshot script merged.
+- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, demo freeze snapshot script, and FUEL_CONSUMP validator merged.
 - GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, Maven package, API smoke, Markdown links, and diff hygiene.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
 - Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
@@ -62,6 +62,7 @@ Merged work log:
 | #15 | Submission audit script | Added repo safety and deliverable-source audit for Day3 upload readiness. |
 | #16 | Day1 schema inventory | Added schema-only inventory script, mapping template, and Day1 data mapping runbook. |
 | #17 | Demo freeze snapshot | Added Day3 API snapshot capture with manifest and checksums for recording/deck freeze. |
+| #18 | FUEL_CONSUMP validator | Added export shape validator and wired it into local demo/CI smoke. |
 
 ## What Runs Now
 
@@ -71,6 +72,7 @@ Implementation starter kit:
 - `core-calc/` contains the pure Java calculation seed and golden checks.
 - `scripts/test-core-calc.sh` runs local golden checks with `javac`.
 - `scripts/export-fuel-consump.sh` exports a first-pass `FUEL_CONSUMP` CSV skeleton without dropping rows.
+- `scripts/validate-fuel-consump.sh` validates export headers, row count, duplicate keys, numeric precision, and quality flags.
 - `scripts/business-impact.sh` estimates fuel cost, CO2, EU ETS, and cleaning payback days from explicit assumptions.
 - `scripts/demo-local.sh` runs the local golden checks and sample exports end to end.
 - `scripts/api-smoke.sh` checks the Spring Boot API once the service is running.
@@ -88,6 +90,7 @@ Local commands:
 ```bash
 ./scripts/test-core-calc.sh
 ./scripts/demo-local.sh
+./scripts/validate-fuel-consump.sh --input core-calc/build/demo/fuel-consump.csv --expected-rows 3
 ./scripts/schema-inventory.sh samples/noon-reports.csv
 BASE_URL=http://localhost:8080 ./scripts/freeze-demo-snapshot.sh
 mvn -pl apps/api -am package

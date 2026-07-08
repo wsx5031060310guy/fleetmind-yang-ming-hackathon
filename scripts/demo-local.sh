@@ -12,6 +12,10 @@ java -cp "$MAIN_CLASSES" com.fleetmind.corecalc.FuelConsumpExportCli \
   --input "$ROOT_DIR/samples/noon-reports.csv" \
   --output "$OUT_DIR/fuel-consump.csv"
 
+"$ROOT_DIR/scripts/validate-fuel-consump.sh" \
+  --input "$OUT_DIR/fuel-consump.csv" \
+  --expected-rows 3
+
 java -cp "$MAIN_CLASSES" com.fleetmind.corecalc.BusinessImpactCli \
   --baseline-daily-foc 58 \
   --observed-daily-foc 61 \
