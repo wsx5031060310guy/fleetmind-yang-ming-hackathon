@@ -31,7 +31,7 @@ For AI agents:
 
 Status as of 2026-07-08:
 
-- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, demo freeze snapshot script, FUEL_CONSUMP validator, live demo warm-up script, Day2 stretch gate, and AI fallback demo merged.
+- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, demo freeze snapshot script, FUEL_CONSUMP validator, live demo warm-up script, Day2 stretch gate, AI fallback demo, and environment template merged.
 - GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, Maven package, API smoke, Markdown links, and diff hygiene.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
 - Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
