@@ -48,6 +48,7 @@ Run before uploading repo link:
 
 ```bash
 ./scripts/submission-audit.sh
+./scripts/day3-final-check.sh
 BASE_URL=<live-demo-url> ./scripts/freeze-demo-snapshot.sh --out build/demo-freeze
 BASE_URL=<live-demo-url> ./scripts/warmup-live-demo.sh --repeat 3
 git status --short --branch
@@ -69,6 +70,7 @@ Manual checks:
 | branches | 遠端只保留 `origin/main`，已 merge feature branch 全刪 |
 | CI | main GitHub Actions `local-checks` green |
 | submission audit | `./scripts/submission-audit.sh` exits with `fail=0` |
+| final local check | `./scripts/day3-final-check.sh` passes on clean `main` |
 | demo freeze | `build/demo-freeze/manifest.txt` exists; deck/recording numbers match captured outputs |
 | FUEL_CONSUMP | validator passes; row count matches official scope; precision/rounding matches Day1 answer |
 | live warm-up | `scripts/warmup-live-demo.sh` passes against submitted live URL |

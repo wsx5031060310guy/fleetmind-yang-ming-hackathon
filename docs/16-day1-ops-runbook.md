@@ -100,7 +100,7 @@ Day3 七項提交物的完整管制表見 `18-submission-control-sheet.md`。
 | 17:00 | demo URL、repo URL、fallback recording plan 都寫入提交 checklist | P5 |
 | Day3 錄影前 | `BASE_URL=<live-url> ./scripts/freeze-demo-snapshot.sh --out build/demo-freeze`，凍結 API/AI/export 輸出 | Sunny + Feng |
 | Day3 上台前 | `BASE_URL=<live-url> ./scripts/warmup-live-demo.sh --repeat 3`，暖機 dashboard/API/AI/export | Sunny |
-| Day3 上傳前 | `./scripts/submission-audit.sh`，確認 repo 安全與交付物 source 齊全 | Sunny + P5 |
+| Day3 上傳前 | `./scripts/day3-final-check.sh`，確認 repo 安全、demo export、schema smoke 與 branch 狀態 | Sunny + P5 |
 
 ## 7. Stop rules
 

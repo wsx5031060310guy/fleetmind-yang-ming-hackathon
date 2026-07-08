@@ -69,6 +69,7 @@ Merged work log:
 | #22 | Environment template | Added safe `.env.example` and audit allowlist for placeholders. |
 | #23 | Source-safe env template | Replaced shell-unsafe placeholders in `.env.example`. |
 | #24 | CI submission audit | Added submission audit to GitHub Actions. |
+| #25 | Day3 final check | Added one-command final local pre-upload check. |
 
 ## What Runs Now
 
@@ -90,6 +91,7 @@ Implementation starter kit:
 - `scripts/freeze-demo-snapshot.sh` captures live/local demo API outputs, AI brief, FUEL_CONSUMP, and checksums into ignored `build/`.
 - `samples/schema-map.template.csv` maps Day1 real fields to FleetMind/core-calc fields.
 - `scripts/warmup-live-demo.sh` warms and verifies the root dashboard plus key API paths before judging.
+- `scripts/day3-final-check.sh` runs the local pre-upload check bundle.
 - `.env.example` lists Day1/Day3 environment variables without secrets.
 - `presentation/build-fleetmind-deck.mjs` regenerates the editable PPTX skeleton in a Codex artifact-tool runtime.
 
@@ -102,6 +104,7 @@ Local commands:
 ./scripts/schema-inventory.sh samples/noon-reports.csv
 BASE_URL=http://localhost:8080 ./scripts/freeze-demo-snapshot.sh
 BASE_URL=http://localhost:8080 ./scripts/warmup-live-demo.sh --repeat 2
+./scripts/day3-final-check.sh --dev
 mvn -pl apps/api -am package
 java -jar apps/api/target/fleetmind-api-0.1.0-SNAPSHOT.jar
 ./scripts/api-smoke.sh

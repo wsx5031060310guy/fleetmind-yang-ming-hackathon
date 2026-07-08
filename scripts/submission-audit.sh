@@ -128,7 +128,8 @@ for file in \
   scripts/schema-inventory.sh \
   scripts/freeze-demo-snapshot.sh \
   scripts/validate-fuel-consump.sh \
-  scripts/warmup-live-demo.sh; do
+  scripts/warmup-live-demo.sh \
+  scripts/day3-final-check.sh; do
   check_executable "$file"
 done
 
