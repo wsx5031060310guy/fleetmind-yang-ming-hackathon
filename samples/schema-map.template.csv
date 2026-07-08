@@ -1,0 +1,15 @@
+fleetmind_field,required,source_dataset,candidate_header,export_cli_arg,notes
+vessel_id,yes,noon_report,,--vessel-id-header,Stable vessel identifier used by dashboard and FUEL_CONSUMP export.
+date,yes,noon_report,,--date-header,Noon report date; convert to ISO yyyy-mm-dd before core-calc.
+ME_FULLSPEED_CONSUMP_VLSFO,yes,noon_report,,--consump-header,Main engine full-speed consumption already in VLSFO equivalent or mapped conversion input.
+HOURS_FULL_SPEED,yes,noon_report,,--hours-header,Full-speed operating hours; quality flag if below 22.
+WIND_SCALE,optional,noon_report,,--wind-header,Beaufort wind scale; quality flag if above 4.
+speed_knots,needed_for_speed_loss,noon_report,,,Speed over ground or log speed; note exact definition and units.
+distance_nm,needed_for_speed_loss,noon_report,,,Distance sailed in nautical miles; optional if speed and hours are reliable.
+draft_m,optional,noon_report,,,Draft or loading proxy; use for confidence notes if present.
+route_or_leg,optional,noon_report,,,Route/leg grouping for same-route comparisons if present.
+event_vessel_id,needed_for_events,underwater_report,,,Vessel identifier used to join cleaning or polishing events.
+event_date,needed_for_events,underwater_report,,,Inspection, hull cleaning, or propeller polishing date.
+event_type,needed_for_events,underwater_report,,,Normalize to inspection, hull_cleaning, propeller_polishing, drydock, other.
+event_notes,optional,underwater_report,,,Short non-sensitive summary; do not copy confidential free text into repo.
+fuel_output_precision,yes,official_submission,,,Day1 confirm decimals, rounding, required columns, and full vs filtered row scope.

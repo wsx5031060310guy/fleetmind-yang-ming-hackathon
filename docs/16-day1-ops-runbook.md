@@ -91,6 +91,7 @@ Day3 七項提交物的完整管制表見 `18-submission-control-sheet.md`。
 | 時間 | 動作 | Owner |
 | --- | --- | --- |
 | 09:40-10:00 | 問 challenge link、提交格式、錄影格式、資料保留規定 | P5 |
+| 10:00-10:40 | 依 `20-day1-schema-inventory.md` 跑 schema inventory，填私有欄位 mapping | Feng + Chen + P5 |
 | 10:40-11:00 | `probe.sh` + `bedrock-models.sh` | Sunny |
 | 13:00 | 選部署路線：App Runner / ECS Express / EC2 | Sunny + Eddie |
 | 14:00 | API skeleton live URL 或 EC2 URL 有 health check | Sunny |

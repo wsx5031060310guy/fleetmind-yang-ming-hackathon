@@ -18,7 +18,7 @@ For humans:
 
 1. Read [docs/INDEX.md](docs/INDEX.md) — one-page master overview: doc map, role-based reading paths, glossary, submission checklist.
 2. New members: find your role in [docs/02-team.md](docs/02-team.md), then follow your reading path in INDEX.
-3. Authoritative plan = [docs/09](docs/09-architecture-and-execution-plan.md) (execution) + [docs/12](docs/12-requirements-fit-and-final-architecture.md) (final architecture) + [docs/15](docs/15-presentation-readiness-pack.md) (P5 presentation pack) + [docs/17](docs/17-enterprise-data-application.md) (enterprise data application) + [docs/18](docs/18-submission-control-sheet.md) (Day3 submission control) + [docs/19](docs/19-technical-architecture-submission.md) (technical architecture submission) + [presentation](presentation/) (editable proposal deck). Older docs (04/05/06) are background; on conflict, 09–19 and `presentation/` win.
+3. Authoritative plan = [docs/09](docs/09-architecture-and-execution-plan.md) (execution) + [docs/12](docs/12-requirements-fit-and-final-architecture.md) (final architecture) + [docs/15](docs/15-presentation-readiness-pack.md) (P5 presentation pack) + [docs/17](docs/17-enterprise-data-application.md) (enterprise data application) + [docs/18](docs/18-submission-control-sheet.md) (Day3 submission control) + [docs/19](docs/19-technical-architecture-submission.md) (technical architecture submission) + [docs/20](docs/20-day1-schema-inventory.md) (Day1 schema inventory) + [presentation](presentation/) (editable proposal deck). Older docs (04/05/06) are background; on conflict, 09–20 and `presentation/` win.
 4. Add new notes under `meetings/`, `decisions/`, or `docs/`.
 
 For AI agents:
@@ -31,14 +31,15 @@ For AI agents:
 
 Status as of 2026-07-08:
 
-- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, and submission audit script merged.
+- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, and Day1 schema inventory pack merged.
 - GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, Maven package, API smoke, Markdown links, and diff hygiene.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
 - Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
 - Enterprise data application draft is ready at [docs/17-enterprise-data-application.md](docs/17-enterprise-data-application.md); Day1/Day2 work is to fill real schema values, row counts, file names, and screenshot/data-retention constraints.
 - Day3 upload control sheet is ready at [docs/18-submission-control-sheet.md](docs/18-submission-control-sheet.md); Day1 work is to fill platform field names and file/link limits.
 - Technical architecture submission draft is ready at [docs/19-technical-architecture-submission.md](docs/19-technical-architecture-submission.md); Day3 work is to fill actual region, URL, bucket/table names, model id, and commit SHA.
-- Remaining human work: run the skeleton in the real AWS/event account, connect real data/DynamoDB, validate Bedrock model access on Day1, swap final demo numbers/screenshots into the deck, fill Day1 placeholders in docs/17, and fill platform placeholders in docs/18.
+- Day1 schema inventory flow is ready at [docs/20-day1-schema-inventory.md](docs/20-day1-schema-inventory.md), backed by `scripts/schema-inventory.sh` and `samples/schema-map.template.csv`.
+- Remaining human work: run the skeleton in the real AWS/event account, connect real data/DynamoDB, validate Bedrock model access on Day1, swap final demo numbers/screenshots into the deck, fill Day1 placeholders in docs/17 using docs/20, and fill platform placeholders in docs/18.
 
 Merged work log:
 
@@ -59,6 +60,7 @@ Merged work log:
 | #13 | Submission control sheet | Added Day3 seven-deliverable upload checklist, timing, fallback, and verification flow. |
 | #14 | Technical architecture submission | Added concise architecture draft for the official technical architecture deliverable. |
 | #15 | Submission audit script | Added repo safety and deliverable-source audit for Day3 upload readiness. |
+| #16 | Day1 schema inventory | Added schema-only inventory script, mapping template, and Day1 data mapping runbook. |
 
 ## What Runs Now
 
@@ -75,6 +77,8 @@ Implementation starter kit:
 - `scripts/bedrock-models.sh` lists Bedrock Anthropic models and inference profiles available in the event account.
 - `scripts/cleanup-event-data.sh` dry-runs or executes post-event data cleanup.
 - `scripts/submission-audit.sh` checks Day3 repo safety and required deliverable source files before upload.
+- `scripts/schema-inventory.sh` scans CSV/TSV headers and row counts without printing raw values.
+- `samples/schema-map.template.csv` maps Day1 real fields to FleetMind/core-calc fields.
 - `presentation/build-fleetmind-deck.mjs` regenerates the editable PPTX skeleton in a Codex artifact-tool runtime.
 
 Local commands:
@@ -82,6 +86,7 @@ Local commands:
 ```bash
 ./scripts/test-core-calc.sh
 ./scripts/demo-local.sh
+./scripts/schema-inventory.sh samples/noon-reports.csv
 mvn -pl apps/api -am package
 java -jar apps/api/target/fleetmind-api-0.1.0-SNAPSHOT.jar
 ./scripts/api-smoke.sh
@@ -106,8 +111,8 @@ Day1:
 - P5 confirms platform fields, challenge link definition, upload limits, and FUEL_CONSUMP format.
 - Sunny runs `scripts/probe.sh` in the event AWS account and validates Bedrock model access.
 - Eddie connects `apps/api` to real DynamoDB/S3-backed data instead of demo fixtures.
-- Feng validates real schema and locks the FUEL_CONSUMP export format.
-- Chen maps real fields into `core-calc` and runs golden checks against official examples.
+- Feng runs `scripts/schema-inventory.sh`, fills `samples/schema-map.template.csv` into a private working map, and locks the FUEL_CONSUMP export format.
+- Chen maps real fields into `core-calc`, verifies export header overrides, and runs golden checks against official examples.
 
 Day2:
 
@@ -127,7 +132,7 @@ Remaining open items:
 
 - Actual AWS App Runner, ECS Express Mode, or EC2 deployment in event account.
 - App Runner is only a fast path if the event account already has access; otherwise use ECS Express Mode or EC2 docker fallback (see [docs/16](docs/16-day1-ops-runbook.md)).
-- Real dataset schema mapping and official FUEL_CONSUMP precision/rounding confirmation.
+- Real dataset values still need to be inventoried with docs/20; official FUEL_CONSUMP precision/rounding still needs Day1 confirmation.
 - Bedrock model ID/region confirmation through `scripts/probe.sh`.
 - Deck finalization with Day2/Day3 frozen real values and screenshots.
 - Decide whether D5-D8 stretch items move into must-have after Day2 18:00 data review.

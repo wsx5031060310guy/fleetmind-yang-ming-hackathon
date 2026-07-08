@@ -107,6 +107,8 @@ required_files=(
   docs/17-enterprise-data-application.md
   docs/18-submission-control-sheet.md
   docs/19-technical-architecture-submission.md
+  docs/20-day1-schema-inventory.md
+  samples/schema-map.template.csv
   presentation/fleetmind-proposal-deck.pptx
   presentation/fleetmind-proposal-deck-preview.webp
 )
@@ -121,7 +123,8 @@ for file in \
   scripts/api-smoke.sh \
   scripts/probe.sh \
   scripts/bedrock-models.sh \
-  scripts/cleanup-event-data.sh; do
+  scripts/cleanup-event-data.sh \
+  scripts/schema-inventory.sh; do
   check_executable "$file"
 done
 
