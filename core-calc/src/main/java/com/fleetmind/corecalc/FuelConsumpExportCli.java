@@ -32,6 +32,10 @@ public final class FuelConsumpExportCli {
         require(indexes, options.consumpHeader);
         require(indexes, options.hoursHeader);
 
+        Path parent = options.output.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
         try (BufferedWriter writer = Files.newBufferedWriter(options.output, StandardCharsets.UTF_8)) {
             writer.write("vessel_id,date,FUEL_CONSUMP,quality_flags");
             writer.newLine();

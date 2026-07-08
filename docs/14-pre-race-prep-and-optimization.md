@@ -25,7 +25,7 @@ P0 小計 ≈ 16h。
 | # | 項目 | 內容 | Owner | 工時 |
 | --- | --- | --- | --- | --- |
 | PR-6 | **Q&A 15 題演練稿** | `07-judge-qna.md` 從 7 題擴到 15 題，含五大海事追問（基準怎麼定／slow steaming 分離／該不該花 4 萬清／SOG 黑潮／歸因 68% 憑什麼）。**P5 主持模擬 Q&A**，工程師按專長答題演練一次 | P5 主持＋全員 | 3h |
-| PR-7 | **CII / ROI 卡假資料原型** | 用假數字先把 `13` D1（CII/CO₂/EU ETS 卡）與 D2（清潔 ROI 回本天數）的 UI 元件與算式寫好，Day2 換真資料即可 | Chen + Feng | 2h |
+| PR-7 | **CII / ROI 卡假資料原型** | 用假數字先把 `13` D1（CII/CO₂/EU ETS 卡）與 D2（清潔 ROI 回本天數）的算式寫好；初版已落在 `BusinessImpact` + `scripts/business-impact.sh`，Day2 換真資料即可接 UI | Chen + Feng | 2h |
 | PR-8 | **Bedrock prompt 初稿 + 防幻覺後驗證** | ai-brief 的系統 prompt（只引用給定 JSON＋水下事件關聯段）與 regex 後驗證邏輯先寫好，用假 metrics JSON 測一次幻覺防線 | Eddie | 2h |
 | PR-9 | **簡報線賽前包（P5 專屬）** | slides 模板選定＋冷開場文案草稿（數字留位）＋行情與標準查證（VLSFO 市價、清潔成本區間、CII 分級表——當假設值的引用來源）＋提交平台問題清單預寫 | P5 | 3h |
 

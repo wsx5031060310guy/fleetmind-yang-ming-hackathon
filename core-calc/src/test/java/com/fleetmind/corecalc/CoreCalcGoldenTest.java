@@ -10,6 +10,7 @@ public final class CoreCalcGoldenTest {
         dailyFocCases();
         qualityFlagCases();
         speedLossCases();
+        businessImpactCases();
         dailyMetricKeepsFlaggedRows();
         System.out.println("core-calc golden checks passed");
     }
@@ -45,6 +46,19 @@ public final class CoreCalcGoldenTest {
         double kObserved = 115.7625;
         assertClose("cube-law speed loss", 4.76190476, CoreCalc.speedLossPct(kRef, kObserved, 3.0));
         assertClose("k value", 0.003, CoreCalc.kValue(24.0, 20.0));
+    }
+
+    private static void businessImpactCases() {
+        BusinessImpactResult result = BusinessImpact.estimate(58.0, 61.0, 525.0, 40000.0, 80.0, 0.5);
+        assertClose("extra fuel per day", 3.0, result.extraFuelMtPerDay());
+        assertClose("daily fuel cost", 1575.0, result.dailyFuelCostUsd());
+        assertClose("annual fuel cost", 574875.0, result.annualizedFuelCostUsd());
+        assertClose("daily CO2", 9.342, result.dailyCo2MetricTons());
+        assertClose("annual CO2", 3409.83, result.annualizedCo2MetricTons());
+        assertClose("daily ETS cost", 373.68, result.dailyEuEtsCostUsd());
+        assertClose("payback days with ETS", 20.52671552, result.paybackDays());
+        assertTrue("no penalty gives infinite payback",
+                Double.isInfinite(BusinessImpact.estimate(61.0, 58.0, 525.0, 40000.0, 80.0, 0.5).paybackDays()));
     }
 
     private static void dailyMetricKeepsFlaggedRows() {

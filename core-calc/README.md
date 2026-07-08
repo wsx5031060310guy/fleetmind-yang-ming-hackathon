@@ -30,3 +30,23 @@ Expected input headers by default:
 
 The CLI exports every input row and only marks quality flags. It does not drop
 rows, matching the project iron rule for the 25% `FUEL_CONSUMP` score.
+
+## Business Impact Skeleton
+
+```bash
+./scripts/business-impact.sh \
+  --baseline-daily-foc 58 \
+  --observed-daily-foc 61 \
+  --fuel-price-usd-per-mt 525 \
+  --cleaning-cost-usd 40000
+```
+
+Defaults intentionally use explicit assumptions:
+
+- fuel price: USD 525/MT
+- cleaning cost: USD 40,000
+- carbon price: USD 80/tCO2
+- EU ETS coverage: 50%
+
+Outputs are estimate fields for dashboard cards and slides, not official
+financial advice.
