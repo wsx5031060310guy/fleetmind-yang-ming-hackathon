@@ -125,7 +125,8 @@ for file in \
   scripts/bedrock-models.sh \
   scripts/cleanup-event-data.sh \
   scripts/schema-inventory.sh \
-  scripts/freeze-demo-snapshot.sh; do
+  scripts/freeze-demo-snapshot.sh \
+  scripts/validate-fuel-consump.sh; do
   check_executable "$file"
 done
 

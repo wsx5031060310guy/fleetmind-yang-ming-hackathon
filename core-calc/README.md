@@ -26,6 +26,10 @@ Expected input headers by default:
 ./scripts/export-fuel-consump.sh \
   --input sample-noon.csv \
   --output fuel-consump.csv
+
+./scripts/validate-fuel-consump.sh \
+  --input fuel-consump.csv \
+  --expected-rows <same-as-source-row-count>
 ```
 
 The CLI exports every input row and only marks quality flags. It does not drop
