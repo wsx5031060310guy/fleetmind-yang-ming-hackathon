@@ -111,6 +111,23 @@ button,
   cursor: pointer;
 }
 
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+button.secondary {
+  background: #314158;
+}
+
+.brief-meta {
+  margin-bottom: 8px;
+  color: #516070;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .citations {
   display: flex;
   flex-wrap: wrap;
@@ -138,6 +155,7 @@ button,
   }
 
   .download,
+  .actions,
   button {
     margin-top: 8px;
   }

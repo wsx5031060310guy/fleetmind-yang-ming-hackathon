@@ -81,6 +81,7 @@ Manual checks:
 | 故障 | 立即做法 | 提交策略 |
 | --- | --- | --- |
 | Bedrock invoke 不通 | 使用 deterministic AI brief fallback；保留 prompt/guardrail 展示 | 不阻塞七項提交 |
+| 評審要求看 AI 失敗模式 | 點 UI `Force fallback` 或呼叫 `/api/vessels/{id}/ai-brief?forceFallback=true` | dashboard/export 照常可用 |
 | App Runner 不可建立 | 改 ECS Express Mode；仍不通改 EC2 docker | live demo link 填可用雲端 URL |
 | 雲端 live URL 全掛 | 上台用本機/錄影；平台填錄影 link + 說明（Day1 需先問是否可接受） | P5 記錄主辦方答案 |
 | FUEL_CONSUMP 格式未確認 | 同時產 full + filtered 版本，平台確認後擇一 | 不讓 dashboard filter 影響提交檔 |

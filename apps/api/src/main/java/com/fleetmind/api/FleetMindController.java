@@ -51,8 +51,10 @@ public class FleetMindController {
     }
 
     @PostMapping("/vessels/{vesselId}/ai-brief")
-    public AiBriefDto aiBrief(@PathVariable("vesselId") String vesselId) {
-        return demoData.aiBrief(vesselId);
+    public AiBriefDto aiBrief(
+            @PathVariable("vesselId") String vesselId,
+            @RequestParam(name = "forceFallback", defaultValue = "false") boolean forceFallback) {
+        return demoData.aiBrief(vesselId, forceFallback);
     }
 
     @GetMapping("/vessels/{vesselId}/ai-brief/prompt")

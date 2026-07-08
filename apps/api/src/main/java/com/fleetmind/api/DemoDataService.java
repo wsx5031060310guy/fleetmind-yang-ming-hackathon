@@ -52,13 +52,13 @@ public class DemoDataService {
                 "INVALID_FULL_SPEED_HOURS", 0));
     }
 
-    public AiBriefDto aiBrief(String vesselId) {
+    public AiBriefDto aiBrief(String vesselId, boolean forceFallback) {
         List<CitedMetricDto> citations = aiBriefCitations(vesselId);
         String text = aiBriefText();
         return new AiBriefDto(
                 vesselId,
                 Instant.now(),
-                "deterministic-fallback",
+                forceFallback ? "deterministic-forced-fallback" : "deterministic-fallback",
                 text,
                 citations,
                 AiBriefGuardrail.validate(text, citations));
