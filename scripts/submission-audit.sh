@@ -126,7 +126,8 @@ for file in \
   scripts/cleanup-event-data.sh \
   scripts/schema-inventory.sh \
   scripts/freeze-demo-snapshot.sh \
-  scripts/validate-fuel-consump.sh; do
+  scripts/validate-fuel-consump.sh \
+  scripts/warmup-live-demo.sh; do
   check_executable "$file"
 done
 
