@@ -49,6 +49,7 @@ Run before uploading repo link:
 ```bash
 ./scripts/submission-audit.sh
 BASE_URL=<live-demo-url> ./scripts/freeze-demo-snapshot.sh --out build/demo-freeze
+BASE_URL=<live-demo-url> ./scripts/warmup-live-demo.sh --repeat 3
 git status --short --branch
 git branch -r
 git log --oneline --decorate -5
@@ -70,6 +71,7 @@ Manual checks:
 | submission audit | `./scripts/submission-audit.sh` exits with `fail=0` |
 | demo freeze | `build/demo-freeze/manifest.txt` exists; deck/recording numbers match captured outputs |
 | FUEL_CONSUMP | validator passes; row count matches official scope; precision/rounding matches Day1 answer |
+| live warm-up | `scripts/warmup-live-demo.sh` passes against submitted live URL |
 | deck | final deck 可開啟，money number 與 dashboard/recording 一致 |
 | demo URL | 外部瀏覽器可打開，不依賴本機 session |
 | video URL | 外部瀏覽器可播放 |
