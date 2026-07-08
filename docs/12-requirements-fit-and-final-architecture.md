@@ -69,7 +69,7 @@
 - 提交物語意分離：**live demo 連結 = 雲端 URL（App Runner／EC2），上台演示 = 可用本機 fallback**。
 - 若 Day3 雲端全掛：demo 連結欄位填錄影連結＋說明，並於 Day1 向主辦方確認此退路是否可接受（新增至 `09` §10 待確認清單）。
 - 上傳平台（R20）Day1 09:40–10:00 才公布：同一時段一併確認「demo 連結欄位格式、檔案大小限制、challenge link 的定義」。
-- App Runner auto-scaling min size 維持預設 1（App Runner 不會 scale-to-zero，僅手動 pause 會停）；上傳提交物前跑一輪 warm-up 腳本作健康驗證，確認評審自行點開時服務活著。
+- App Runner 只在 event account 已開通時使用；若不可建立新服務，改 ECS Express Mode 或 EC2 docker。上傳提交物前跑一輪 warm-up 腳本作健康驗證，確認評審自行點開時服務活著。
 
 ### G2【必修】R12「AI 判讀找關聯性」需顯性回應
 
@@ -122,10 +122,10 @@ v1.0 相對 `09` §2.1 的優化差異（全部小步、零新風險）：
 
 | 優化 | 內容 | 來源 |
 | --- | --- | --- |
-| O1 | App Runner auto-scaling min size 維持預設 1（不會 scale-to-zero，僅手動 pause 停）＋提交前 warm-up 腳本作健康驗證 | G1／`11` A 路線吸收 |
+| O1 | 部署路線改成既有 App Runner → ECS Express Mode → EC2 docker；提交前 warm-up 腳本作健康驗證 | G1／`16` |
 | O2 | ai-brief prompt 固定加「水下事件關聯分析」段（R12 顯性化，同時承接陽明「AI 協作創意 10%」） | G2 |
 | O3 | S3 加 exports/ 前綴放提交檔，presigned URL 下載（提交 harness 輸出物有固定家） | `11` A 路線吸收 |
-| O4 | 賽後清理 runbook（涵蓋 raw/、processed/、exports/ 與本機快照；條件式，Day1 確認）入提交檢查清單 | G3 |
+| O4 | 賽後清理 runbook（`scripts/cleanup-event-data.sh`，涵蓋 raw/、processed/、exports/ 與本機快照；條件式，Day1 確認）入提交檢查清單 | G3 |
 | O5 | 「企業資料應用說明」Day2 晚間初稿、Day3 上午定稿，Feng owner | G4 |
 | O6 | P2 觸發條件明文化：Day2 18:00 端到端全通且超前才拆 Lambda；否則凍結 | `11` §5.2 |
 | O7 | 「五件套」全面改稱**官方七項提交物**，checklist 逐項對官方清單（含 challenge link） | G5 |

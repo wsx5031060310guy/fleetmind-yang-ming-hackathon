@@ -59,14 +59,14 @@ flowchart LR
 
 | 階段 | 內容 | 條件 |
 | --- | --- | --- |
-| P1（default，Day1 必須跑通） | 單一 Spring Boot 服務：serve React build（同源，無 CORS/混合內容問題）+ API + 內嵌 core-calc（管理端點觸發全量重算）。外部依賴只有 S3、DynamoDB、Bedrock。跑在 App Runner（可用時）或一台 EC2 + docker | 任何權限環境都能活 |
+| P1（default，Day1 必須跑通） | 單一 Spring Boot 服務：serve React build（同源，無 CORS/混合內容問題）+ API + 內嵌 core-calc（管理端點觸發全量重算）。外部依賴只有 S3、DynamoDB、Bedrock。部署優先序：既有 App Runner 可用才用；否則 ECS Express Mode；再否則 EC2 + docker | 任何權限環境都能活 |
 | P2（加分，時間有餘才做） | core-calc 包成 Lambda 由 S3 上傳事件觸發；前端拆到 Amplify Hosting | Day2 進度超前 + 權限允許 |
 
 明確**不做**：CloudFront（invalidation 延遲 + HTTPS 混合內容是 demo 前夜炸彈）、RDS（VPC 佈建成本高）、ECS Fargate 為 default（ECR/task role/ALB 全套半天起跳，降為 P2 之後的 stretch）。
 
 DynamoDB 不可用時的儲存 fallback：內嵌 H2 / 純記憶體 + S3 快照。
 
-**開賽日環境探測**：預先寫好 10 分鐘權限探測 checklist（建 S3 bucket / 建 DynamoDB table / 建 IAM role / 部署 Lambda / App Runner 可用性 / **Bedrock 可用模型清單 + 實際 InvokeModel 一次**），環境到手立刻跑，每項 pass/fail 直接對映 P1/P2 分叉。Bedrock smoke test 是 Day1 必做——模型存取可能要逐一啟用，拖到 Day2 發現沒開通就來不及。
+**開賽日環境探測**：預先寫好 10 分鐘權限探測 checklist（建 S3 bucket / 建 DynamoDB table / 建 IAM role / 部署 Lambda / App Runner 可用性 / **Bedrock 可用模型清單 + 實際 InvokeModel 一次**），環境到手立刻跑，每項 pass/fail 直接對映 P1/P2 分叉；ECS Express / EC2 fallback 依 `16-day1-ops-runbook.md` 裁決。Bedrock smoke test 是 Day1 必做——模型存取可能要逐一啟用，拖到 Day2 發現沒開通就來不及。
 
 ### 2.3 技術選型摘要
 
@@ -285,7 +285,7 @@ POST /admin/reprocess                                # 全量重算(冪等)
 | 09:00–10:00 | 報到/開場（無開發時段） |
 | 09:40–10:00 | 上傳平台公布：**P5 主責記錄**欄位/格式限制、challenge link 定義（`12` §5） |
 | 10:00–10:40 | 企業命題與資料說明：工程四人專注 schema 技術細節；**P5 記錄全部 §10 待確認答案**（問不到就當場向主辦方書面提問） |
-| 10:40–11:00 | 環境說明：Sunny 跑 10 分鐘權限探測 checklist + **Bedrock smoke test**（§2.2） |
+| 10:40–11:00 | 環境說明：Sunny 跑 `scripts/probe.sh` + `scripts/bedrock-models.sh` + **Bedrock smoke test**（§2.2 / `16`） |
 | 11:00–12:00 | 提案討論時段內定 P1/P2 拍板 + API contract 草稿 + **凍結 Speed Loss 輸出 JSON schema（含假數值）**；P5 開 slides 骨架（冷開場留數字位） |
 | 13:00–14:00 | API contract 定稿（哪怕全假資料），前後端自此平行 |
 | 13:00–17:00 | 平行實作（下表） |
@@ -293,7 +293,7 @@ POST /admin/reprocess                                # 全量重算(冪等)
 
 | Day1 13:00–17:00 | Eddie | Sunny | Feng | Chen | P5 |
 | --- | --- | --- | --- | --- | --- |
-| 任務 | 以 `apps/api` 為底接真資料/DynamoDB；補 before-after contract | P1 部署跑通（App Runner/EC2）+ S3/DynamoDB/IAM + 前端 build 部署走通一次 | 真實資料 schema 驗證 + golden case 準備 + **FUEL_CONSUMP 提交 harness（owner）** | core-calc：真欄位映射 + 品質旗標 + VLSFO 換算 + Daily FOC | 依 `15` 開 slides 骨架（評分表骨架頁+冷開場留位）+ 上傳平台規則文件化 + 16:00 抽籤結果入彩排排程 |
+| 任務 | 以 `apps/api` 為底接真資料/DynamoDB；補 before-after contract | P1 部署跑通（既有 App Runner / ECS Express Mode / EC2 docker）+ S3/DynamoDB/IAM + 前端 build 部署走通一次 | 真實資料 schema 驗證 + golden case 準備 + **FUEL_CONSUMP 提交 harness（owner）** | core-calc：真欄位映射 + 品質旗標 + VLSFO 換算 + Daily FOC | 依 `15` 開 slides 骨架（評分表骨架頁+冷開場留位）+ 上傳平台規則文件化 + 16:00 抽籤結果入彩排排程 |
 
 ### Day2 07-15（remote）
 

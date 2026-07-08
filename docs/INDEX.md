@@ -41,12 +41,13 @@
 | 13 differentiation-strategy | 對手地圖+差異化 backlog | ✅ 待 review 拍板優先級 |
 | 14 pre-race-prep | 賽前清單+待回寫追蹤 | ✅ 現行 |
 | 15 presentation-readiness-pack | P5 簡報賽前包：假設來源、冷開場、backup slides、提交問題 | ✅ 現行 |
+| 16 day1-ops-runbook | Day1 AWS/Bedrock/部署/資料清理執行手冊 | ✅ 現行 |
 
 ## 4. 角色閱讀路徑
 
 - **P5 成員（簡報/提交）**：`02` 分工 → `10` 全文 → `15` 全文 → `13` §3.2 呈現項+§4 → `12` §3（G1/G4/G5 提交缺口）→ `09` §7 只看 P5 欄 → `14` PR-6/PR-9 → 本頁 §6 checklist。
 - **工程新人**：`00` → `03` → `09` 全文 → `12` → 背景 `05`/`11`。
-- **只看架構**：`09` §2 → `12` §4 → `11` §1 計分板+§5 決策樹 → `decisions/`。
+- **只看架構/部署**：`09` §2 → `12` §4 → `16` → `11` §1 計分板+§5 決策樹 → `decisions/`。
 - **賽前最後一天惡補**：README 評分表 → `10` → `13` §1+§5 → `07` 全部 15 題 → `09` §4.4 ISO 偏離表。
 
 ## 5. 命名 legend
@@ -85,4 +86,4 @@
 
 - 已 merge：core-calc + golden checks、business impact、CI checks、single-service API skeleton、AI brief prompt/guardrail。
 - 本地可跑：`./scripts/test-core-calc.sh`、`./scripts/demo-local.sh`；GitHub Actions 會跑 Maven package 與 API smoke。
-- 待回寫（review 後執行）：`06` 狀態收斂、`09` 分工表細化、pptx 實際套版——追蹤 `14` §2；P5 賽前包見 `15`。
+- 待回寫（review 後執行）：`06` 狀態收斂、pptx 實際套版——追蹤 `14` §2；P5 賽前包見 `15`，Day1 ops 見 `16`。
