@@ -49,11 +49,11 @@ section "env template"
 zsh -c 'set -a; source .env.example; test -n "$AWS_REGION"; test -n "$BASE_URL"'
 
 section "submission audit"
-audit_args=()
 if [[ "$DEV_MODE" == "true" ]]; then
-  audit_args+=(--allow-dirty --allow-non-main --skip-remote-branches)
+  ./scripts/submission-audit.sh --allow-dirty --allow-non-main --skip-remote-branches
+else
+  ./scripts/submission-audit.sh
 fi
-./scripts/submission-audit.sh "${audit_args[@]}"
 
 section "local demo"
 ./scripts/demo-local.sh
