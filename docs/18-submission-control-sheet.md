@@ -11,7 +11,7 @@
 | 1 | Complete proposal deck | `presentation/fleetmind-proposal-deck.pptx`、`docs/10`、`docs/15` | final PPTX/平台檔案 | P5 | 可開啟、9 頁正片 + backup、數字與 demo 一致 |
 | 2 | Challenge link | Day1 09:40-10:00 向主辦方確認 | TBD | P5 | 連結格式符合平台要求 |
 | 3 | Enterprise data and data application description | `docs/17-enterprise-data-application.md` | final doc/pdf/form text | Feng + P5 | 不含 raw data；schema/列數/檔名已補 |
-| 4 | Technical architecture | `docs/09` §2、`docs/12` §4、`docs/16` | architecture doc/image/form text | Sunny + Eddie | 與實際部署路線一致：App Runner/ECS Express/EC2 |
+| 4 | Technical architecture | `docs/19-technical-architecture-submission.md`；細節回查 `docs/09` §2、`docs/12` §4、`docs/16` | architecture doc/image/form text | Sunny + Eddie | 與實際部署路線一致：App Runner/ECS Express/EC2 |
 | 5 | GitHub repository link | README、GitHub main branch | repo URL | Sunny + P5 | main 綠燈；無 raw data、無憑證、無未 merge branch |
 | 6 | Live demo link | `docs/16` deployment route | HTTPS/URL | Sunny | `/api/health` OK；評審無登入即可開 |
 | 7 | Demo recording video link | Day3 凍結快照錄影 | video URL | P5 + demo operator | 可播放、長度/格式符合平台限制 |
