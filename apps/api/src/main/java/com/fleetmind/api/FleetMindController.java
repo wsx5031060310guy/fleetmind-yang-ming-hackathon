@@ -55,6 +55,11 @@ public class FleetMindController {
         return demoData.aiBrief(vesselId);
     }
 
+    @GetMapping("/vessels/{vesselId}/ai-brief/prompt")
+    public AiBriefPromptDto aiBriefPrompt(@PathVariable("vesselId") String vesselId) {
+        return demoData.aiBriefPrompt(vesselId);
+    }
+
     @GetMapping("/data-quality/summary")
     public DataQualityDto dataQuality() {
         return demoData.dataQuality();

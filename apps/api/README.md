@@ -18,6 +18,10 @@ Then open:
 - dashboard: `http://localhost:8080/`
 - health: `http://localhost:8080/api/health`
 - fleet summary: `http://localhost:8080/api/fleet/summary`
+- AI brief fallback: `POST http://localhost:8080/api/vessels/YM-DEMO-01/ai-brief`
+- AI brief prompt contract: `http://localhost:8080/api/vessels/YM-DEMO-01/ai-brief/prompt`
+
+The AI brief path is still deterministic locally. The prompt contract and guardrail make the future Bedrock call boring: only supplied JSON, cited metric IDs, and exact cited numbers pass.
 
 ## Docker
 
