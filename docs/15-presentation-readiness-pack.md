@@ -90,6 +90,8 @@ Demo fake case 目前口徑：
 
 Day1 09:40-10:00 先問，P5 記錄：
 
+七項提交物上傳管制表見 `18-submission-control-sheet.md`。
+
 | 問題 | 為何重要 |
 | --- | --- |
 | Challenge link 是什麼格式？ | 七項提交物之一，不能到 Day3 才猜。 |

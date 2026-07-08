@@ -18,7 +18,7 @@ For humans:
 
 1. Read [docs/INDEX.md](docs/INDEX.md) — one-page master overview: doc map, role-based reading paths, glossary, submission checklist.
 2. New members: find your role in [docs/02-team.md](docs/02-team.md), then follow your reading path in INDEX.
-3. Authoritative plan = [docs/09](docs/09-architecture-and-execution-plan.md) (execution) + [docs/12](docs/12-requirements-fit-and-final-architecture.md) (final architecture) + [docs/15](docs/15-presentation-readiness-pack.md) (P5 presentation pack) + [docs/17](docs/17-enterprise-data-application.md) (enterprise data application) + [presentation](presentation/) (editable proposal deck). Older docs (04/05/06) are background; on conflict, 09–17 and `presentation/` win.
+3. Authoritative plan = [docs/09](docs/09-architecture-and-execution-plan.md) (execution) + [docs/12](docs/12-requirements-fit-and-final-architecture.md) (final architecture) + [docs/15](docs/15-presentation-readiness-pack.md) (P5 presentation pack) + [docs/17](docs/17-enterprise-data-application.md) (enterprise data application) + [docs/18](docs/18-submission-control-sheet.md) (Day3 submission control) + [presentation](presentation/) (editable proposal deck). Older docs (04/05/06) are background; on conflict, 09–18 and `presentation/` win.
 4. Add new notes under `meetings/`, `decisions/`, or `docs/`.
 
 For AI agents:
@@ -31,12 +31,13 @@ For AI agents:
 
 Status as of 2026-07-08:
 
-- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, and enterprise data application draft merged.
+- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, and Day3 submission control sheet merged.
 - GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, Maven package, API smoke, Markdown links, and diff hygiene.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
 - Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
 - Enterprise data application draft is ready at [docs/17-enterprise-data-application.md](docs/17-enterprise-data-application.md); Day1/Day2 work is to fill real schema values, row counts, file names, and screenshot/data-retention constraints.
-- Remaining human work: run the skeleton in the real AWS/event account, connect real data/DynamoDB, validate Bedrock model access on Day1, swap final demo numbers/screenshots into the deck, and fill the Day1 placeholders in docs/17.
+- Day3 upload control sheet is ready at [docs/18-submission-control-sheet.md](docs/18-submission-control-sheet.md); Day1 work is to fill platform field names and file/link limits.
+- Remaining human work: run the skeleton in the real AWS/event account, connect real data/DynamoDB, validate Bedrock model access on Day1, swap final demo numbers/screenshots into the deck, fill Day1 placeholders in docs/17, and fill platform placeholders in docs/18.
 
 Merged work log:
 
@@ -54,6 +55,7 @@ Merged work log:
 | #10 | Day1 ops runbook | Added AWS/Bedrock/deployment/data-cleanup runbook and helper scripts. |
 | #11 | Proposal deck skeleton | Added editable PPTX, visual preview, and regeneratable deck source. |
 | #12 | Enterprise data application | Added official submission draft for data sources, transformations, AI boundary, and data safety. |
+| #13 | Submission control sheet | Added Day3 seven-deliverable upload checklist, timing, fallback, and verification flow. |
 
 ## What Runs Now
 
@@ -138,6 +140,7 @@ Remaining open items:
 ## Deliverables
 
 Official submission is **seven items** (missing any = forfeit under the 14:30 deadline rule; see docs/12 §3 G5). Owner: P5.
+Control sheet: [docs/18](docs/18-submission-control-sheet.md).
 
 - Complete proposal deck: [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx)
 - Challenge link
