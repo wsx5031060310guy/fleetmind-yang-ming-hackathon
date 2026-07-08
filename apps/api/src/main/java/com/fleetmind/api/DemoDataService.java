@@ -35,7 +35,7 @@ public class DemoDataService {
     }
 
     public BeforeAfterDto beforeAfter(String vesselId, String eventId) {
-        BusinessImpactResult impact = BusinessImpact.estimate(58.0, 61.0, 525.0, 40000.0, 80.0, 0.5);
+        BusinessImpactResult impact = BusinessImpact.estimate(58.0, 61.0, 650.0, 40000.0, 90.0, 0.5);
         return new BeforeAfterDto(
                 eventId == null ? "event-2025-03-cleaning" : eventId,
                 vesselId,
@@ -82,14 +82,14 @@ public class DemoDataService {
                 new CitedMetricDto("median_k_before", "0.00763", beforeAfterHref),
                 new CitedMetricDto("median_k_after", "0.00722", beforeAfterHref),
                 new CitedMetricDto("recovery_pct", "5.37", beforeAfterHref),
-                new CitedMetricDto("payback_days", "20.53", beforeAfterHref));
+                new CitedMetricDto("payback_days", "16.87", beforeAfterHref));
         return citations;
     }
 
     private String aiBriefText() {
         return "YM-DEMO-01 shows elevated speed loss under comparable conditions. "
                 + "The deterministic calculation estimates 4.76% speed loss [latest_speed_loss_pct] "
-                + "and about 20.53 days payback [payback_days] "
+                + "and about 16.87 days payback [payback_days] "
                 + "under the stated fuel, carbon, and cleaning-cost assumptions. Recommend human review for inspection, "
                 + "then cleaning or propeller polishing if onboard evidence matches.";
     }

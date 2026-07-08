@@ -36,9 +36,9 @@ public final class BusinessImpactCli {
     private static final class Options {
         private double baselineDailyFoc = Double.NaN;
         private double observedDailyFoc = Double.NaN;
-        private double fuelPriceUsdPerMt = 525.0;
+        private double fuelPriceUsdPerMt = 650.0;
         private double cleaningCostUsd = 40000.0;
-        private double carbonPriceUsdPerTon = 80.0;
+        private double carbonPriceUsdPerTon = 90.0;
         private double euEtsCoverageRate = 0.5;
 
         private static Options parse(String[] args) {

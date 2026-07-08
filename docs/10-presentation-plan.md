@@ -35,6 +35,8 @@ flowchart LR
 
 ## Q&A 附錄 slides（不進正片）
 
+可直接套版的 backup slide 清單與彩排流程見 `15-presentation-readiness-pack.md`。
+
 1. 為什麼不做航線優化（`07-judge-qna.md` 第一題）。
 2. 污損歸因方法與未控制變因（湧浪/洋流/SST/吃水）。
 3. 資料品質處理（品質旗標原因碼統計、全量計算鐵律）。

@@ -10,12 +10,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AiBriefGuardrailTest {
     private static final List<CitedMetricDto> CITATIONS = List.of(
             new CitedMetricDto("latest_speed_loss_pct", "4.76", "/api/fleet/summary"),
-            new CitedMetricDto("payback_days", "20.53", "/api/vessels/YM-DEMO-01/before-after"));
+            new CitedMetricDto("payback_days", "16.87", "/api/vessels/YM-DEMO-01/before-after"));
 
     @Test
     void acceptsNumbersThatMatchCitedMetrics() {
         AiBriefGuardrailDto result = AiBriefGuardrail.validate(
-                "Observed 4.76% speed loss [latest_speed_loss_pct] and about 20.53 days payback [payback_days].",
+                "Observed 4.76% speed loss [latest_speed_loss_pct] and about 16.87 days payback [payback_days].",
                 CITATIONS);
 
         assertTrue(result.passed());
@@ -45,7 +45,7 @@ class AiBriefGuardrailTest {
     @Test
     void rejectsNumericClaimsWithoutInlineMetricCitation() {
         AiBriefGuardrailDto result = AiBriefGuardrail.validate(
-                "Observed 4.76% speed loss and about 20.53 days payback.",
+                "Observed 4.76% speed loss and about 16.87 days payback.",
                 CITATIONS);
 
         assertFalse(result.passed());
