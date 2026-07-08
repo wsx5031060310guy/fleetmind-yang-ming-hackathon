@@ -98,7 +98,7 @@ Day1 09:40-10:00 先問，P5 記錄：
 | 原始企業資料能否留在賽後 repo / artifact？ | R19 安全與刪除 runbook。 |
 | live demo link 可否為 App Runner 預設 URL？ | 影響部署方案與 HTTPS。 |
 | 錄影格式/長度/上傳位置？ | Day3 上午錄影排程。 |
-| 企業資料與資料應用說明是否有模板？ | 七項提交物之一，P5 要提前套版。 |
+| 企業資料與資料應用說明是否有模板？ | 七項提交物之一；若無官方模板，直接用 `17-enterprise-data-application.md` 起手。 |
 
 ## 7. P5 完成定義
 
