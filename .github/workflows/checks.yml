@@ -1,0 +1,52 @@
+name: checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  local-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Core calculation golden checks
+        run: ./scripts/test-core-calc.sh
+
+      - name: Local demo smoke
+        run: ./scripts/demo-local.sh
+
+      - name: Markdown local link check
+        run: |
+          ruby -e '
+            bad = []
+            Dir.glob("**/*.md").each do |file|
+              text = File.read(file)
+              text.scan(/\[[^\]]+\]\(([^)]+)\)/).flatten.each do |href|
+                next if href =~ /\A(https?:|mailto:|#)/
+                path = href.split("#", 2)[0]
+                next if path.empty?
+                next unless path.end_with?(".md")
+                full = File.expand_path(path, File.dirname(file))
+                bad << [file, href] unless File.exist?(full)
+              end
+            end
+            if bad.empty?
+              puts "OK markdown .md links"
+            else
+              bad.each { |file, href| puts "#{file}: #{href}" }
+              exit 1
+            end
+          '
+
+      - name: Git diff hygiene
+        run: git diff --check
