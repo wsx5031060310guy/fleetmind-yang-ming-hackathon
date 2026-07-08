@@ -75,7 +75,7 @@
 
 題目原文要求 AI 判讀「船速油耗與水下報告狀態之關聯性」。現行設計中關聯性由確定性計算產出（before-after、事件分段），Bedrock 只「解釋單船異常」——語意上可被質疑「AI 沒有做判讀」。修正（零新架構、改 prompt 與呈現）：
 
-- ai-brief prompt 增加固定段落「**水下事件關聯分析**」：引用該船每次清潔／拋光事件前後的 k 值變化與回收效率，由 Bedrock 產出跨事件的關聯性敘述（數字仍全部來自輸入 JSON，防幻覺三道防線不變）。
+- ai-brief prompt 增加固定段落「**水下事件關聯分析**」：引用該船每次清潔／拋光事件前後的 k 值變化與回收效率，由 Bedrock 產出跨事件的關聯性敘述（數字仍全部來自輸入 JSON / `citedMetrics`，防幻覺三道防線不變）。賽前已先落 `AiBriefPrompt` / `AiBriefGuardrail` 與 prompt preview endpoint，Day2 接 Bedrock InvokeModel 即可。
 - Dashboard Before-After 卡標題直接用題目語言：「水下報告狀態 × 油耗關聯」。
 - Q&A 防守（入 `07-judge-qna.md` 素材）：「AI 判讀 = 確定性統計找訊號 + Bedrock 把訊號判讀成營運語言的關聯結論；數字可回溯，這正是可信的 AI 判讀」。
 

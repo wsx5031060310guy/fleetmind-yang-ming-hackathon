@@ -124,7 +124,7 @@ Daily FOC = ME_FULLSPEED_CONSUMP_VLSFO / HOURS_FULL_SPEED × 24
 | UnderwaterEvent | vessel_id, date, type(inspection/cleaning/propeller_polishing/**unknown_breakpoint**), notes | 水下報告 + 斷點偵測 |
 | DailyMetric | vessel_id, date, daily_foc, quality_flags, k_value, speed_loss_pct, fuel_penalty_pct, confidence, transform_version | 管線產出 |
 | VesselSummary | vessel_id, latest_speed_loss, fouling_attribution_pct, trend, days_since_last_cleaning, ref_window_span_days, data_quality_score, review_priority | 管線產出 |
-| AiBrief | vessel_id, generated_at, brief_text, cited_metrics[], model_id | Bedrock |
+| AiBrief | vessel_id, generated_at, mode, brief_text, cited_metrics[], guardrail | Bedrock / deterministic fallback |
 
 ## 4. Speed Loss 方法論（dashboard 評分 30% 的核心）
 
@@ -224,15 +224,17 @@ sequenceDiagram
   API->>DB: 讀取該船 processed metrics<br/>(speed loss、歸因、事件、品質分數)
   API->>BR: Prompt = 系統規則 + 結構化 JSON 數據<br/>(僅允許引用給定數字；model-agnostic 封裝)
   BR-->>API: 簡報草稿(異常摘要/證據/建議 review 行動/信心與限制)
-  API->>API: 後驗證：簡報中數字必須存在於輸入 JSON<br/>(regex 抽取 + 比對，不符即標記)
+  API->>API: 後驗證：簡報中數字必須存在於 citedMetrics<br/>(regex 抽取 + inline citation 比對，不符即標記)
   API-->>F: 簡報 + 引用數據清單(每個數字可點回原始 metric)
   Note over API,F: timeout 30-45s + UI loading 狀態；<br/>失敗 → 確定性模板摘要(fallback)
 ```
 
+賽前已落地：`apps/api` 內已有 `AiBriefPrompt`、`AiBriefGuardrail`、`/api/vessels/{id}/ai-brief/prompt` 與 JUnit guardrail 測試。Day2 工作重點不再是設計規則，而是把 Bedrock InvokeModel 接到同一 contract。
+
 防幻覺三道防線：
 
 1. Prompt 內明確規則：只能引用提供的 JSON 數字，不得推算新數字。
-2. 後驗證：抽取簡報中所有數字比對輸入，不符者整段標記警示。
+2. 後驗證：抽取簡報中所有帶單位/金額的數字，比對 `citedMetrics`，並要求 inline metric citation。
 3. UI 上每個數字可點回原始 metric（citation）——**這也是 AI 協作創意 10% 的展示重點**：demo 時現場點簡報中的數字跳到 dashboard 對應點，零額外工程、評審可見的差異化。
 
 **Demo 風險解耦**：demo 用船的簡報在 Day3 資料凍結後預先產生並快取，現場點擊直接秀快取結果（UI 顯示 `generated_at` 證明真實產出），live 重新生成留作評審要求時的加碼演示。不讓 8 分鐘簡報現場賭 LLM 延遲。
@@ -244,19 +246,29 @@ sequenceDiagram
 
 ## 6. API 規格（v1）
 
+已在 `apps/api` demo skeleton 實作：
+
 ```http
 GET  /api/fleet/summary                      # 15 船排名 + 品質分數
 GET  /api/vessels/{id}/performance?from&to   # daily metrics 時序
 GET  /api/vessels/{id}/underwater-events
 GET  /api/vessels/{id}/before-after?eventId
 POST /api/vessels/{id}/ai-brief              # 產生簡報(30-45s timeout, demo 走快取)
+GET  /api/vessels/{id}/ai-brief/prompt       # prompt/guardrail contract 檢查
 GET  /api/data-quality/summary               # 品質旗標統計
+GET  /api/fuel-consump/export                # demo 提交檔匯出
+```
+
+Day1 真格式確認後補：
+
+```http
 GET  /api/fuel-consump/export?variant=full|filtered   # 自動評分提交檔
-POST /admin/reprocess                        # 全量重算(冪等)
+POST /admin/reprocess                                # 全量重算(冪等)
 ```
 
 - 回應內附 `transform_version` 與 `data_quality`，供簡報引用與 Q&A 防守。
 - 簡報 review 狀態流程（PUT status）降為 could-have：3 分鐘 demo 展示不到，工時讓給綁分數的缺口。
+- 賽前已落地 demo skeleton：`apps/api` 同源 dashboard + `/api/**`、`scripts/api-smoke.sh`、GitHub Actions Maven package + API smoke。Day1 只需接真資料/DynamoDB，不需重建服務骨架。
 
 ## 7. 三天執行計畫與分工
 
@@ -281,13 +293,13 @@ POST /admin/reprocess                        # 全量重算(冪等)
 
 | Day1 13:00–17:00 | Eddie | Sunny | Feng | Chen | P5 |
 | --- | --- | --- | --- | --- | --- |
-| 任務 | Spring Boot 骨架 + API contract 假資料實作 + 接 DynamoDB | P1 部署跑通（App Runner/EC2）+ S3/DynamoDB/IAM + 前端 build 部署走通一次 | 真實資料 schema 驗證 + golden case 準備 + **FUEL_CONSUMP 提交 harness（owner）** | core-calc：品質旗標 + VLSFO 換算 + Daily FOC + 單元測試 | slides 骨架（評分表骨架頁+冷開場留位）+ 上傳平台規則文件化 + 16:00 抽籤結果入彩排排程 |
+| 任務 | 以 `apps/api` 為底接真資料/DynamoDB；補 before-after contract | P1 部署跑通（App Runner/EC2）+ S3/DynamoDB/IAM + 前端 build 部署走通一次 | 真實資料 schema 驗證 + golden case 準備 + **FUEL_CONSUMP 提交 harness（owner）** | core-calc：真欄位映射 + 品質旗標 + VLSFO 換算 + Daily FOC | 依 `15` 開 slides 骨架（評分表骨架頁+冷開場留位）+ 上傳平台規則文件化 + 16:00 抽籤結果入彩排排程 |
 
 ### Day2 07-15（remote）
 
 | 時段 | Eddie | Sunny | Feng | Chen | P5 |
 | --- | --- | --- | --- | --- | --- |
-| 全天 | before-after API + ai-brief API + 後驗證 | Bedrock 整合 + fallback + CloudWatch + **端到端整合 owner** | Dashboard 三頁面（template 起手，最小圖表集合） | Speed Loss + 歸因 + 信心等級（core-calc） | slides 主體主筆（工程師只供截圖/數字）+ 企業資料應用說明初稿（Feng 供技術素材）+ demo script 三擊版初稿 |
+| 全天 | before-after API + Bedrock InvokeModel 接 `AiBriefPrompt` contract + D4 三分級建議文案 | Bedrock 權限/模型 smoke + fallback + CloudWatch + **端到端整合 owner** | Dashboard 三頁面（Fleet/Vessel/Before-After）+ D3 信心徽章 + citation click | Speed Loss + 歸因 + 信心等級 + D1/D2 CII/ROI 輸出（core-calc） | `15` 為底做 slides 主體（工程師只供截圖/數字）+ 企業資料應用說明初稿（Feng 供技術素材）+ demo script 三擊版初稿 |
 | 12:00 sync | — | — | — | Speed Loss 首版數字落 DynamoDB | — |
 | 18:00 sync | 全員：端到端串真資料，走一次 demo 動線（P5 掐錶） | | | | |
 | 晚間 | Q&A 附錄 10 題技術素材；第二版 FUEL_CONSUMP 提交檔驗證 | | | | slides 定稿（Day3 只換真截圖）+ 冷開場數字填入（來自 18:00 before-after 真資料） |
@@ -319,8 +331,8 @@ Day2 環境風險：比賽用臨時帳號可能場外不可用/憑證過期（§
 | 品質旗標 | 單元測試（風力 4/5、時數 21.9/22 邊界） | 全過；**旗標不影響 FOC 計算與提交檔列數** |
 | Speed Loss | 對 1-2 艘有清潔事件的船人工驗證：事件後 k 應下降 | 方向正確 + before-after 同分母口徑數字合理 |
 | 管線冪等 | 同一 CSV 跑兩次 diff processed 輸出 | 完全一致 |
-| API | contract test（回應 schema）+ 手動冒煙 | demo 所需端點全通 |
-| 簡報防幻覺 | 抽 5 份簡報人工核對所有數字 | 100% 可回溯 |
+| API | `scripts/api-smoke.sh` + contract test（回應 schema） | demo 所需端點全通；GitHub Actions 綠 |
+| 簡報防幻覺 | JUnit guardrail 測試 + 抽 5 份簡報人工核對所有數字 | 100% 可回溯；不符數字被標記 |
 | Live demo | demo script 計時 | **≤ 3 分鐘**（配合 `10-presentation-plan.md` 時段） |
 | 整場簡報 | 含 demo 全程彩排計時 | **≤ 7 分 15 秒**（留 45 秒 buffer） |
 

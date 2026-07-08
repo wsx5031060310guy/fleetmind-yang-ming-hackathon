@@ -35,8 +35,8 @@ P1 小計 ≈ 10h（P0+P1 = 26h，**5 人分攤 ≈ 5h/人**，在預算內—�
 
 `09` §10 有些問題不必等 Day1，賽前就能查：
 
-- ISO 19030 / CII / EEXI 的公式與 rating 分級表（公開標準）— 併入 PR-7 準備。
-- VLSFO 市價區間（US$500–550/MT）、清潔成本區間（US$30k–50k）、進塢週期 — 公開行情，先查好當假設值來源，簡報標「假設值」有依據。
+- ISO 19030 / CII / EEXI 的公式與 rating 分級表（公開標準）— CII 引用已整理到 `15`。
+- VLSFO 市價、EU ETS、清潔成本區間 — 已整理到 `15`；demo 假設目前用 VLSFO USD 650/MT、carbon USD 90/tCO2、cleaning USD 40k。
 - Bedrock 在台灣區域（ap-*）可用的 Claude 模型清單 — 賽前查 AWS 文件先有預期。
 
 ## 2. 文件體系剩餘缺口（待回寫）
@@ -48,10 +48,10 @@ P1 小計 ≈ 10h（P0+P1 = 26h，**5 人分攤 ≈ 5h/人**，在預算內—�
 | G-a | `10-presentation-plan` 已回寫 `13` 呈現戰術；`15` 已補簡報賽前包；實際 pptx 仍需套版 | 依新版 slide 清單製作簡報：money number、評分表前置、三擊 demo、減法架構、ISO 偏離表進正片 | P5 套版 |
 | G-b | `06-demo-storyline` 已有三擊 demo 草稿，但仍是 raw material | 以 `10` 的新版 demo 段為唯一彩排腳本，`06` 保留原始素材定位 | team review 通過 |
 | G-c | `07-judge-qna` 已擴到 15 題，並已在 `15` 轉成 backup slide 清單 | 實際套版並演練一次（= PR-6） | P5 套版/彩排 |
-| G-d | `13` P0 產品項已併入 `09` §4.5；§7 分工表尚未細化 | 把 D1–D4 owner 對位回寫 Day2 任務表；D5–D8 維持 P1 閘門項 | team review 通過 |
+| G-d | `13` P0 產品項已併入 `09` §4.5；§7 分工表已補 D1–D4 owner 對位 | D5–D8 維持 P1 閘門項，Day2 18:00 視資料品質決定 | team review |
 | G-e | 累積劣化曲線仍標 stretch，避免未看真資料前擠壓 55% 硬盤 | Day2 18:00 若事件數與合格天足夠再升必做；否則保留 backup slide | team review 通過 |
 
-**為何暫不自動回寫**：09/10 是團隊執行藍本，改動幅度大（重排簡報、升級必做項）應由團隊拍板；本文件把待辦列清，review 後一次性回寫，避免反覆。
+**剩餘需要人拍板**：pptx 實際套版、D5–D8 是否升必做、真實資料支不支援累積劣化曲線。核心骨架、prompt guardrail、簡報賽前包與 D1–D4 owner 已先回寫。
 
 ## 3. 整體優化方向收斂（三層防線）
 
