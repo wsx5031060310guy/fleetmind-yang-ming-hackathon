@@ -27,7 +27,7 @@ P0 小計 ≈ 16h。
 | PR-6 | **Q&A 15 題演練稿** | `07-judge-qna.md` 從 7 題擴到 15 題，含五大海事追問（基準怎麼定／slow steaming 分離／該不該花 4 萬清／SOG 黑潮／歸因 68% 憑什麼）。**P5 主持模擬 Q&A**，工程師按專長答題演練一次 | P5 主持＋全員 | 3h |
 | PR-7 | **CII / ROI 卡假資料原型** | 用假數字先把 `13` D1（CII/CO₂/EU ETS 卡）與 D2（清潔 ROI 回本天數）的算式寫好；初版已落在 `BusinessImpact` + `scripts/business-impact.sh`，Day2 換真資料即可接 UI | Chen + Feng | 2h |
 | PR-8 | **Bedrock prompt 初稿 + 防幻覺後驗證** | ai-brief 的系統 prompt 與 regex 後驗證已落在 `apps/api/`：只引用給定 JSON、數字 claim 必須匹配 `citedMetrics`，`/api/vessels/{id}/ai-brief/prompt` 可檢查 prompt contract；下一步接 Bedrock InvokeModel | Eddie | 2h |
-| PR-9 | **簡報線賽前包（P5 專屬）** | `15-presentation-readiness-pack.md` 已整理 slides 填數表、冷開場、行情與標準來源（VLSFO / EU ETS / cleaning / CII）、backup slides 與提交平台問題清單；pptx 套版仍由 P5 執行 | P5 | 3h |
+| PR-9 | **簡報線賽前包（P5 專屬）** | `15-presentation-readiness-pack.md` 已整理 slides 填數表、冷開場、行情與標準來源（VLSFO / EU ETS / cleaning / CII）、backup slides 與提交平台問題清單；`presentation/fleetmind-proposal-deck.pptx` 已提供 9 頁正片 + B1-B15 骨架 | P5 | 3h |
 
 P1 小計 ≈ 10h（P0+P1 = 26h，**5 人分攤 ≈ 5h/人**，在預算內——原 20h 是按 4 人估的）。
 
@@ -45,13 +45,13 @@ P1 小計 ≈ 10h（P0+P1 = 26h，**5 人分攤 ≈ 5h/人**，在預算內—�
 
 | # | 缺口 | 動作 | 阻塞 |
 | --- | --- | --- | --- |
-| G-a | `10-presentation-plan` 已回寫 `13` 呈現戰術；`15` 已補簡報賽前包；實際 pptx 仍需套版 | 依新版 slide 清單製作簡報：money number、評分表前置、三擊 demo、減法架構、ISO 偏離表進正片 | P5 套版 |
+| G-a | `10-presentation-plan` 已回寫 `13` 呈現戰術；`15` 已補簡報賽前包；`presentation/fleetmind-proposal-deck.pptx` 已產出 | Day2/Day3 以凍結真資料替換 money number、商務價值、demo 截圖；保留 B1-B15 Q&A 備援 | 真資料凍結 |
 | G-b | `06-demo-storyline` 已有三擊 demo 草稿，但仍是 raw material | 以 `10` 的新版 demo 段為唯一彩排腳本，`06` 保留原始素材定位 | team review 通過 |
-| G-c | `07-judge-qna` 已擴到 15 題，並已在 `15` 轉成 backup slide 清單 | 實際套版並演練一次（= PR-6） | P5 套版/彩排 |
+| G-c | `07-judge-qna` 已擴到 15 題，並已在 `15` 轉成 backup slide 清單；`presentation/fleetmind-proposal-deck.pptx` 已含 B1-B15 | P5 連續問 15 題，工程四人按專長 40 秒內答完 | 彩排 |
 | G-d | `13` P0 產品項已併入 `09` §4.5；§7 分工表已補 D1–D4 owner 對位 | D5–D8 維持 P1 閘門項，Day2 18:00 視資料品質決定 | team review |
 | G-e | 累積劣化曲線仍標 stretch，避免未看真資料前擠壓 55% 硬盤 | Day2 18:00 若事件數與合格天足夠再升必做；否則保留 backup slide | team review 通過 |
 
-**剩餘需要人拍板**：pptx 實際套版、D5–D8 是否升必做、真實資料支不支援累積劣化曲線。核心骨架、prompt guardrail、簡報賽前包與 D1–D4 owner 已先回寫。
+**剩餘需要人拍板**：D5–D8 是否升必做、真實資料支不支援累積劣化曲線、Day2/Day3 最終數字與截圖。核心骨架、prompt guardrail、簡報賽前包、PPTX 骨架與 D1–D4 owner 已先回寫。
 
 ## 3. 整體優化方向收斂（三層防線）
 

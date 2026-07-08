@@ -1,7 +1,7 @@
 # 簡報計畫（8 分鐘上台 + 4 分鐘 Q&A）
 
 > 對應 `06-demo-storyline.md` 的敘事，落成 slide-by-slide 計畫。
-> 簡報檔以此為藍本產出；live demo 佔中段 2.5–3 分鐘，slides 前後包夾。
+> 簡報檔已依此產出於 `presentation/fleetmind-proposal-deck.pptx`；live demo 佔中段 2.5–3 分鐘，slides 前後包夾。
 > 總長目標 **7 分 15 秒**，留 45 秒 buffer——超時 30 秒就會腰斬收尾。
 
 ## 時間分配
@@ -35,18 +35,23 @@ flowchart LR
 
 ## Q&A 附錄 slides（不進正片）
 
-可直接套版的 backup slide 清單與彩排流程見 `15-presentation-readiness-pack.md`。
+已套成 `presentation/fleetmind-proposal-deck.pptx` 的 backup slide 清單與彩排流程見 `15-presentation-readiness-pack.md`。
 
 1. 為什麼不做航線優化（`07-judge-qna.md` 第一題）。
-2. 污損歸因方法與未控制變因（湧浪/洋流/SST/吃水）。
-3. 資料品質處理（品質旗標原因碼統計、全量計算鐵律）。
-4. 無船速欄位的 fallback 說明。
-5. 為什麼不用 SageMaker/QuickSight/Bedrock Agents。
-6. 3.2% Speed Loss 到底該不該花 USD 40k 清潔。
-7. SOG 與洋流偏差。
-8. V³ 近似與每船 n 擬合。
-9. 成本估算（AWS 服務用量）。
-10. 賽後資料刪除與 repo 無原始資料檢查。
+2. AI 是否做維修決策。
+3. 防幻覺三道線。
+4. 資料品質處理（品質旗標原因碼統計、全量計算鐵律）。
+5. Baseline / dry-dock 怎麼定。
+6. slow steaming 怎麼分離。
+7. 3.2% Speed Loss 到底該不該花 USD 40k 清潔。
+8. SOG 與洋流偏差。
+9. 污損歸因方法與未控制變因（湧浪/洋流/SST/吃水）。
+10. 為什麼不用 SageMaker/QuickSight/Bedrock Agents。
+11. V³ 近似與每船 n 擬合。
+12. 成本估算（AWS 服務用量）。
+13. CII A-E 與 corrective action。
+14. 提交檔為何全量計算。
+15. 賽後資料刪除與 repo 無原始資料檢查。
 
 ## Demo 防炸設計
 
@@ -63,7 +68,7 @@ flowchart LR
 ## 簡報製作原則
 
 - 每頁一個重點，數字大字呈現。
-- 架構圖與流程圖直接取自 `09-architecture-and-execution-plan.md` mermaid 圖轉出。
+- 架構圖與流程圖以 `09-architecture-and-execution-plan.md` 為準，簡報中用可編輯 PowerPoint 物件重畫。
 - Demo 截圖：Day2 晚只放佔位草稿，Day3 凍結快照後換真圖。
 - 中文為主，技術名詞保留英文。
 - slides 主體 Day2 晚間定稿，Day3 只換截圖（時間軸見 `09` §7）。

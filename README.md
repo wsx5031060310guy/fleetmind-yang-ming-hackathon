@@ -18,7 +18,7 @@ For humans:
 
 1. Read [docs/INDEX.md](docs/INDEX.md) — one-page master overview: doc map, role-based reading paths, glossary, submission checklist.
 2. New members: find your role in [docs/02-team.md](docs/02-team.md), then follow your reading path in INDEX.
-3. Authoritative plan = [docs/09](docs/09-architecture-and-execution-plan.md) (execution) + [docs/12](docs/12-requirements-fit-and-final-architecture.md) (final architecture) + [docs/15](docs/15-presentation-readiness-pack.md) (P5 presentation pack). Older docs (04/05/06) are background; on conflict, 09–15 win.
+3. Authoritative plan = [docs/09](docs/09-architecture-and-execution-plan.md) (execution) + [docs/12](docs/12-requirements-fit-and-final-architecture.md) (final architecture) + [docs/15](docs/15-presentation-readiness-pack.md) (P5 presentation pack) + [presentation](presentation/) (editable proposal deck). Older docs (04/05/06) are background; on conflict, 09–16 and `presentation/` win.
 4. Add new notes under `meetings/`, `decisions/`, or `docs/`.
 
 For AI agents:
@@ -31,10 +31,11 @@ For AI agents:
 
 Status as of 2026-07-08:
 
-- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, and presentation readiness pack merged.
+- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, and editable proposal deck skeleton merged.
 - GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, Maven package, API smoke, Markdown links, and diff hygiene.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
-- Remaining human work: run the skeleton in the real AWS/event account, connect real data/DynamoDB, finish the actual deck/PPTX, and validate Bedrock model access on Day1.
+- Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
+- Remaining human work: run the skeleton in the real AWS/event account, connect real data/DynamoDB, validate Bedrock model access on Day1, and swap final demo numbers/screenshots into the deck.
 
 Merged work log:
 
@@ -48,6 +49,9 @@ Merged work log:
 | #6 | AI brief guardrails | Added prompt contract, cited-metric numeric validator, JUnit tests, and prompt preview endpoint. |
 | #7 | Presentation readiness pack | Added P5 deck pack, source-backed assumptions, backup slide list, Q&A drill, and submission questions. |
 | #8 | Execution plan sync | Updated docs/09/12/14 to match implemented scaffolds and owner mapping. |
+| #9 | README status rollup | Updated README, execution status, and branch cleanup rules. |
+| #10 | Day1 ops runbook | Added AWS/Bedrock/deployment/data-cleanup runbook and helper scripts. |
+| #11 | Proposal deck skeleton | Added editable PPTX, visual preview, and regeneratable deck source. |
 
 ## What Runs Now
 
@@ -63,6 +67,7 @@ Implementation starter kit:
 - `scripts/probe.sh` smoke-tests AWS permissions for Day1.
 - `scripts/bedrock-models.sh` lists Bedrock Anthropic models and inference profiles available in the event account.
 - `scripts/cleanup-event-data.sh` dry-runs or executes post-event data cleanup.
+- `presentation/build-fleetmind-deck.mjs` regenerates the editable PPTX skeleton in a Codex artifact-tool runtime.
 
 Local commands:
 
@@ -102,7 +107,7 @@ Day2:
 - Feng builds the dashboard pages from the existing API contract.
 - Eddie connects Bedrock InvokeModel behind `AiBriefPrompt` and `AiBriefGuardrail`.
 - Sunny owns deployment, CloudWatch, fallback path, and end-to-end integration.
-- P5 builds the deck from [docs/15](docs/15-presentation-readiness-pack.md), with engineering only supplying screenshots and numbers.
+- P5 starts from [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx) and [docs/15](docs/15-presentation-readiness-pack.md), with engineering only supplying screenshots and numbers.
 
 Day3:
 
@@ -112,11 +117,11 @@ Day3:
 
 Remaining open items:
 
-- Actual AWS App Runner or EC2 deployment in event account.
+- Actual AWS App Runner, ECS Express Mode, or EC2 deployment in event account.
 - App Runner is only a fast path if the event account already has access; otherwise use ECS Express Mode or EC2 docker fallback (see [docs/16](docs/16-day1-ops-runbook.md)).
 - Real dataset schema mapping and official FUEL_CONSUMP precision/rounding confirmation.
 - Bedrock model ID/region confirmation through `scripts/probe.sh`.
-- Actual PPTX/deck creation from docs/10 and docs/15.
+- Deck finalization with Day2/Day3 frozen real values and screenshots.
 - Decide whether D5-D8 stretch items move into must-have after Day2 18:00 data review.
 
 ## Important Dates

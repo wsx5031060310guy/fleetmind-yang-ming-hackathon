@@ -9,9 +9,9 @@ target/
 .idea/
 .vscode/
 *.log
+*.pptx.inspect.ndjson
 
 # Do not commit raw enterprise datasets unless the team confirms they are allowed
 # to be stored in this private repository.
 data/raw/
 data/private/
-
