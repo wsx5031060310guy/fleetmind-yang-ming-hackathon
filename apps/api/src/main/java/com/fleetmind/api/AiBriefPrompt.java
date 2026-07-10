@@ -1,18 +1,21 @@
 package com.fleetmind.api;
 
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public final class AiBriefPrompt {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String SYSTEM_PROMPT = """
-            You are FleetMind's vessel-performance analyst for a shipping hackathon demo.
-            Follow these rules:
-            1. Use only the supplied JSON. Do not add outside facts, model guesses, or hidden assumptions.
-            2. Every numeric claim must exactly match a value in citedMetrics.
-            3. Cite metric ids inline as [metric_id] after each numeric claim.
-            4. If the supplied JSON is insufficient, say what is missing instead of inventing.
-            5. Recommend human review. Do not claim guaranteed savings, guaranteed causality, or a maintenance order.
+            你是 FleetMind 船舶效能決策支援分析員。只能使用提供的 JSON，不得加入外部事實、猜測或隱藏假設。
+            請以繁體中文輸出且固定使用四個段落標題：異常摘要 / 水下事件關聯分析 / 建議行動 / 限制與缺失資料。
+            每個數字都必須逐一緊接 inline [metric_id]，metric_id 只能取自 citedMetrics，數字必須完全符合該 metric 的 value。
+            不得創造任何新數字。資料不足時明說缺少什麼，不得推測。
+            lowConfidence 為 true 時，建議行動只能建議 inspection/observation，不得直接建議 cleaning。
+            不得宣稱保證節省、保證因果或直接下達維護命令。數字來自計算，語言來自 AI，決策留給人。
             """;
 
     private AiBriefPrompt() {
@@ -26,51 +29,27 @@ public final class AiBriefPrompt {
             String vesselId,
             BeforeAfterDto beforeAfter,
             List<UnderwaterEventDto> events,
+            List<CitedMetricDto> citedMetrics,
+            boolean lowConfidence) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("vesselId", vesselId);
+        payload.put("lowConfidence", lowConfidence);
+        payload.put("beforeAfter", beforeAfter);
+        payload.put("underwaterEvents", events);
+        payload.put("citedMetrics", citedMetrics);
+        try {
+            return "請只依下列 JSON 產生精簡維護決策簡報：\n"
+                    + OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(payload);
+        } catch (JacksonException exception) {
+            throw new IllegalStateException("Unable to serialize AI brief prompt", exception);
+        }
+    }
+
+    public static String buildUserPrompt(
+            String vesselId,
+            BeforeAfterDto beforeAfter,
+            List<UnderwaterEventDto> events,
             List<CitedMetricDto> citedMetrics) {
-        return String.format(Locale.US, """
-                Generate a concise maintenance brief for this JSON only.
-                {
-                  "vesselId": "%s",
-                  "beforeAfter": {
-                    "eventId": "%s",
-                    "medianKBefore": %.5f,
-                    "medianKAfter": %.5f,
-                    "recoveryPct": %.2f,
-                    "paybackDays": %s
-                  },
-                  "underwaterEvents": [%s],
-                  "citedMetrics": [%s]
-                }
-                """,
-                json(vesselId),
-                json(beforeAfter.eventId()),
-                beforeAfter.medianKBefore(),
-                beforeAfter.medianKAfter(),
-                beforeAfter.recoveryPct(),
-                beforeAfter.businessImpact().paybackDays() == null
-                        ? "null"
-                        : String.format(Locale.US, "%.2f", beforeAfter.businessImpact().paybackDays()),
-                events.stream().map(AiBriefPrompt::eventJson).collect(Collectors.joining(", ")),
-                citedMetrics.stream().map(AiBriefPrompt::metricJson).collect(Collectors.joining(", ")));
-    }
-
-    private static String eventJson(UnderwaterEventDto event) {
-        return String.format(Locale.US,
-                "{\"eventId\":\"%s\",\"date\":\"%s\",\"type\":\"%s\"}",
-                json(event.eventId()),
-                event.date(),
-                json(event.type()));
-    }
-
-    private static String metricJson(CitedMetricDto metric) {
-        return String.format(Locale.US,
-                "{\"metricId\":\"%s\",\"value\":\"%s\",\"href\":\"%s\"}",
-                json(metric.metricId()),
-                json(metric.value()),
-                json(metric.href()));
-    }
-
-    private static String json(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+        return buildUserPrompt(vesselId, beforeAfter, events, citedMetrics, false);
     }
 }

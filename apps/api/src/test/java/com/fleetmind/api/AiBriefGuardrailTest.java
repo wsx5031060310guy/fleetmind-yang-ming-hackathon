@@ -49,12 +49,85 @@ class AiBriefGuardrailTest {
                 CITATIONS);
 
         assertFalse(result.passed());
-        assertTrue(result.violations().contains("missing inline metric citation"));
+        assertTrue(result.violations().stream().allMatch(value -> value.startsWith("uncited numeric claim")));
     }
 
     @Test
-    void promptForcesSuppliedJsonAndCitedNumbers() {
-        assertTrue(AiBriefPrompt.systemPrompt().contains("Use only the supplied JSON"));
-        assertTrue(AiBriefPrompt.systemPrompt().contains("Every numeric claim"));
+    void rejectsBareNumberWithoutUnit() {
+        AiBriefGuardrailDto result = AiBriefGuardrail.validate(
+                "The unexplained score is 999.", CITATIONS);
+
+        assertFalse(result.passed());
+        assertTrue(result.violations().getFirst().contains("999"));
+    }
+
+    @Test
+    void rejectsUnitBeforeNumber() {
+        AiBriefGuardrailDto result = AiBriefGuardrail.validate(
+                "Avoidable cost is USD 470,000.", CITATIONS);
+
+        assertFalse(result.passed());
+        assertTrue(result.violations().getFirst().contains("USD 470,000"));
+    }
+
+    @Test
+    void rejectsOneCitationUsedForMultipleClaims() {
+        AiBriefGuardrailDto result = AiBriefGuardrail.validate(
+                "Observed 4.76% speed loss and 16.87 days payback [payback_days].", CITATIONS);
+
+        assertFalse(result.passed());
+        assertTrue(result.violations().stream().anyMatch(value -> value.contains("wrong metric")));
+    }
+
+    @Test
+    void rejectsWrongMetricCitation() {
+        AiBriefGuardrailDto result = AiBriefGuardrail.validate(
+                "Observed 4.76% speed loss [payback_days].", CITATIONS);
+
+        assertFalse(result.passed());
+        assertTrue(result.violations().getFirst().contains("claim cites wrong metric"));
+    }
+
+    @Test
+    void acceptsKnotsWithCorrectCitation() {
+        List<CitedMetricDto> citations = List.of(
+                new CitedMetricDto("observed_speed_knots", "18.5", "/api/vessels/YM-DEMO-01/performance"));
+
+        AiBriefGuardrailDto result = AiBriefGuardrail.validate(
+                "Observed speed was 18.5 knots [observed_speed_knots].", citations);
+
+        assertTrue(result.passed());
+    }
+
+    @Test
+    void acceptsTextWithoutNumericClaimsWhenCitationsExist() {
+        AiBriefGuardrailDto result = AiBriefGuardrail.validate("Recommend human inspection.", CITATIONS);
+
+        assertTrue(result.passed());
+    }
+
+    @Test
+    void ignoresIsoDates() {
+        AiBriefGuardrailDto result = AiBriefGuardrail.validate("Inspection occurred on 2025-03-15.", CITATIONS);
+
+        assertTrue(result.passed());
+    }
+
+    @Test
+    void deterministicBriefStillPasses() {
+        AiBriefGuardrailDto result = AiBriefGuardrail.validate(
+                "YM-DEMO-01 shows speed loss under comparable conditions. "
+                        + "The deterministic calculation estimates 4.76% speed loss [latest_speed_loss_pct] "
+                        + "and about 16.87 days payback [payback_days] under the stated assumptions.",
+                CITATIONS);
+
+        assertTrue(result.passed());
+    }
+
+    @Test
+    void promptEnforcesFixedSectionsAndCitationBoundary() {
+        assertTrue(AiBriefPrompt.systemPrompt().contains("異常摘要 / 水下事件關聯分析 / 建議行動 / 限制與缺失資料"));
+        assertTrue(AiBriefPrompt.systemPrompt().contains("每個數字"));
+        assertTrue(AiBriefPrompt.systemPrompt().contains("數字來自計算，語言來自 AI，決策留給人"));
     }
 }
