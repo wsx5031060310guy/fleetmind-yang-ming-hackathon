@@ -4,19 +4,22 @@ set -euo pipefail
 INPUT=""
 EXPECTED_ROWS=""
 MAX_DECIMALS=6
+MAX_BLANK_FOC=0
 COLUMNS="vessel_id,date,FUEL_CONSUMP,quality_flags"
 
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/validate-fuel-consump.sh --input fuel-consump.csv [--expected-rows N] [--max-decimals N] [--columns csv]
+  scripts/validate-fuel-consump.sh --input fuel-consump.csv [--expected-rows N] [--max-decimals N] [--max-blank-foc N] [--columns csv]
 
 Validates the current FleetMind FUEL_CONSUMP export shape:
 - exact header order
 - optional expected row count
 - duplicate vessel_id/date keys
-- ISO date strings
+- real ISO calendar dates
 - non-negative numeric FUEL_CONSUMP values with bounded decimal precision
+- at most --max-blank-foc blank FUEL_CONSUMP values (default 0)
+- every blank FUEL_CONSUMP has an explanatory quality flag
 - quality_flags as pipe-separated uppercase tokens
 EOF
 }
@@ -47,6 +50,14 @@ while [[ $# -gt 0 ]]; do
       MAX_DECIMALS="$2"
       shift 2
       ;;
+    --max-blank-foc)
+      if [[ $# -lt 2 ]]; then
+        echo "missing value for --max-blank-foc" >&2
+        exit 2
+      fi
+      MAX_BLANK_FOC="$2"
+      shift 2
+      ;;
     --columns)
       if [[ $# -lt 2 ]]; then
         echo "missing value for --columns" >&2
@@ -71,11 +82,12 @@ if [[ -z "$INPUT" ]]; then
   exit 2
 fi
 
-ruby -rcsv -e '
+ruby -rcsv -rdate -e '
 input = ARGV.fetch(0)
 expected_rows = ARGV.fetch(1)
 max_decimals = Integer(ARGV.fetch(2))
 expected_headers = ARGV.fetch(3).split(",")
+max_blank_foc = Integer(ARGV.fetch(4))
 
 errors = []
 unless File.file?(input)
@@ -101,7 +113,12 @@ table.each_with_index do |row, index|
   flags = row["quality_flags"].to_s.strip
 
   errors << "line #{line}: missing vessel_id" if vessel_id.empty?
-  errors << "line #{line}: date must be ISO yyyy-mm-dd" unless date.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+  begin
+    parsed_date = Date.iso8601(date)
+    errors << "line #{line}: date must be ISO yyyy-mm-dd" unless parsed_date.to_s == date
+  rescue ArgumentError
+    errors << "line #{line}: date must be a real ISO calendar date"
+  end
 
   key = "#{vessel_id}\t#{date}"
   if seen[key]
@@ -112,6 +129,7 @@ table.each_with_index do |row, index|
 
   if foc.empty?
     blank_foc += 1
+    errors << "line #{line}: blank FUEL_CONSUMP requires quality_flags" if flags.empty?
   elsif !foc.match?(numeric_re)
     errors << "line #{line}: FUEL_CONSUMP must be non-negative numeric with <= #{max_decimals} decimals"
   end
@@ -121,6 +139,10 @@ table.each_with_index do |row, index|
       errors << "line #{line}: invalid quality flag token" unless flag.match?(/\A[A-Z0-9_]+\z/)
     end
   end
+end
+
+if blank_foc > max_blank_foc
+  errors << "blank FUEL_CONSUMP count #{blank_foc} exceeds --max-blank-foc #{max_blank_foc}"
 end
 
 if !expected_rows.empty? && table.length != Integer(expected_rows)
@@ -133,4 +155,4 @@ else
   errors.each { |error| warn error }
   exit 1
 end
-' "$INPUT" "$EXPECTED_ROWS" "$MAX_DECIMALS" "$COLUMNS"
+' "$INPUT" "$EXPECTED_ROWS" "$MAX_DECIMALS" "$COLUMNS" "$MAX_BLANK_FOC"
