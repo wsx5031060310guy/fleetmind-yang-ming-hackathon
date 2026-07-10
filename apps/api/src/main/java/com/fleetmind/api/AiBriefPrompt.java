@@ -36,7 +36,7 @@ public final class AiBriefPrompt {
                     "medianKBefore": %.5f,
                     "medianKAfter": %.5f,
                     "recoveryPct": %.2f,
-                    "paybackDays": %.2f
+                    "paybackDays": %s
                   },
                   "underwaterEvents": [%s],
                   "citedMetrics": [%s]
@@ -47,7 +47,9 @@ public final class AiBriefPrompt {
                 beforeAfter.medianKBefore(),
                 beforeAfter.medianKAfter(),
                 beforeAfter.recoveryPct(),
-                beforeAfter.businessImpact().paybackDays(),
+                beforeAfter.businessImpact().paybackDays() == null
+                        ? "null"
+                        : String.format(Locale.US, "%.2f", beforeAfter.businessImpact().paybackDays()),
                 events.stream().map(AiBriefPrompt::eventJson).collect(Collectors.joining(", ")),
                 citedMetrics.stream().map(AiBriefPrompt::metricJson).collect(Collectors.joining(", ")));
     }

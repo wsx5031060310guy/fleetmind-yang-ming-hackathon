@@ -18,6 +18,7 @@
 
     <section class="panel">
       <h2>Fleet Overview</h2>
+      <div id="fleet-wrap" class="table-wrap">
       <table id="fleet">
         <thead>
           <tr>
@@ -26,20 +27,22 @@
             <th>Speed Loss</th>
             <th>Fouling</th>
             <th>Confidence</th>
+            <th>Days since cleaning</th>
             <th>Quality</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
+      </div>
     </section>
 
     <section class="grid">
       <div class="panel">
-        <h2>Vessel Trend</h2>
+        <h2>Vessel Trend · <span id="selected-vessel">YM-DEMO-01</span></h2>
         <div id="performance"></div>
       </div>
       <div class="panel">
-        <h2>Business Impact</h2>
+        <h2>水下報告狀態 × 油耗關聯</h2>
         <div id="business"></div>
       </div>
     </section>
@@ -57,7 +60,7 @@
 
     <section class="panel">
       <h2>Data Quality</h2>
-      <p id="quality"></p>
+      <div id="quality"></div>
     </section>
     <p id="app-error" role="alert"></p>
   </main>
