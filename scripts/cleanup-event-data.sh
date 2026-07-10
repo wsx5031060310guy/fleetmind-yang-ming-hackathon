@@ -7,6 +7,7 @@ TABLE="${FLEETMIND_DDB_TABLE:-}"
 LOCAL_SNAPSHOT_DIR="${FLEETMIND_LOCAL_SNAPSHOT_DIR:-}"
 EXECUTE=false
 YES=false
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -84,11 +85,15 @@ fi
 
 if [[ -n "$LOCAL_SNAPSHOT_DIR" ]]; then
   case "$LOCAL_SNAPSHOT_DIR" in
-    "$PWD"/*|/tmp/*)
-      run_or_print rm -rf "$LOCAL_SNAPSHOT_DIR"
+    /*) RESOLVED_SNAPSHOT_DIR="$LOCAL_SNAPSHOT_DIR" ;;
+    *) RESOLVED_SNAPSHOT_DIR="$ROOT_DIR/$LOCAL_SNAPSHOT_DIR" ;;
+  esac
+  case "$RESOLVED_SNAPSHOT_DIR" in
+    "$ROOT_DIR"/*|/tmp/*)
+      run_or_print rm -rf "$RESOLVED_SNAPSHOT_DIR"
       ;;
     *)
-      echo "Refusing to delete local dir outside workspace or /tmp: $LOCAL_SNAPSHOT_DIR" >&2
+      echo "Refusing to delete local dir outside repo or /tmp: $RESOLVED_SNAPSHOT_DIR" >&2
       exit 2
       ;;
   esac

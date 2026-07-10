@@ -71,6 +71,11 @@ if [[ -z "$INPUT" ]]; then
   exit 2
 fi
 
+if ! command -v ruby >/dev/null 2>&1; then
+  echo "ruby is required; verify macOS Ruby or install with: brew install ruby" >&2
+  exit 2
+fi
+
 ruby -rcsv -e '
 input = ARGV.fetch(0)
 expected_rows = ARGV.fetch(1)

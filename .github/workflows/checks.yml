@@ -19,11 +19,20 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - name: Shellcheck scripts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          shellcheck -S error scripts/*.sh scripts/lib/*.sh
+
       - name: Core calculation golden checks
         run: ./scripts/test-core-calc.sh
 
       - name: Local demo smoke
         run: ./scripts/demo-local.sh
+
+      - name: Day3 development final check
+        run: ./scripts/day3-final-check.sh --dev
 
       - name: Submission audit
         run: ./scripts/submission-audit.sh --allow-non-main --skip-remote-branches
@@ -33,12 +42,13 @@ jobs:
 
       - name: API smoke
         run: |
-          java -jar apps/api/target/fleetmind-api-0.1.0-SNAPSHOT.jar > /tmp/fleetmind-api.log 2>&1 &
+          jar_path="$(ls apps/api/target/fleetmind-api-*.jar | head -1)"
+          java -jar "$jar_path" > /tmp/fleetmind-api.log 2>&1 &
           pid=$!
           cleanup() { kill "$pid" 2>/dev/null || true; }
           trap cleanup EXIT
           for _ in $(seq 1 30); do
-            if curl -fsS http://localhost:8080/api/health >/dev/null; then
+            if curl -fsS --connect-timeout 3 --max-time 12 http://localhost:8080/api/health >/dev/null; then
               if ./scripts/api-smoke.sh; then
                 exit 0
               fi
@@ -55,7 +65,7 @@ jobs:
           ruby -e '
             bad = []
             Dir.glob("**/*.md").each do |file|
-              text = File.read(file)
+              text = File.read(file, encoding: "UTF-8")
               text.scan(/\[[^\]]+\]\(([^)]+)\)/).flatten.each do |href|
                 next if href =~ /\A(https?:|mailto:|#)/
                 path = href.split("#", 2)[0]
@@ -75,3 +85,28 @@ jobs:
 
       - name: Git diff hygiene
         run: git diff --check
+
+  macos-compat:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: BSD/macOS script smoke
+        run: |
+          ./scripts/test-core-calc.sh
+          if ! command -v ruby >/dev/null 2>&1; then
+            echo "ruby unavailable on runner; skipping Ruby-backed validation"
+            exit 0
+          fi
+          ./scripts/demo-local.sh
+          ./scripts/validate-fuel-consump.sh \
+            --input core-calc/build/demo/fuel-consump.csv \
+            --expected-rows 3
+          ./scripts/schema-inventory.sh samples/noon-reports.csv

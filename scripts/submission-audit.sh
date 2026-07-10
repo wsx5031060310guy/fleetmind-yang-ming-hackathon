@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ALLOW_DIRTY=false
 ALLOW_NON_MAIN=false
 SKIP_REMOTE_BRANCHES=false
+CHECK_INPUTS=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -20,14 +21,20 @@ while [[ $# -gt 0 ]]; do
       SKIP_REMOTE_BRANCHES=true
       shift
       ;;
+    --check-inputs)
+      CHECK_INPUTS=true
+      shift
+      ;;
     -h|--help)
       cat <<'EOF'
 Usage:
-  scripts/submission-audit.sh [--allow-dirty] [--allow-non-main] [--skip-remote-branches]
+  scripts/submission-audit.sh [--allow-dirty] [--allow-non-main] [--skip-remote-branches] [--check-inputs]
 
 Default mode is for Day3 final upload: clean main branch, only origin/main as
 remote branch, no raw enterprise data, no common secret patterns, and all
 submission deliverable source files present.
+
+Tracked inputs/screenshots files warn by default. --check-inputs makes them fail.
 
 During development, run:
   scripts/submission-audit.sh --allow-dirty --allow-non-main --skip-remote-branches
@@ -40,6 +47,11 @@ EOF
       ;;
   esac
 done
+
+if ! command -v ruby >/dev/null 2>&1; then
+  echo "ruby is required for markdown auditing; verify macOS Ruby or install with: brew install ruby" >&2
+  exit 2
+fi
 
 cd "$ROOT_DIR"
 
@@ -78,7 +90,7 @@ check_markdown_links() {
   if ruby -e '
     bad = []
     Dir.glob("**/*.md").each do |file|
-      text = File.read(file)
+      text = File.read(file, encoding: "UTF-8")
       text.scan(/\[[^\]]+\]\(([^)]+)\)/).flatten.each do |href|
         next if href =~ /\A(https?:|mailto:|#)/
         path = href.split("#", 2)[0]
@@ -129,6 +141,9 @@ for file in \
   scripts/freeze-demo-snapshot.sh \
   scripts/validate-fuel-consump.sh \
   scripts/warmup-live-demo.sh \
+  scripts/export-fuel-consump.sh \
+  scripts/business-impact.sh \
+  scripts/compile-core-calc.sh \
   scripts/day3-final-check.sh; do
   check_executable "$file"
 done
@@ -142,6 +157,17 @@ else
     fail "working tree is dirty"
     git status --short >&2
   fi
+fi
+
+tracked_screenshots="$(git ls-files 'inputs/screenshots/*' ':!inputs/screenshots/README.md')"
+if [[ -z "$tracked_screenshots" ]]; then
+  pass "no tracked Yang Ming screenshots"
+elif [[ "$CHECK_INPUTS" == "true" ]]; then
+  fail "tracked files under inputs/screenshots found (--check-inputs)"
+  echo "$tracked_screenshots" >&2
+else
+  echo "WARNING tracked files under inputs/screenshots violate docs/20 section 2; rerun with --check-inputs to fail" >&2
+  echo "$tracked_screenshots" | sed 's/^/  /' >&2
 fi
 
 branch="$(git branch --show-current)"
@@ -169,8 +195,8 @@ else
   echo "$tracked_sensitive_names" >&2
 fi
 
-secret_re='AKIA[0-9A-Z]{16}|aws_secret_access_key|BEGIN (RSA |OPENSSH |PRIVATE )?KEY|xox[baprs]-|ghp_[A-Za-z0-9_]{30,}'
-if git grep -nE "$secret_re" -- . ':!scripts/submission-audit.sh' >/tmp/fleetmind-secret-scan.txt; then
+secret_re='(AKIA|ASIA)[0-9A-Z]{16}|aws_secret_access_key|BEGIN (RSA |OPENSSH |PRIVATE )?KEY|xox[baprs]-|ghp_[A-Za-z0-9_]{30,}'
+if git grep -inE "$secret_re" -- . ':!scripts/submission-audit.sh' >/tmp/fleetmind-secret-scan.txt; then
   fail "possible secret patterns found"
   sed 's/^/  /' /tmp/fleetmind-secret-scan.txt >&2
 else
