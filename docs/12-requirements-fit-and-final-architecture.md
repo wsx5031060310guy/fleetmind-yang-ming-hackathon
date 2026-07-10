@@ -109,7 +109,7 @@ flowchart LR
     C --> X["FUEL_CONSUMP 提交檔<br/>全量版 + 篩選版 → S3 exports/"]
   end
   subgraph Serve["服務層（單服務，同源）"]
-    D --> E["Spring Boot<br/>API + React build 同源<br/>App Runner min=1（fallback EC2）"]
+    D --> E["Spring Boot<br/>API + 靜態 dashboard 同源<br/>App Runner min=1（fallback ECS Express / EC2）"]
     E --> F["Speed Loss Dashboard<br/>排名 · 趨勢 · 歸因卡 · Before-After"]
     E <--> G["Amazon Bedrock (Claude)<br/>決策簡報 + 事件關聯分析<br/>demo 走預產快取"]
   end

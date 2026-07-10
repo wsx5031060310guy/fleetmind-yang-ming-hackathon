@@ -114,7 +114,7 @@ Daily FOC = ME_FULLSPEED_CONSUMP_VLSFO / HOURS_FULL_SPEED * 24
 
 Build a Fleet Efficiency Copilot with a Speed Loss dashboard.
 
-**Finalized architecture (authoritative — see docs/09 §2.2 and docs/12 §4):** core-calc as a Java pure-function library (no I/O, golden-case tested) embedded in a single Spring Boot service that also serves the React dashboard (same origin), backed by S3 + DynamoDB + Bedrock + CloudWatch. Deliberately NOT using ECS/RDS/CloudFront/QuickSight/Bedrock Agents (six-route evaluation in docs/11). Optional P2 bonus: the same core-calc jar triggered as an S3-event Lambda.
+**Finalized architecture (authoritative — see docs/09 §2.2 and docs/12 §4):** core-calc as a Java pure-function library (no I/O, golden-case tested) embedded in a single Spring Boot service that also serves the vanilla-JS static dashboard (same origin — no React), backed by S3 + DynamoDB + Bedrock + CloudWatch. Default deployment: App Runner; sanctioned fallbacks: ECS Express Mode or EC2 docker (docs/16 §3). Deliberately NOT using RDS/CloudFront/QuickSight/Bedrock Agents (six-route evaluation in docs/11). Optional P2 bonus: the same core-calc jar triggered as an S3-event Lambda.
 
 Core flow:
 
