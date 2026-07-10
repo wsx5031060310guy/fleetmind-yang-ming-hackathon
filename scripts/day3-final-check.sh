@@ -62,7 +62,7 @@ section() {
 }
 
 section "env template"
-zsh -c 'set -a; source .env.example; test -n "$AWS_REGION"; test -n "$BASE_URL"'
+bash -c 'set -a; source .env.example; test -n "$AWS_REGION"; test -n "$BASE_URL"'
 
 section "submission audit"
 if [[ "$STRICT_DATA_MODE" == "true" ]]; then
