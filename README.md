@@ -29,17 +29,19 @@ For AI agents:
 
 ## Current Status
 
-Status as of 2026-07-08:
+Status as of 2026-07-10:
 
 - `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, demo freeze snapshot script, FUEL_CONSUMP validator, live demo warm-up script, Day2 stretch gate, AI fallback demo, and environment template merged.
-- GitHub Actions checks pass on `main`: core-calc golden checks, local demo smoke, submission audit, Maven package, API smoke, Markdown links, and diff hygiene.
+- Pre-race hardening round (PR #27-#32, from a three-way adversarial review) is merged: crash-proof FUEL_CONSUMP export with submission-profile flags, full Speed Loss aggregation pipeline in `core-calc` with golden tests, interactive SVG dashboard (vessel switching + citation click-back), Bedrock client skeleton with a guardrail-gated fallback ladder, event-day ops hardening (curl timeouts, strict Day3 checks, macOS CI), and entry-doc/compliance sync (Yang Ming screenshots removed from tracking).
+- GitHub Actions checks pass on `main`: core-calc + speed-loss golden checks, local demo smoke, submission audit, shellcheck, Day3 dev check, Maven package, API smoke, Markdown links, diff hygiene, and a macOS compatibility job.
 - Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
 - Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
 - Enterprise data application draft is ready at [docs/17-enterprise-data-application.md](docs/17-enterprise-data-application.md); Day1/Day2 work is to fill real schema values, row counts, file names, and screenshot/data-retention constraints.
 - Day3 upload control sheet is ready at [docs/18-submission-control-sheet.md](docs/18-submission-control-sheet.md); Day1 work is to fill platform field names and file/link limits.
 - Technical architecture submission draft is ready at [docs/19-technical-architecture-submission.md](docs/19-technical-architecture-submission.md); Day3 work is to fill actual region, URL, bucket/table names, model id, and commit SHA.
 - Day1 schema inventory flow is ready at [docs/20-day1-schema-inventory.md](docs/20-day1-schema-inventory.md), backed by `scripts/schema-inventory.sh` and `samples/schema-map.template.csv`.
-- Remaining human work: run the skeleton in the real AWS/event account, connect real data/DynamoDB, validate Bedrock model access on Day1, swap final demo numbers/screenshots into the deck, fill Day1 placeholders in docs/17 using docs/20, and fill platform placeholders in docs/18.
+- Remaining human work: run the skeleton in the real AWS/event account, connect real data/DynamoDB, set `AWS_REGION` + `FLEETMIND_BEDROCK_MODEL_ID` and smoke Bedrock on Day1 (client code is pre-built), swap final demo numbers/screenshots into the deck, fill Day1 placeholders in docs/17 using docs/20, and fill platform placeholders in docs/18.
+- Team decision pending: the removed Yang Ming screenshots still exist in old git history; rewriting history (filter-repo + everyone re-clones) is a team call.
 
 Merged work log:
 
@@ -70,20 +72,27 @@ Merged work log:
 | #23 | Source-safe env template | Replaced shell-unsafe placeholders in `.env.example`. |
 | #24 | CI submission audit | Added submission audit to GitHub Actions. |
 | #25 | Day3 final check | Added one-command final local pre-upload check. |
+| #26 | Strict final check mode | Fixed strict-mode handling in the Day3 final check. |
+| #27 | Export resilience | Made FUEL_CONSUMP export crash-proof (never-drop rows, BOM/Big5, multiline quotes, submission-profile flags, atomic write) and hardened the validator (blank FOC fails by default). |
+| #28 | Ops hardening | Added curl timeouts, ASIA/STS secret scan, screenshots gate, probe REQUIRED/OPTIONAL split, Day3 strict real-data mode, dynamic port/jar, shellcheck + macOS CI. |
+| #29 | Speed Loss pipeline | Implemented the full docs/09 §4 aggregation (reference window, speed band, rolling median, Theil-Sen, before-after) as pure functions with golden tests. |
+| #30 | Interactive dashboard | Added SVG trend chart with event markers, vessel switching, citation click-back, per-panel error states, and XSS-safe rendering. |
+| #31 | Docs and compliance | Synced AI entry docs, removed tracked Yang Ming screenshots, relative Day1 timeline, Day3 shadow-uploader plan. |
+| #32 | Bedrock skeleton | Added AiBriefService (Converse, timeouts, retry, cached fallback ladder) and per-claim citation guardrail matching. |
 
 ## What Runs Now
 
 Implementation starter kit:
 
-- `apps/api/` contains the single-service Spring Boot skeleton that serves the static dashboard and `/api/**` from one origin.
-- `core-calc/` contains the pure Java calculation seed and golden checks.
-- `scripts/test-core-calc.sh` runs local golden checks with `javac`.
-- `scripts/export-fuel-consump.sh` exports a first-pass `FUEL_CONSUMP` CSV skeleton without dropping rows.
-- `scripts/validate-fuel-consump.sh` validates export headers, row count, duplicate keys, numeric precision, and quality flags.
+- `apps/api/` contains the single-service Spring Boot app: same-origin static dashboard (SVG trend chart, vessel switching, citation click-back), `/api/**`, and the Bedrock-ready `AiBriefService` (deterministic fallback until `AWS_REGION` + `FLEETMIND_BEDROCK_MODEL_ID` are set).
+- `core-calc/` contains the pure Java calculation library and golden checks: Daily FOC/quality flags plus the full Speed Loss aggregation (`SpeedLoss`: reference window, same-speed band, rolling median, Theil-Sen, before-after).
+- `scripts/test-core-calc.sh` runs both golden suites (`CoreCalcGoldenTest`, `SpeedLossGoldenTest`) with `javac`.
+- `scripts/export-fuel-consump.sh` exports the `FUEL_CONSUMP` CSV without ever dropping or crashing on a row (dirty rows are emitted with `PARSE_ERROR`/`INVALID_*` flags); the CLI supports `--charset`, `--date-format`, `--scale`, `--rounding-mode`, `--output-columns`, `--line-ending`, and `--qualified-only` (filtered submission variant) so the official Day1 format needs no recompile.
+- `scripts/validate-fuel-consump.sh` validates export headers, row count, duplicate keys, real calendar dates, numeric precision, and quality flags; blank `FUEL_CONSUMP` fails by default (`--max-blank-foc`).
 - `scripts/business-impact.sh` estimates fuel cost, CO2, EU ETS, and cleaning payback days from explicit assumptions.
 - `scripts/demo-local.sh` runs the local golden checks and sample exports end to end.
 - `scripts/api-smoke.sh` checks the Spring Boot API once the service is running.
-- `scripts/probe.sh` smoke-tests AWS permissions for Day1.
+- `scripts/probe.sh` smoke-tests AWS permissions for Day1 with a REQUIRED/OPTIONAL split (real Bedrock invoke-model counts, list-models does not); `--strict` restores all-mandatory.
 - `scripts/bedrock-models.sh` lists Bedrock Anthropic models and inference profiles available in the event account.
 - `scripts/cleanup-event-data.sh` dry-runs or executes post-event data cleanup.
 - `scripts/submission-audit.sh` checks Day3 repo safety and required deliverable source files before upload.
@@ -91,7 +100,7 @@ Implementation starter kit:
 - `scripts/freeze-demo-snapshot.sh` captures live/local demo API outputs, AI brief, FUEL_CONSUMP, and checksums into ignored `build/`.
 - `samples/schema-map.template.csv` maps Day1 real fields to FleetMind/core-calc fields.
 - `scripts/warmup-live-demo.sh` warms and verifies the root dashboard plus key API paths before judging.
-- `scripts/day3-final-check.sh` runs the local pre-upload check bundle.
+- `scripts/day3-final-check.sh` runs the local pre-upload check bundle; strict real-data mode activates with `FINAL_FUEL_CONSUMP` + `OFFICIAL_ROW_COUNT` (+ optional `BASE_URL`), `--dev` keeps the sample-based checks.
 - `.env.example` lists Day1/Day3 environment variables without secrets.
 - `presentation/build-fleetmind-deck.mjs` regenerates the editable PPTX skeleton in a Codex artifact-tool runtime.
 
@@ -134,9 +143,9 @@ Day1:
 
 Day2:
 
-- Chen finishes Speed Loss, fouling attribution, confidence grade, CII/ROI outputs.
-- Feng builds the dashboard pages from the existing API contract.
-- Eddie connects Bedrock InvokeModel behind `AiBriefPrompt` and `AiBriefGuardrail`.
+- Chen wires real data into the pre-built `SpeedLoss` pipeline (already implemented and golden-tested; remaining work is schema mapping into `DailyPoint`) and finishes CII/ROI outputs.
+- Feng extends the pre-built interactive dashboard (chart, vessel switching, and citation click-back already work on demo data) to the real-data repository.
+- Eddie enables the pre-built `AiBriefService` Bedrock path: set `AWS_REGION` + `FLEETMIND_BEDROCK_MODEL_ID`, smoke one Converse call, verify the guardrail-gated fallback ladder.
 - Sunny owns deployment, CloudWatch, fallback path, and end-to-end integration.
 - P5 starts from [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx) and [docs/15](docs/15-presentation-readiness-pack.md), with engineering only supplying screenshots and numbers.
 
@@ -151,8 +160,9 @@ Remaining open items:
 
 - Actual AWS App Runner, ECS Express Mode, or EC2 deployment in event account.
 - App Runner is only a fast path if the event account already has access; otherwise use ECS Express Mode or EC2 docker fallback (see [docs/16](docs/16-day1-ops-runbook.md)).
-- Real dataset values still need to be inventoried with docs/20; official FUEL_CONSUMP precision/rounding still needs Day1 confirmation.
-- Bedrock model ID/region confirmation through `scripts/probe.sh`.
+- Real dataset values still need to be inventoried with docs/20; official FUEL_CONSUMP precision/rounding still needs Day1 confirmation (now flag-configurable on the export CLI, no recompile).
+- Bedrock model ID/region confirmation through `scripts/probe.sh` (real invoke-model smoke), then set the two env vars for `AiBriefService`.
+- Deck regeneration script depends on a private Codex-runtime package; treat the committed PPTX as canonical and swap numbers/screenshots manually unless the runtime is available.
 - Deck finalization with Day2/Day3 frozen real values and screenshots.
 - Decide D5-D8/P1 stretch only through [docs/21](docs/21-day2-stretch-gate.md) after Day2 18:00 data review.
 
@@ -207,6 +217,7 @@ Yang Ming briefing scoring emphasis:
 - Do not commit secrets, AWS credentials, personal tokens, or production keys.
 - Use `.env.example` as the only committed environment template; filled `.env` files stay local.
 - Do not commit raw enterprise datasets unless the team confirms repository storage is allowed.
+- Do not commit Yang Ming screenshots or briefing images anywhere in the repo (docs/20 §2); `scripts/submission-audit.sh` warns on tracked files under `inputs/screenshots/` and fails with `--check-inputs`.
 - If Yang Ming provides data only for the competition period, delete or archive it according to the official rules after the event.
 - Prefer short Markdown notes with source/date/context over screenshots alone.
 - Delete merged feature branches after PR merge; keep `main` as the only long-lived branch.
