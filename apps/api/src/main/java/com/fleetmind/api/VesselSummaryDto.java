@@ -5,6 +5,7 @@ public record VesselSummaryDto(
         double latestSpeedLossPct,
         double foulingAttributionPct,
         String confidence,
+        int sampleDays,
         int daysSinceLastCleaning,
         int dataQualityScore,
         int reviewPriority) {

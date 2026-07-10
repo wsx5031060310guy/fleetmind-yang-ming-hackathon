@@ -30,7 +30,7 @@ Competition constraints:
 - Presentation: 8 minutes + 4 minutes Q&A.
 
 Finalized architecture (do not propose alternatives unless asked):
-core-calc = Java pure-function library (no I/O) embedded in a single Spring Boot service that also serves the React dashboard (same origin), on App Runner or EC2, backed by S3 + DynamoDB + Bedrock + CloudWatch. Deliberately not using ECS/RDS/CloudFront/QuickSight/Bedrock Agents. Optional bonus: same core-calc jar as S3-event Lambda.
+core-calc = Java pure-function library (no I/O) embedded in a single Spring Boot service that also serves the vanilla-JS static dashboard (same origin — no React), on App Runner (fallbacks: ECS Express Mode or EC2 docker), backed by S3 + DynamoDB + Bedrock + CloudWatch. Deliberately not using RDS/CloudFront/QuickSight/Bedrock Agents. Optional bonus: same core-calc jar as S3-event Lambda.
 
 Official scoring:
 - Theme relevance 30%

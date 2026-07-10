@@ -70,6 +70,24 @@ table {
   border-collapse: collapse;
 }
 
+.table-wrap {
+  overflow-x: auto;
+}
+
+#fleet tbody tr {
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+#fleet tbody tr:hover,
+#fleet tbody tr[aria-selected="true"] {
+  background: #eef4ff;
+}
+
+#fleet tbody tr[aria-selected="true"] {
+  box-shadow: inset 3px 0 #155eef;
+}
+
 th,
 td {
   padding: 10px;
@@ -94,6 +112,68 @@ th {
 .metric small {
   grid-column: 1 / -1;
   color: #627386;
+}
+
+#performance svg {
+  display: block;
+  width: 100%;
+  min-height: 250px;
+}
+
+.chart-grid {
+  stroke: #dfe5ed;
+  stroke-width: 1;
+}
+
+.axis-label,
+.event-label {
+  fill: #627386;
+  font-size: 11px;
+}
+
+.event-line {
+  stroke: #d97706;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.event-label {
+  fill: #9a5b05;
+  font-size: 9px;
+}
+
+.trend-line {
+  fill: none;
+  stroke: #155eef;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.data-dot {
+  fill: #155eef;
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.data-dot.flagged {
+  fill: #fff;
+  stroke: #d97706;
+  stroke-width: 3;
+}
+
+.chart-note,
+.quality-summary {
+  margin: 4px 0 0;
+  color: #627386;
+  font-size: 12px;
+}
+
+.empty-state,
+.panel-error,
+.guardrail-warning {
+  color: #b42318;
+  font-weight: 700;
 }
 
 button,
@@ -134,12 +214,44 @@ button.secondary {
   gap: 8px;
 }
 
-.citations a {
+.citations .citation {
   padding: 6px 8px;
+  min-height: auto;
   border-radius: 6px;
   background: #eef4ff;
   color: #1849a9;
-  text-decoration: none;
+  font-weight: 600;
+}
+
+.inline-citation {
+  display: inline;
+  min-height: auto;
+  padding: 0 2px;
+  background: transparent;
+  color: #155eef;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.quality-list {
+  margin-bottom: 0;
+  padding-left: 22px;
+}
+
+.quality-list li {
+  margin: 5px 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+
+.flash {
+  animation: flash-outline 1.5s ease-out;
+}
+
+@keyframes flash-outline {
+  0%, 45% { outline: 4px solid #f59e0b; outline-offset: 3px; }
+  100% { outline: 0 solid transparent; outline-offset: 8px; }
 }
 
 #app-error {

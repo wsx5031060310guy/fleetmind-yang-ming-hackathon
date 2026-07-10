@@ -90,14 +90,17 @@ Execute：
 
 Day3 七項提交物的完整管制表見 `18-submission-control-sheet.md`。
 
+> 時間採相對制：**T+0 = 資料與 AWS 環境實際開放**（官方預告 Day1 13:00 才能動手；若上午開幕即可提問，提問類項目提早做，不佔 T 時間軸）。
+
 | 時間 | 動作 | Owner |
 | --- | --- | --- |
-| 09:40-10:00 | 問 challenge link、提交格式、錄影格式、資料保留規定 | P5 |
-| 10:00-10:40 | 依 `20-day1-schema-inventory.md` 跑 schema inventory，填私有欄位 mapping | Feng + Chen + P5 |
-| 10:40-11:00 | `probe.sh` + `bedrock-models.sh` | Sunny |
-| 13:00 | 選部署路線：App Runner / ECS Express / EC2 | Sunny + Eddie |
-| 14:00 | API skeleton live URL 或 EC2 URL 有 health check | Sunny |
-| 17:00 | demo URL、repo URL、fallback recording plan 都寫入提交 checklist | P5 |
+| 開幕時段（若可提問） | 問 challenge link、提交格式、錄影格式、資料保留規定 | P5 |
+| T+0〜T+20 | 平台/帳號問題確認、AWS credentials 到手驗證（`aws sts get-caller-identity`） | Sunny + P5 |
+| T+20〜T+50 | 平行：依 `20-day1-schema-inventory.md` 跑 schema inventory 填 mapping（Feng + Chen）；`probe.sh` + Bedrock 真 invoke 煙測（Sunny） | Feng + Chen + Sunny |
+| T+50 | 鎖定部署路線：App Runner / ECS Express / EC2 | Sunny + Eddie |
+| T+120 | 第一個雲端 health URL 上線 | Sunny |
+| T+240 | sample→real 垂直切片跑通（真資料進 dashboard + export） | 全員 |
+| Day1 收工前 | demo URL、repo URL、fallback recording plan 都寫入提交 checklist | P5 |
 | Day3 錄影前 | `BASE_URL=<live-url> ./scripts/freeze-demo-snapshot.sh --out build/demo-freeze`，凍結 API/AI/export 輸出 | Sunny + Feng |
 | Day3 上台前 | `BASE_URL=<live-url> ./scripts/warmup-live-demo.sh --repeat 3`，暖機 dashboard/API/AI/export | Sunny |
 | Day3 上傳前 | `./scripts/day3-final-check.sh`，確認 repo 安全、demo export、schema smoke 與 branch 狀態 | Sunny + P5 |

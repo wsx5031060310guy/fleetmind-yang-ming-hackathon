@@ -36,11 +36,13 @@
 | 08:30-09:30 | 預產 demo AI brief cache；錄影前 warm-up | Eddie + Sunny | Bedrock 不穩則改 deterministic fallback |
 | 09:30-10:30 | 錄製 demo recording；P5 更新 deck 真截圖 | P5 + operator | 錄影失敗一次後先保 live demo，錄影用簡短 fallback |
 | 10:30-11:00 | 彩排第 1 次，核對 deck/demo/recording 數字 | P5 | 超過 7:15 直接砍 backup/技術細節 |
-| 11:30-12:00 | 現場網路與 live URL warm-up | Sunny | live link 不通 15 分鐘內轉 EC2/local fallback + 錄影方案 |
-| 12:00-13:00 | 上傳七項提交物第一輪 | P5 | 不等所有檔完美；先有可用版本 |
-| 13:00-13:30 | 逐項打開平台上傳後連結 | P5 + Sunny | 任一連結打不開，立即重傳或改備援連結 |
-| 13:30-14:00 | 彩排第 2 次；最終 repo/security check | 全員 | 14:00 後只修提交阻塞問題 |
-| 14:00-14:30 | 緩衝時間 | P5 | 不新增功能、不換故事線 |
+| 11:30-12:00 | 現場網路與 live URL warm-up；**建離線提交包**（七項檔案+最終連結清單存兩台機器＋隨身碟/雲端） | Sunny + shadow uploader | live link 不通 15 分鐘內轉 EC2/local fallback + 錄影方案 |
+| 12:00-13:00 | 上傳七項提交物第一輪；**同步截圖/錄影存證每一項上傳成功畫面** | P5（primary）+ shadow uploader | 不等所有檔完美；先有可用版本 |
+| 13:00-13:30 | 逐項打開平台上傳後連結（第二人用另一台機器/帳號驗證） | P5 + Sunny | 任一連結打不開，立即重傳或改備援連結 |
+| 13:30-14:00 | 彩排第 2 次；最終 repo/security check；**至少一人留守提交平台不進彩排** | 全員 | 14:00 後只修提交阻塞問題 |
+| 14:00-14:30 | 緩衝時間 | P5 + shadow | 不新增功能、不換故事線 |
+
+**提交單點故障防護（賽前準備）**：指定 shadow uploader（建議 Sunny）；兩台 Mac 都預先登入提交平台並驗證上傳權限；七項提交物的最終值（連結、檔名）另存純文字檔（`build/submission-links.txt`）＋列印一份；P5 機器故障時 shadow 直接依離線提交包續傳。
 
 ## 4. 上傳前安全檢查
 
