@@ -13,6 +13,11 @@ import java.util.Map;
 @Service
 public class DemoDataService {
     private static final String TRANSFORM_VERSION = "demo-static-v1";
+    private final AiBriefService aiBriefService;
+
+    public DemoDataService(AiBriefService aiBriefService) {
+        this.aiBriefService = aiBriefService;
+    }
 
     public List<VesselSummaryDto> fleetSummary() {
         return List.of(
@@ -93,10 +98,25 @@ public class DemoDataService {
         List<CitedMetricDto> citations = aiBriefCitations(vesselId);
         BeforeAfterDto beforeAfter = beforeAfter(vesselId, underwaterEvents(vesselId).getFirst().eventId());
         String text = aiBriefText(vesselId, beforeAfter);
+        if (!forceFallback) {
+            AiBriefService.Result result = aiBriefService.generateBrief(
+                    vesselId,
+                    beforeAfter,
+                    underwaterEvents(vesselId),
+                    citations,
+                    isLowConfidence(vesselId));
+            return new AiBriefDto(
+                    vesselId,
+                    Instant.now(),
+                    result.mode(),
+                    result.text(),
+                    result.citations(),
+                    result.guardrail());
+        }
         return new AiBriefDto(
                 vesselId,
                 Instant.now(),
-                forceFallback ? "deterministic-forced-fallback" : "deterministic-fallback",
+                "deterministic-forced-fallback",
                 text,
                 citations,
                 AiBriefGuardrail.validate(text, citations));
@@ -108,9 +128,18 @@ public class DemoDataService {
         String text = aiBriefText(vesselId, beforeAfter);
         return new AiBriefPromptDto(
                 AiBriefPrompt.systemPrompt(),
-                AiBriefPrompt.buildUserPrompt(vesselId, beforeAfter, underwaterEvents(vesselId), citations),
+                AiBriefPrompt.buildUserPrompt(
+                        vesselId, beforeAfter, underwaterEvents(vesselId), citations, isLowConfidence(vesselId)),
                 citations,
                 AiBriefGuardrail.validate(text, citations));
+    }
+
+    private boolean isLowConfidence(String vesselId) {
+        return fleetSummary().stream()
+                .filter(vessel -> vessel.vesselId().equals(vesselId))
+                .findFirst()
+                .map(vessel -> "LOW".equals(vessel.confidence()))
+                .orElse(true);
     }
 
     private List<CitedMetricDto> aiBriefCitations(String vesselId) {
