@@ -97,6 +97,6 @@
 
 ## 8. 現況與追蹤
 
-- 已 merge：core-calc + golden checks、business impact、CI checks、single-service API skeleton、AI brief prompt/guardrail、Day1 ops runbook、proposal deck skeleton、enterprise data application draft、submission control sheet、technical architecture submission draft、submission audit、schema inventory pack、demo freeze、FUEL_CONSUMP validator、live warm-up、stretch gate。
+- 已 merge：core-calc + golden checks、business impact、CI checks、single-service API skeleton、AI brief prompt/guardrail、Day1 ops runbook、proposal deck skeleton、enterprise data application draft、submission control sheet、technical architecture submission draft、submission audit、schema inventory pack、demo freeze、FUEL_CONSUMP validator、live warm-up、stretch gate、AI fallback demo control、.env template、submission audit CI、day3 final check。
 - 本地可跑：`./scripts/test-core-calc.sh`、`./scripts/demo-local.sh`、`./scripts/schema-inventory.sh samples/noon-reports.csv`；GitHub Actions 會跑 Maven package 與 API smoke。
 - 待回寫：deck 只剩 Day2/Day3 真資料與截圖替換；D5-D8/P1 只依 `21` gate 開啟。
