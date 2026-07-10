@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/lib/curl-common.sh"
+
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 
 check_contains() {
@@ -11,7 +13,11 @@ check_contains() {
   local body
 
   echo "checking $label"
-  body="$(curl -fsS -X "$method" "$url")"
+  if [[ "$method" == "POST" ]]; then
+    body="$(curl_post_safe "$url")"
+  else
+    body="$(curl_safe "$url")"
+  fi
   if ! printf "%s" "$body" | grep -q "$expected"; then
     echo "missing expected text '$expected' from $label"
     printf "%s\n" "$body"

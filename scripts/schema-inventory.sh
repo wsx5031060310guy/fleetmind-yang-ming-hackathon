@@ -4,10 +4,13 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/schema-inventory.sh [--output build/schema-inventory.csv] <csv-or-tsv-file-or-directory>...
+  scripts/schema-inventory.sh [--strict] [--output build/schema-inventory.csv] <csv-or-tsv-file-or-directory>...
 
 Scans CSV/TSV files and writes a schema-only inventory:
-file, format, byte_count, row_count, column_count, headers, status.
+file, format, byte_count, row_count, column_count, min/max row width, BOM, headers, status.
+
+Blank/duplicate headers, BOM, and row-width mismatches warn by default.
+--strict makes these schema defects fail.
 
 Safety:
 - Does not print cell values.
@@ -17,6 +20,7 @@ EOF
 }
 
 OUTPUT=""
+STRICT=false
 PATHS=()
 
 while [[ $# -gt 0 ]]; do
@@ -28,6 +32,10 @@ while [[ $# -gt 0 ]]; do
       fi
       OUTPUT="$2"
       shift 2
+      ;;
+    --strict)
+      STRICT=true
+      shift
       ;;
     -h|--help)
       usage
@@ -49,8 +57,14 @@ if [[ "${#PATHS[@]}" -eq 0 ]]; then
   exit 2
 fi
 
+if ! command -v ruby >/dev/null 2>&1; then
+  echo "ruby is required; verify macOS Ruby or install with: brew install ruby" >&2
+  exit 2
+fi
+
 ruby -rcsv -rfind -rfileutils -e '
 output = ARGV.shift
+strict = ARGV.shift == "true"
 paths = ARGV
 
 def csv_like?(path)
@@ -82,26 +96,37 @@ if files.empty?
 end
 
 rows = []
+schema_defect = false
 files.sort.each do |file|
   begin
     sep = col_sep(file)
-    header_line = nil
-    File.open(file, "r:bom|utf-8") { |io| header_line = io.gets }
-    headers = header_line ? CSV.parse_line(header_line, col_sep: sep) : []
+    bom = File.open(file, "rb") { |io| io.read(3) == "\xEF\xBB\xBF".b }
+    parsed = CSV.read(file, col_sep: sep, encoding: "bom|utf-8")
+    headers = parsed.shift || []
     headers ||= []
-    row_count = 0
-    CSV.foreach(file, headers: true, col_sep: sep, encoding: "bom|utf-8") do |row|
-      next if row.fields.all? { |value| value.nil? || value.to_s.strip.empty? }
-      row_count += 1
+    data_rows = parsed.reject { |row| row.all? { |value| value.nil? || value.to_s.strip.empty? } }
+    widths = data_rows.map(&:length)
+    min_width = widths.empty? ? headers.length : widths.min
+    max_width = widths.empty? ? headers.length : widths.max
+    defects = []
+    defects << "blank_header" if headers.any? { |header| header.nil? || header.to_s.strip.empty? }
+    normalized = headers.map { |header| header.to_s.strip }
+    defects << "duplicate_header" if normalized.uniq.length != normalized.length
+    defects << "row_width_mismatch" if widths.any? { |width| width != headers.length }
+    defects << "bom" if bom
+    unless defects.empty?
+      schema_defect = true
+      warn "#{strict ? "FAIL" : "WARN"} #{file}: #{defects.join(",")} header_width=#{headers.length} min_width=#{min_width} max_width=#{max_width}"
     end
-    rows << [file, File.extname(file).delete_prefix(".").downcase, File.size(file), row_count, headers.length, headers.join("|"), "ok"]
+    status = defects.empty? ? "ok" : "warning: #{defects.join("|")}"
+    rows << [file, File.extname(file).sub(/\A\./, "").downcase, File.size(file), data_rows.length, headers.length, min_width, max_width, bom ? "yes" : "no", headers.join("|"), status]
   rescue StandardError => e
-    rows << [file, File.extname(file).delete_prefix(".").downcase, File.exist?(file) ? File.size(file) : "", "", "", "", "error: #{e.class}: #{e.message}"]
+    rows << [file, File.extname(file).sub(/\A\./, "").downcase, File.exist?(file) ? File.size(file) : "", "", "", "", "", "", "", "error: #{e.class}: #{e.message}"]
   end
 end
 
 content = CSV.generate do |csv|
-  csv << ["file", "format", "byte_count", "row_count", "column_count", "headers", "status"]
+  csv << ["file", "format", "byte_count", "row_count", "column_count", "min_row_width", "max_row_width", "bom", "headers", "status"]
   rows.each { |row| csv << row }
 end
 
@@ -113,5 +138,6 @@ else
   warn "wrote #{output}"
 end
 
-exit(rows.any? { |row| !row.last.start_with?("ok") } ? 1 : 0)
-' "$OUTPUT" "${PATHS[@]}"
+parse_error = rows.any? { |row| row.last.start_with?("error:") }
+exit(parse_error || (strict && schema_defect) ? 1 : 0)
+' "$OUTPUT" "$STRICT" "${PATHS[@]}"

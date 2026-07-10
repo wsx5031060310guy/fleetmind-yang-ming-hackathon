@@ -1,19 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/lib/curl-common.sh"
+
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 REPEAT=1
 SLEEP_SECONDS=2
 VESSEL_ID="YM-DEMO-01"
 EVENT_ID="event-2025-03-cleaning"
+REQUIRE_AI=false
 
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/warmup-live-demo.sh [--base-url URL] [--repeat N] [--sleep SECONDS] [--vessel-id ID] [--event-id ID]
+  scripts/warmup-live-demo.sh [--base-url URL] [--repeat N] [--sleep SECONDS] [--vessel-id ID] [--event-id ID] [--require-ai]
 
 Warms and verifies the live demo URL before judges open it. Checks the root
 dashboard and key API paths, including AI brief fallback and FUEL_CONSUMP export.
+AI brief failure warns by default and does not fail warm-up. Use --require-ai to fail.
 
 Default BASE_URL is http://localhost:8080. You can also set BASE_URL env.
 EOF
@@ -55,6 +59,10 @@ while [[ $# -gt 0 ]]; do
       EVENT_ID="$2"
       shift 2
       ;;
+    --require-ai)
+      REQUIRE_AI=true
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -85,24 +93,37 @@ check_contains() {
   local total_time
 
   tmp="$(mktemp)"
-  metrics="$(curl -sS --retry 2 --retry-delay 1 -X "$method" "$url" \
-    -w "%{http_code} %{time_total}" \
-    -o "$tmp")"
+  if [[ "$method" == "POST" ]]; then
+    metrics="$(curl_post_safe "$url" -w "%{http_code} %{time_total}" -o "$tmp")"
+  else
+    metrics="$(curl_safe "$url" -w "%{http_code} %{time_total}" -o "$tmp")"
+  fi
   http_code="$(awk '{print $1}' <<<"$metrics")"
   total_time="$(awk '{print $2}' <<<"$metrics")"
   if [[ "$http_code" != "200" ]]; then
     echo "FAIL $label HTTP $http_code" >&2
     rm -f "$tmp"
-    exit 1
+    return 1
   fi
   if ! grep -q "$expected" "$tmp"; then
     echo "FAIL $label missing '$expected'" >&2
     cat "$tmp" >&2
     rm -f "$tmp"
-    exit 1
+    return 1
   fi
   rm -f "$tmp"
   printf "PASS %-18s %ss %s\n" "$label" "$total_time" "$path"
+}
+
+check_ai_brief() {
+  if check_contains ai-brief POST "/api/vessels/$VESSEL_ID/ai-brief" '"passed":true'; then
+    return 0
+  fi
+  if [[ "$REQUIRE_AI" == "true" ]]; then
+    return 1
+  fi
+  echo "WARN ai-brief unavailable; non-AI demo checks continue" >&2
+  return 0
 }
 
 for round in $(seq 1 "$REPEAT"); do
@@ -112,7 +133,7 @@ for round in $(seq 1 "$REPEAT"); do
   check_contains fleet-summary GET "/api/fleet/summary" "$VESSEL_ID"
   check_contains performance GET "/api/vessels/$VESSEL_ID/performance" "dailyFoc"
   check_contains before-after GET "/api/vessels/$VESSEL_ID/before-after?eventId=$EVENT_ID" "paybackDays"
-  check_contains ai-brief POST "/api/vessels/$VESSEL_ID/ai-brief" '"passed":true'
+  check_ai_brief
   check_contains fuel-export GET "/api/fuel-consump/export" "FUEL_CONSUMP"
   if [[ "$round" -lt "$REPEAT" ]]; then
     sleep "$SLEEP_SECONDS"
