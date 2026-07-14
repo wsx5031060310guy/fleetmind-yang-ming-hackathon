@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FleetMind · 決策看板</title>
+  <meta name="description" content="FleetMind 依 ISO 19030 方法量測 15 艘船的 Speed Loss，提供門檻告警、跨越預估與分級養護建議。數字來自計算，語言來自 AI，決策留給人。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232FB09A'/%3E%3Cpath d='M6 20c3 2 5 2 8 0s5-2 8 0 5 2 6 1' fill='none' stroke='%23052029' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 6l5 9H11z' fill='%23052029'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .fm-topnav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px clamp(16px,4vw,40px);background:#081a2c;border-bottom:1px solid rgba(148,183,214,.14);position:sticky;top:0;z-index:900;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+    .fm-topnav .fm-brand{color:#EAF2F9;font-weight:800;text-decoration:none;font-size:15.5px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .fm-topnav .fm-brand b{color:#2FB09A}
+    .fm-topnav .fm-brand svg{width:20px;height:20px}
+    .fm-topnav .fm-links{display:flex;gap:3px;flex-wrap:wrap;margin-left:auto}
+    .fm-topnav .fm-links a{color:#8AA6BF;text-decoration:none;font-size:13px;font-weight:600;padding:7px 12px;border-radius:8px;transition:background .2s,color .2s;min-height:38px;display:inline-flex;align-items:center}
+    .fm-topnav .fm-links a:hover{background:rgba(47,176,154,.12);color:#EAF2F9}
+    .fm-topnav .fm-links a[aria-current="page"]{background:rgba(47,176,154,.16);color:#2FB09A}
+    .fm-topnav .fm-links a.soon{opacity:.45;pointer-events:none}
+    .fm-topnav .fm-links a.soon::after{content:"建置中";font-size:9px;margin-left:5px}
+    .fm-topnav .fm-links a:focus-visible{outline:2px solid #2FB09A;outline-offset:2px}
+    .app-header{position:static}
+    @media(max-width:600px){.fm-topnav{gap:8px}.fm-topnav .fm-links{margin-left:0;width:100%}}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#fleet-section">跳到船隊列表</a>
+
+  <nav class="fm-topnav" aria-label="主選單">
+    <a class="fm-brand" href="/"><svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
+    <div class="fm-links">
+      <a href="/">首頁</a>
+      <a href="/dashboard.html" aria-current="page">決策看板</a>
+      <a href="/voyage.html">航程</a>
+      <a href="/architecture.html">AWS 架構</a>
+      <a href="/admin.html">後台</a>
+    </div>
+  </nav>
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#052029" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#052029"/></svg>
+      </span>
+      <div class="brand-text">
+        <p class="wordmark">Fleet<b>Mind</b></p>
+        <p class="subtitle">AI 船舶效能節能決策支援系統</p>
+        <p class="tagline">數字來自計算，語言來自 AI，決策留給人。</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="threshold" role="group" aria-label="Speed Loss 告警門檻設定">
+        <span class="th-label">告警門檻<b id="th-current">10%</b></span>
+        <div class="seg" id="th-seg" role="tablist" aria-label="門檻快選">
+          <button type="button" data-th="8">8%</button>
+          <button type="button" data-th="10">10%</button>
+          <button type="button" data-th="15">15%</button>
+        </div>
+        <input class="th-custom tnum" id="th-input" type="number" min="1" max="50" step="0.5"
+               inputmode="decimal" aria-label="自訂門檻 (%)" title="自訂門檻 (%)">
+      </div>
+      <a class="download" href="/api/fuel-consump/export" download>
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        FUEL_CONSUMP CSV
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <p id="app-error" role="alert"></p>
+
+    <section class="panel decisionboard enter d1" aria-labelledby="board-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">決策看板</p>
+          <h2 id="board-title">需要注意的船</h2>
+        </div>
+        <span class="board-count tnum" id="board-count" aria-live="polite"></span>
+      </div>
+      <div id="alerts"></div>
+    </section>
+
+    <section class="panel enter d2" id="fleet-section" aria-labelledby="fleet-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">船隊總覽</p>
+          <h2 id="fleet-title">船隊 · 依風險排序</h2>
+        </div>
+        <span class="section-note">點選任一列查看決策細節</span>
+      </div>
+      <div id="fleet-wrap" class="table-wrap">
+        <table id="fleet">
+          <thead>
+            <tr>
+              <th scope="col">狀態</th>
+              <th scope="col">船舶</th>
+              <th scope="col" class="num">Speed Loss</th>
+              <th scope="col" class="num">預估跨越</th>
+              <th scope="col" class="num">船體污損</th>
+              <th scope="col">清洗塗層</th>
+              <th scope="col">信賴度</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="detail-grid enter d3" aria-label="單船決策細節">
+      <div class="detail-left">
+        <article class="panel decision-card" id="decision" aria-live="polite"></article>
+        <div class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">效能趨勢</p>
+              <h2>Speed Loss · <span id="selected-vessel">—</span></h2>
+            </div>
+          </div>
+          <div id="performance"></div>
+        </div>
+      </div>
+      <div class="detail-right">
+        <div class="panel">
+          <h2>污損歸因 · 船體 vs 螺旋槳</h2>
+          <div id="attribution"></div>
+        </div>
+        <div class="panel">
+          <h2>養護前後 k 值（UWILD/清洗效果）</h2>
+          <div id="business"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>AI 決策簡報</h2>
+            <div class="actions">
+              <button id="generate" class="btn primary" type="button">生成簡報</button>
+              <button id="force-fallback" class="btn secondary" type="button">離線備援</button>
+            </div>
+          </div>
+          <div id="brief"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel enter d4" aria-labelledby="quality-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">資料品質</p>
+          <h2 id="quality-title">正午報表篩選旗標</h2>
+        </div>
+      </div>
+      <div id="quality"></div>
+    </section>
+
+    <footer class="site-foot">
+      FleetMind · ISO 19030 方法論參考 · k = FOC / STW³（同航速正規化效能）· 門檻與建議可由營運端自行調整
+    </footer>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

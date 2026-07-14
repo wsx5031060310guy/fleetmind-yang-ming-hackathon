@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api")
@@ -25,15 +27,18 @@ public class FleetMindController {
     private final FleetDecisionService fleetDecisionService;
     private final ThresholdService thresholdService;
     private final AlertNotificationService alertNotificationService;
+    private final AdminSettingsService adminSettingsService;
 
     public FleetMindController(FleetDataProvider fleetData,
             FleetDecisionService fleetDecisionService,
             ThresholdService thresholdService,
-            AlertNotificationService alertNotificationService) {
+            AlertNotificationService alertNotificationService,
+            AdminSettingsService adminSettingsService) {
         this.fleetData = fleetData;
         this.fleetDecisionService = fleetDecisionService;
         this.thresholdService = thresholdService;
         this.alertNotificationService = alertNotificationService;
+        this.adminSettingsService = adminSettingsService;
     }
 
     @GetMapping("/health")
@@ -64,10 +69,32 @@ public class FleetMindController {
     @PostMapping("/alerts/notify")
     public Map<String, Object> notifyAlerts() {
         List<DecisionDto> alerts = fleetDecisionService.alerts();
-        alertNotificationService.publishAsync(thresholdService.get(), alerts);
-        return Map.of("status", alertNotificationService.configured() ? "queued" : "disabled",
-                "topicConfigured", alertNotificationService.configured(),
-                "alertCount", alerts.size());
+        Set<String> enabled = adminSettingsService.channels();
+        List<String> emailRecipients = adminSettingsService.emailRecipients();
+        alertNotificationService.publishAsync(thresholdService.get(), alerts, enabled, emailRecipients);
+
+        boolean snsConfigured = alertNotificationService.configured();
+        boolean sesConfigured = alertNotificationService.sesConfigured(emailRecipients);
+        boolean webhookConfigured = alertNotificationService.webhookConfigured();
+
+        List<Map<String, Object>> channels = new ArrayList<>();
+        channels.add(channelStatus("email", enabled.contains("email"), snsConfigured));
+        channels.add(channelStatus("sns", enabled.contains("sns"), snsConfigured));
+        channels.add(channelStatus("ses", enabled.contains("ses"), sesConfigured));
+        channels.add(channelStatus("webhook", enabled.contains("webhook"), webhookConfigured));
+
+        boolean anyQueued = channels.stream().anyMatch(channel -> "queued".equals(channel.get("status")));
+        return Map.of("status", anyQueued ? "queued" : "disabled",
+                "topicConfigured", snsConfigured,
+                "sesConfigured", sesConfigured,
+                "webhookConfigured", webhookConfigured,
+                "alertCount", alerts.size(),
+                "channels", channels);
+    }
+
+    private static Map<String, Object> channelStatus(String name, boolean enabled, boolean configured) {
+        String status = !enabled ? "disabled" : (configured ? "queued" : "not_configured");
+        return Map.of("name", name, "enabled", enabled, "configured", configured, "status", status);
     }
 
     @GetMapping("/vessels/{vesselId}/decision")

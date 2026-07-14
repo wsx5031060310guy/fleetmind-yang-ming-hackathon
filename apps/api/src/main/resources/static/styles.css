@@ -569,11 +569,96 @@ footer.site-foot { color: var(--muted-2); font-size: 11.5px; text-align: center;
 @media (max-width: 1080px) {
   .detail-grid { grid-template-columns: 1fr; }
 }
+
+/* tablet + small laptop: header stacks, threshold/download flow left */
 @media (max-width: 780px) {
-  .app-header { grid-template-columns: 1fr; }
-  .header-right { justify-self: start; }
+  .app-header { grid-template-columns: 1fr; gap: 14px 0; }
+  .header-right { justify-self: start; width: 100%; justify-content: flex-start; }
   .threshold { flex-wrap: wrap; }
   .brand-text .tagline { display: none; }
+}
+
+/* phones (≈360–430px): single column everywhere, ≥44px touch targets */
+@media (max-width: 560px) {
+  /* compact sticky header so it does not eat the viewport */
+  .app-header { padding: 11px var(--pad); gap: 10px 0; }
+  .brand { gap: 12px; }
+  .brand-mark { width: 38px; height: 38px; }
+  .brand-text .subtitle { display: none; }
+
+  /* threshold + download stack full-width, comfortably tappable */
+  .header-right { flex-direction: column; align-items: stretch; gap: 10px; }
+  .threshold { width: 100%; gap: 9px 10px; padding: 9px 11px; }
+  .threshold .th-label { flex-direction: row; align-items: baseline; gap: 6px; width: 100%; }
+  .seg { flex: 1 1 auto; }
+  .seg button { flex: 1; min-height: 44px; padding: 8px 6px; }
+  .th-custom { width: 84px; flex: none; min-height: 44px; }
+  .download { width: 100%; justify-content: center; min-height: 44px; padding: 11px 14px; }
+
+  /* section heads wrap instead of squeezing the note */
+  .section-head { flex-wrap: wrap; }
+
+  /* decision board: force single column (guards ≤360px body overflow) */
+  .alerts-grid { grid-template-columns: 1fr; }
+
+  /* fleet table → stacked cards. Labels below TRACK the column order in
+     index.html <thead>; if columns are reordered there, update these too. */
+  table#fleet { min-width: 0; }
+  #fleet thead {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0);
+    border: 0; white-space: nowrap;
+  }
+  #fleet, #fleet tbody, #fleet tr, #fleet td { display: block; }
+  #fleet tbody tr {
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: rgba(6, 20, 35, 0.4);
+    padding: 4px 15px;
+    margin-bottom: 12px;
+  }
+  #fleet tbody tr:last-child { margin-bottom: 0; }
+  #fleet tbody tr[aria-selected="true"] {
+    background: linear-gradient(180deg, rgba(47, 176, 154, 0.16), rgba(47, 176, 154, 0.03));
+    box-shadow: inset 3px 0 0 var(--seafoam);
+  }
+  #fleet tbody td:not([colspan]) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-height: 44px;
+    padding: 9px 0;
+    text-align: right;
+    white-space: normal;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  #fleet tbody tr td:not([colspan]):last-child { border-bottom: 0; }
+  #fleet tbody td:not([colspan])::before {
+    flex: none;
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  #fleet tbody td:nth-child(1)::before { content: "狀態"; }
+  #fleet tbody td:nth-child(2)::before { content: "船舶"; }
+  #fleet tbody td:nth-child(3)::before { content: "Speed Loss"; }
+  #fleet tbody td:nth-child(4)::before { content: "預估跨越"; }
+  #fleet tbody td:nth-child(5)::before { content: "船體污損"; }
+  #fleet tbody td:nth-child(6)::before { content: "清洗塗層"; }
+  #fleet tbody td:nth-child(7)::before { content: "信賴度"; }
+  .cell-status, .mini-eff { justify-content: flex-end; }
+
+  /* AI brief actions + citations tappable */
+  .panel-heading .actions { width: 100%; }
+  .actions .btn { flex: 1; min-height: 44px; }
+  .citations .citation { min-height: 40px; padding: 8px 12px; }
+  .inline-citation { padding: 2px 6px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

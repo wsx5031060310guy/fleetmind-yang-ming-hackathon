@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FleetMind · AWS 架構藍圖與方案比較</title>
+<style>
+  :root {
+    /* maritime navy — deliberate dark-first world, with a legible light variant */
+    --bg: #071523;
+    --bg-2: #0A2540;
+    --surface: #0E2B49;
+    --surface-2: #12385C;
+    --line: rgba(148, 183, 214, 0.16);
+    --line-soft: rgba(148, 183, 214, 0.09);
+    --ink: #EAF2F9;
+    --ink-dim: #B7CBDD;
+    --muted: #8AA6BF;
+    --muted-2: #5F7B95;
+    --teal: #3BA0C4;
+    --seafoam: #37C0A6;
+    --amber: #F4A72B;
+    --coral: #EC7358;
+    --current: #37C0A6;   /* current architecture */
+    --alt: #3BA0C4;       /* alternative options */
+    --node: #0F3152;
+    --node-cur: #123f39;
+    --band: rgba(59, 160, 196, 0.06);
+    --shadow: 0 20px 44px -22px rgba(2, 10, 20, 0.85);
+    --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
+      "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+  }
+  :root[data-theme="light"] {
+    --bg: #EEF3F8;
+    --bg-2: #E3ECF4;
+    --surface: #FFFFFF;
+    --surface-2: #F3F7FB;
+    --line: rgba(20, 54, 92, 0.16);
+    --line-soft: rgba(20, 54, 92, 0.09);
+    --ink: #10263C;
+    --ink-dim: #2C4967;
+    --muted: #5A768F;
+    --muted-2: #86A0B6;
+    --teal: #1C7293;
+    --seafoam: #1B9E86;
+    --amber: #C57F11;
+    --coral: #C6543B;
+    --current: #1B9E86;
+    --alt: #1C7293;
+    --node: #EAF1F8;
+    --node-cur: #E1F3EE;
+    --band: rgba(28, 114, 147, 0.07);
+    --shadow: 0 18px 40px -24px rgba(20, 54, 92, 0.4);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #EEF3F8; --bg-2: #E3ECF4; --surface: #FFFFFF; --surface-2: #F3F7FB;
+      --line: rgba(20, 54, 92, 0.16); --line-soft: rgba(20, 54, 92, 0.09);
+      --ink: #10263C; --ink-dim: #2C4967; --muted: #5A768F; --muted-2: #86A0B6;
+      --teal: #1C7293; --seafoam: #1B9E86; --amber: #C57F11; --coral: #C6543B;
+      --current: #1B9E86; --alt: #1C7293; --node: #EAF1F8; --node-cur: #E1F3EE;
+      --band: rgba(28, 114, 147, 0.07); --shadow: 0 18px 40px -24px rgba(20, 54, 92, 0.4);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 560px at 82% -10%, rgba(55, 192, 166, 0.10), transparent 60%),
+      radial-gradient(900px 520px at 6% -4%, rgba(59, 160, 196, 0.12), transparent 55%),
+      var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
+
+  /* top bar */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 14px clamp(16px, 4vw, 40px);
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter: blur(12px) saturate(140%);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand .mk { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+    background: linear-gradient(150deg, var(--teal), var(--seafoam)); flex: none; }
+  .brand .mk svg { width: 18px; height: 18px; }
+  .brand b { color: var(--seafoam); }
+  .nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 600;
+    padding: 6px 11px; border-radius: 8px; transition: background .2s, color .2s; }
+  .nav a:hover { background: var(--band); color: var(--ink); }
+  .nav a.soon { opacity: .45; pointer-events: none; }
+  .nav a.soon::after { content: "建置中"; font-size: 9px; margin-left: 4px; }
+  .theme-toggle { appearance: none; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink-dim); font: inherit; font-size: 12px; font-weight: 600; padding: 7px 12px;
+    border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .theme-toggle:hover { border-color: var(--seafoam); color: var(--ink); }
+  .theme-toggle:focus-visible, .nav a:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+
+  /* hero */
+  header.hero { padding: clamp(48px, 8vw, 90px) 0 clamp(30px, 5vw, 54px); }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--seafoam); margin: 0 0 16px; }
+  h1 { font-size: clamp(30px, 5.4vw, 54px); line-height: 1.04; letter-spacing: -0.025em; margin: 0 0 20px; text-wrap: balance; font-weight: 800; }
+  h1 .thin { color: var(--ink-dim); font-weight: 500; }
+  .lede { font-size: clamp(15px, 2vw, 18px); color: var(--ink-dim); max-width: 62ch; margin: 0; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+  .chip { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+  .chip b { color: var(--seafoam); }
+
+  section { padding: clamp(30px, 5vw, 56px) 0; border-top: 1px solid var(--line-soft); }
+  .sec-head { margin-bottom: 26px; }
+  .sec-kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
+  .sec-kicker .tag { padding: 2px 9px; border-radius: 6px; font-weight: 700; letter-spacing: 0.02em; }
+  .tag.cur { background: color-mix(in srgb, var(--current) 20%, transparent); color: var(--current); border: 1px solid color-mix(in srgb, var(--current) 45%, transparent); }
+  .tag.alt { background: color-mix(in srgb, var(--alt) 16%, transparent); color: var(--alt); border: 1px solid color-mix(in srgb, var(--alt) 40%, transparent); }
+  h2 { font-size: clamp(22px, 3.4vw, 34px); letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; font-weight: 800; }
+  h2 .num { font-family: var(--mono); color: var(--muted-2); font-size: 0.62em; margin-right: 12px; font-weight: 600; }
+  .sec-lede { color: var(--ink-dim); max-width: 66ch; margin: 0; font-size: 15.5px; }
+
+  /* diagram frame */
+  .diagram { margin: 26px 0; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+  .diagram .scroll { overflow-x: auto; padding: 20px; }
+  .diagram svg { display: block; min-width: 720px; width: 100%; height: auto; }
+  .dcap { padding: 12px 18px; border-top: 1px solid var(--line-soft); font-size: 12.5px; color: var(--muted); font-family: var(--mono); background: var(--surface-2); }
+
+  /* svg node styling (shared) */
+  .band-rect { fill: var(--band); }
+  .band-label { fill: var(--muted-2); font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .node rect { fill: var(--node); stroke: var(--line); stroke-width: 1.2; }
+  .node.cur rect { fill: var(--node-cur); stroke: color-mix(in srgb, var(--current) 55%, transparent); stroke-width: 1.6; }
+  .node.hl rect { stroke: color-mix(in srgb, var(--alt) 60%, transparent); stroke-width: 1.6; }
+  .node .svc { fill: var(--ink); font-family: var(--sans); font-size: 13px; font-weight: 700; }
+  .node .role { fill: var(--muted); font-family: var(--sans); font-size: 11px; }
+  .node .ic { fill: var(--seafoam); font-family: var(--mono); font-size: 10px; font-weight: 700; }
+  .edge { stroke: var(--muted-2); stroke-width: 1.6; fill: none; }
+  .edge.strong { stroke: var(--seafoam); stroke-width: 2; }
+  .edge-label { fill: var(--muted); font-family: var(--mono); font-size: 10.5px; }
+  .flow-num { fill: var(--bg); font-family: var(--mono); font-size: 10px; font-weight: 700; }
+  .flow-badge { fill: var(--seafoam); }
+
+  /* prose + cards */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  .card h3 { margin: 0 0 12px; font-size: 14px; letter-spacing: 0.02em; display: flex; align-items: center; gap: 8px; }
+  .card.pros h3 { color: var(--seafoam); }
+  .card.cons h3 { color: var(--coral); }
+  .card ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .card li { position: relative; padding-left: 20px; font-size: 13.5px; color: var(--ink-dim); }
+  .card li::before { content: ""; position: absolute; left: 4px; top: 8px; width: 7px; height: 7px; border-radius: 2px; }
+  .card.pros li::before { background: var(--seafoam); }
+  .card.cons li::before { background: var(--coral); }
+  .facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+  .fact { border: 1px solid var(--line); border-radius: 11px; padding: 11px 15px; background: var(--surface-2); min-width: 150px; }
+  .fact .k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .fact .v { font-size: 14px; font-weight: 700; margin-top: 3px; }
+  .whenrec { margin-top: 20px; padding: 14px 18px; border-radius: 12px; border: 1px solid var(--line); background: linear-gradient(100deg, var(--band), transparent); font-size: 14px; color: var(--ink-dim); }
+  .whenrec b { color: var(--ink); }
+
+  /* comparison table */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 760px; background: var(--surface); }
+  th, td { padding: 13px 15px; text-align: left; border-bottom: 1px solid var(--line-soft); }
+  thead th { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; background: var(--surface-2); position: sticky; top: 0; }
+  tbody th { font-weight: 700; color: var(--ink); }
+  td.num, th.num { font-variant-numeric: tabular-nums; }
+  tr.is-current { background: color-mix(in srgb, var(--current) 9%, transparent); }
+  tr.is-current th { color: var(--current); }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; font-family: var(--mono); }
+  .pill.hi { background: color-mix(in srgb, var(--seafoam) 18%, transparent); color: var(--seafoam); }
+  .pill.mid { background: color-mix(in srgb, var(--amber) 18%, transparent); color: var(--amber); }
+  .pill.lo { background: color-mix(in srgb, var(--coral) 16%, transparent); color: var(--coral); }
+
+  footer { padding: 40px 0 60px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: 13px; }
+  footer .tagline { font-style: italic; color: var(--ink-dim); }
+
+  @media (max-width: 720px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .nav { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+
+<p class="sr-only" role="doc-abstract">FleetMind AWS 架構報告：現行 ECS Fargate 部署架構，以及五個替代架構方案（Serverless、App Runner、EC2、完整資料分析管線）的比較。</p>
+
+<!-- shared arrow marker -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0 0L10 5L0 10z" fill="var(--muted-2)"/></marker>
+  <marker id="arrowS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0 0L10 5L0 10z" fill="var(--seafoam)"/></marker>
+</defs></svg>
+
+<div class="topbar">
+  <a class="brand" href="/" style="text-decoration:none;color:inherit" aria-label="返回決策看板">
+    <span class="mk" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#052029" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#052029"/></svg></span>
+    Fleet<b>Mind</b>
+  </a>
+  <nav class="nav" aria-label="章節">
+    <a href="/">首頁</a>
+    <a href="/dashboard.html">決策看板</a>
+    <a href="/voyage.html">航程</a>
+    <a href="/admin.html">後台</a>
+    <a href="#current">現行架構</a>
+    <a href="#optB">Serverless</a>
+    <a href="#optC">App Runner</a>
+    <a href="#optD">EC2</a>
+    <a href="#optE">資料管線</a>
+    <a href="#compare">比較表</a>
+  </nav>
+  <button class="theme-toggle" id="themeBtn" type="button" aria-label="切換深淺色">
+    <span id="themeIcon">◑</span><span id="themeTxt">淺色</span>
+  </button>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">AWS Architecture Blueprint</p>
+    <h1>FleetMind 雲端架構<span class="thin"> — 現行部署與方案比較</span></h1>
+    <p class="lede">同一套「Speed Loss 節能決策支援系統」，可以落在很不同的 AWS 形狀上。這份報告先精確描述已上線的架構，再攤開五種替代方案的服務組成、資料流與取捨——讓「為什麼選這條路」有圖有據。</p>
+    <div class="meta-row">
+      <span class="chip">帳號 <b>516665228894</b></span>
+      <span class="chip">Region <b>us-east-1</b></span>
+      <span class="chip">運算 <b>ECS Fargate ARM64</b></span>
+      <span class="chip">AI <b>Amazon Bedrock</b></span>
+      <span class="chip">靜態 URL <b>ALB</b></span>
+    </div>
+  </header>
+
+  <!-- ===================== CURRENT ===================== -->
+  <section id="current">
+    <div class="sec-head">
+      <p class="sec-kicker"><span class="tag cur">現行・已上線</span> Deployed today</p>
+      <h2><span class="num">現行</span>ECS Fargate ＋ ALB ＋ Bedrock ＋ SNS</h2>
+      <p class="sec-lede">單一 Spring Boot 服務同時吐 dashboard 與 REST API，跑在 Fargate 上、掛在 ALB 後面拿到永不變的網址。指標離線由 core-calc 算好、烤進映像；AI 解讀走 Bedrock，門檻告警走 SNS。</p>
+    </div>
+
+    <div class="diagram">
+      <div class="scroll">
+        <svg viewBox="0 0 960 400" role="img" aria-label="現行架構圖">
+          <title>FleetMind 現行 AWS 架構</title>
+          <desc>離線由 core-calc 產生 metrics 並烤入 Docker 映像推上 ECR；使用者經 ALB 進到 ECS Fargate 上的 Spring Boot 服務，服務呼叫 Bedrock 與 SNS。</desc>
+          <!-- bands -->
+          <rect class="band-rect" x="8" y="44" width="300" height="330" rx="12"/>
+          <text class="band-label" x="24" y="66">離線建置 / Build</text>
+          <rect class="band-rect" x="322" y="44" width="342" height="330" rx="12"/>
+          <text class="band-label" x="338" y="66">執行 / Runtime (VPC)</text>
+          <rect class="band-rect" x="678" y="44" width="274" height="330" rx="12"/>
+          <text class="band-label" x="694" y="66">代管服務 / Managed</text>
+
+          <!-- build lane -->
+          <g class="node"><rect x="30" y="92" width="256" height="52" rx="10"/><text class="ic" x="46" y="112">CSV</text><text class="svc" x="46" y="118">正午報表 vt_fd + maintenance</text><text class="role" x="46" y="134">每日航速 / 油耗 / 天氣原始資料</text></g>
+          <g class="node"><rect x="30" y="164" width="256" height="52" rx="10"/><text class="ic" x="46" y="184">JAVA</text><text class="svc" x="46" y="190">core-calc · MetricsExportCli</text><text class="role" x="46" y="206">ISO 19030 k=FOC/STW³ → metrics.json</text></g>
+          <g class="node"><rect x="30" y="236" width="256" height="52" rx="10"/><text class="ic" x="46" y="256">IMG</text><text class="svc" x="46" y="262">Docker build (ARM64)</text><text class="role" x="46" y="278">metrics.json 烤進映像</text></g>
+          <g class="node hl"><rect x="30" y="308" width="256" height="52" rx="10"/><text class="ic" x="46" y="328">ECR</text><text class="svc" x="46" y="334">Amazon ECR</text><text class="role" x="46" y="350">fleetmind-api:latest 映像倉</text></g>
+          <path class="edge" d="M158 144 V164" marker-end="url(#arrow)"/>
+          <path class="edge" d="M158 216 V236" marker-end="url(#arrow)"/>
+          <path class="edge" d="M158 288 V308" marker-end="url(#arrow)"/>
+
+          <!-- runtime lane -->
+          <g class="node hl"><rect x="344" y="150" width="300" height="52" rx="10"/><text class="ic" x="360" y="170">ALB</text><text class="svc" x="360" y="176">Application Load Balancer</text><text class="role" x="360" y="192">靜態 DNS · 健康檢查 · 自動接手</text></g>
+          <g class="node cur"><rect x="344" y="238" width="300" height="76" rx="10"/><text class="ic" x="360" y="260">ECS</text><text class="svc" x="360" y="266">ECS Fargate Service (fleetmind-svc)</text><text class="role" x="360" y="284">Spring Boot 4.1 · 同源服務 dashboard + REST</text><text class="role" x="360" y="300">RealDataService 讀 metrics · 決策/門檻/forecast</text></g>
+          <!-- ECR -> ECS -->
+          <path class="edge" d="M286 334 C 320 334, 494 334, 494 314" marker-end="url(#arrow)"/>
+          <text class="edge-label" x="300" y="330">pull image</text>
+
+          <!-- managed lane -->
+          <g class="node hl"><rect x="700" y="150" width="238" height="52" rx="10"/><text class="ic" x="716" y="170">AI</text><text class="svc" x="716" y="176">Amazon Bedrock (Converse)</text><text class="role" x="716" y="192">Claude Haiku · 只解讀數字不產數字</text></g>
+          <g class="node hl"><rect x="700" y="238" width="238" height="52" rx="10"/><text class="ic" x="716" y="258">SNS</text><text class="svc" x="716" y="264">Amazon SNS</text><text class="role" x="716" y="280">fleetmind-alerts · Email/SMS 告警</text></g>
+          <g class="node"><rect x="700" y="308" width="238" height="52" rx="10"/><text class="ic" x="716" y="328">IAM</text><text class="svc" x="716" y="334">Task Role</text><text class="role" x="716" y="350">bedrock:Invoke · sns:Publish</text></g>
+          <path class="edge strong" d="M644 264 H700" marker-end="url(#arrowS)"/>
+          <text class="edge-label" x="650" y="256">brief</text>
+          <path class="edge strong" d="M644 288 C 670 288, 686 264, 700 264" marker-end="url(#arrowS)"/>
+
+          <!-- user -->
+          <g class="node"><rect x="344" y="88" width="300" height="42" rx="10"/><text class="ic" x="360" y="106">USER</text><text class="svc" x="360" y="113">陽明營運端 / 評審 (瀏覽器)</text></g>
+          <path class="edge strong" d="M494 130 V150" marker-end="url(#arrowS)"/>
+          <text class="edge-label" x="504" y="145">HTTPS</text>
+          <path class="edge" d="M494 202 V238" marker-end="url(#arrow)"/>
+        </svg>
+      </div>
+      <div class="dcap">資料流：正午報表 → core-calc 算 metrics → 烤映像 → ECR → ECS 拉取；使用者 → ALB → Fargate 服務 → Bedrock / SNS。</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card pros"><h3>◆ 為什麼現在選它</h3><ul>
+        <li>單服務、單一部署單位，賽程三天最省心</li>
+        <li>ALB 給永久網址，redeploy 網址不變、還自動健康接手</li>
+        <li>Fargate 免管機器，ARM64 便宜；1 task 就夠 demo</li>
+        <li>指標離線算好烤進映像 → 執行期零重算、冷啟即服務</li>
+      </ul></div>
+      <div class="card cons"><h3>◆ 代價與已知限制</h3><ul>
+        <li>指標更新要重建映像 + 滾動部署（非即時）</li>
+        <li>常駐 1 task 有基本成本（非 scale-to-zero）</li>
+        <li>App Runner 在此 workshop 帳號被 AccessDenied，故走 ECS</li>
+        <li>單服務放大到全船隊即時遙測時需再拆</li>
+      </ul></div>
+    </div>
+    <div class="facts">
+      <div class="fact"><div class="k">運算</div><div class="v">Fargate ARM64 · 1 task</div></div>
+      <div class="fact"><div class="k">入口</div><div class="v">ALB 靜態 DNS</div></div>
+      <div class="fact"><div class="k">成本層級</div><div class="v">低～中（常駐）</div></div>
+      <div class="fact"><div class="k">維運負擔</div><div class="v">低</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== OPTION B: Serverless ===================== -->
+  <section id="optB">
+    <div class="sec-head">
+      <p class="sec-kicker"><span class="tag alt">方案 B</span> Serverless</p>
+      <h2><span class="num">B</span>全 Serverless — Lambda ＋ API Gateway ＋ DynamoDB</h2>
+      <p class="sec-lede">前端純靜態放 S3/CloudFront，API 走 API Gateway → Lambda，指標存 DynamoDB；每晚 EventBridge 觸發 Lambda 從 S3 重算指標。閒置零成本、隨流量自動伸縮。</p>
+    </div>
+    <div class="diagram"><div class="scroll">
+      <svg viewBox="0 0 960 340" role="img" aria-label="Serverless 架構圖">
+        <title>方案 B — 全 Serverless</title>
+        <desc>CloudFront + S3 提供靜態前端，API Gateway 觸發 Lambda，資料存 DynamoDB，EventBridge 排程重算，Bedrock 與 SES/SNS 負責 AI 與告警。</desc>
+        <g class="node"><rect x="24" y="130" width="150" height="60" rx="10"/><text class="ic" x="40" y="150">WEB</text><text class="svc" x="40" y="156">CloudFront</text><text class="role" x="40" y="172">+ S3 靜態前端</text></g>
+        <g class="node hl"><rect x="210" y="130" width="150" height="60" rx="10"/><text class="ic" x="226" y="150">APIGW</text><text class="svc" x="226" y="156">API Gateway</text><text class="role" x="226" y="172">HTTP API</text></g>
+        <g class="node cur"><rect x="396" y="120" width="164" height="80" rx="10"/><text class="ic" x="412" y="140">λ</text><text class="svc" x="412" y="146">AWS Lambda</text><text class="role" x="412" y="162">決策/門檻/forecast 邏輯</text><text class="role" x="412" y="178">core-calc 打包為函式</text></g>
+        <g class="node"><rect x="600" y="60" width="164" height="56" rx="10"/><text class="ic" x="616" y="80">DDB</text><text class="svc" x="616" y="86">DynamoDB</text><text class="role" x="616" y="102">metrics / 設定</text></g>
+        <g class="node hl"><rect x="600" y="128" width="164" height="56" rx="10"/><text class="ic" x="616" y="148">AI</text><text class="svc" x="616" y="154">Bedrock</text><text class="role" x="616" y="170">AI brief</text></g>
+        <g class="node hl"><rect x="600" y="196" width="164" height="56" rx="10"/><text class="ic" x="616" y="216">MAIL</text><text class="svc" x="616" y="222">SES / SNS</text><text class="role" x="616" y="238">Email 告警</text></g>
+        <g class="node"><rect x="24" y="238" width="150" height="60" rx="10"/><text class="ic" x="40" y="258">CRON</text><text class="svc" x="40" y="264">EventBridge</text><text class="role" x="40" y="280">每晚排程</text></g>
+        <g class="node"><rect x="210" y="238" width="150" height="60" rx="10"/><text class="ic" x="226" y="258">S3</text><text class="svc" x="226" y="264">S3 noon reports</text><text class="role" x="226" y="280">原始資料湖</text></g>
+        <path class="edge" d="M174 160 H210" marker-end="url(#arrow)"/>
+        <path class="edge strong" d="M360 160 H396" marker-end="url(#arrowS)"/>
+        <path class="edge" d="M560 150 H600" marker-end="url(#arrow)"/>
+        <path class="edge" d="M560 140 C 580 120, 585 100, 600 92" marker-end="url(#arrow)"/>
+        <path class="edge" d="M560 180 C 580 200, 585 214, 600 220" marker-end="url(#arrow)"/>
+        <path class="edge" d="M174 268 H210" marker-end="url(#arrow)"/>
+        <path class="edge" d="M285 238 C 320 210, 420 210, 460 200" marker-end="url(#arrow)"/>
+        <text class="edge-label" x="330" y="222">重算 metrics</text>
+      </svg>
+    </div><div class="dcap">閒置零成本 · 冷啟動是 Java Lambda 的主要取捨 · 重算受 15 分鐘函式上限約束。</div></div>
+    <div class="grid2">
+      <div class="card pros"><h3>◆ 優點</h3><ul>
+        <li>閒置零成本，隨請求自動伸縮到零</li>
+        <li>幾乎不用管機器與擴縮</li>
+        <li>S3 資料湖天然適合累積 5 年報表</li>
+      </ul></div>
+      <div class="card cons"><h3>◆ 缺點</h3><ul>
+        <li>Java 冷啟動延遲（可用 SnapStart 緩解）</li>
+        <li>元件變多，除錯與追蹤更分散</li>
+        <li>重運算受 Lambda 15 分鐘 / 記憶體上限</li>
+      </ul></div>
+    </div>
+    <div class="whenrec"><b>何時選它：</b>要多租戶 SaaS 化、流量時高時低、想把成本壓到「有人看才付費」時。</div>
+  </section>
+
+  <!-- ===================== OPTION C: App Runner ===================== -->
+  <section id="optC">
+    <div class="sec-head">
+      <p class="sec-kicker"><span class="tag alt">方案 C</span> Fully managed</p>
+      <h2><span class="num">C</span>App Runner — 最簡管理的容器托管</h2>
+      <p class="sec-lede">同一個容器映像，交給 App Runner 全托管：內建 HTTPS 網域、自動伸縮、免碰 ALB / VPC / 叢集。程式碼零改動即可上線。</p>
+    </div>
+    <div class="diagram"><div class="scroll">
+      <svg viewBox="0 0 900 240" role="img" aria-label="App Runner 架構圖">
+        <title>方案 C — App Runner</title>
+        <desc>ECR 映像交由 App Runner 全托管服務，內建 HTTPS 與自動伸縮，呼叫 Bedrock 與 SNS。</desc>
+        <g class="node"><rect x="30" y="90" width="150" height="60" rx="10"/><text class="ic" x="46" y="110">USER</text><text class="svc" x="46" y="116">瀏覽器</text><text class="role" x="46" y="132">內建 HTTPS 網域</text></g>
+        <g class="node"><rect x="220" y="90" width="150" height="60" rx="10"/><text class="ic" x="236" y="110">ECR</text><text class="svc" x="236" y="116">Amazon ECR</text><text class="role" x="236" y="132">同一映像</text></g>
+        <g class="node cur"><rect x="410" y="80" width="180" height="80" rx="10"/><text class="ic" x="426" y="100">RUN</text><text class="svc" x="426" y="106">AWS App Runner</text><text class="role" x="426" y="122">自動伸縮 · 免管叢集</text><text class="role" x="426" y="138">HTTPS / 憑證內建</text></g>
+        <g class="node hl"><rect x="640" y="56" width="220" height="52" rx="10"/><text class="ic" x="656" y="76">AI</text><text class="svc" x="656" y="82">Amazon Bedrock</text><text class="role" x="656" y="98">AI brief</text></g>
+        <g class="node hl"><rect x="640" y="132" width="220" height="52" rx="10"/><text class="ic" x="656" y="152">SNS</text><text class="svc" x="656" y="158">Amazon SNS / SES</text><text class="role" x="656" y="174">Email 告警</text></g>
+        <path class="edge strong" d="M180 120 H410" marker-end="url(#arrowS)"/>
+        <text class="edge-label" x="250" y="112">HTTPS</text>
+        <path class="edge" d="M370 120 H410" marker-end="url(#arrow)"/>
+        <path class="edge" d="M590 108 C 615 100, 625 90, 640 84" marker-end="url(#arrow)"/>
+        <path class="edge" d="M590 132 C 615 140, 625 150, 640 156" marker-end="url(#arrow)"/>
+      </svg>
+    </div><div class="dcap">程式零改動 · 本 workshop 帳號對 App Runner 回 AccessDenied，故正式選了 ECS。</div></div>
+    <div class="grid2">
+      <div class="card pros"><h3>◆ 優點</h3><ul>
+        <li>最少的基礎設施：免 ALB、免 VPC、免叢集</li>
+        <li>內建 HTTPS 與自動伸縮</li>
+        <li>與現行同一份容器映像，遷移零成本</li>
+      </ul></div>
+      <div class="card cons"><h3>◆ 缺點</h3><ul>
+        <li>可調參數少、網路控制弱</li>
+        <li>部分帳號 / region 有權限或配額限制</li>
+        <li>成本模型對長時間常駐不一定最省</li>
+      </ul></div>
+    </div>
+    <div class="whenrec"><b>何時選它：</b>只想「把容器丟上去就有網址」、團隊不想碰網路層時，是最快的正式環境。</div>
+  </section>
+
+  <!-- ===================== OPTION D: EC2 ===================== -->
+  <section id="optD">
+    <div class="sec-head">
+      <p class="sec-kicker"><span class="tag alt">方案 D</span> Self-managed</p>
+      <h2><span class="num">D</span>EC2 ＋ Docker — 最省、最可控</h2>
+      <p class="sec-lede">一台 EC2 跑 Docker Compose + Nginx，綁 Elastic IP 拿固定入口。穩定負載下單位成本最低，代價是修補、監控、擴縮都自己扛。</p>
+    </div>
+    <div class="diagram"><div class="scroll">
+      <svg viewBox="0 0 900 250" role="img" aria-label="EC2 架構圖">
+        <title>方案 D — EC2 + Docker</title>
+        <desc>使用者經 Elastic IP 進到 EC2 上的 Nginx 反向代理與 Docker 容器，容器呼叫 Bedrock 與 SNS，資料存於 EBS。</desc>
+        <g class="node"><rect x="30" y="96" width="140" height="58" rx="10"/><text class="ic" x="46" y="116">USER</text><text class="svc" x="46" y="122">瀏覽器</text><text class="role" x="46" y="138">Elastic IP 固定</text></g>
+        <g class="node cur"><rect x="210" y="70" width="330" height="120" rx="10"/><text class="ic" x="226" y="92">EC2</text><text class="svc" x="226" y="98">EC2 執行個體</text>
+          <rect x="230" y="110" width="140" height="64" rx="8" fill="var(--surface-2)" stroke="var(--line)"/><text class="svc" x="244" y="132" font-size="12">Nginx</text><text class="role" x="244" y="148">反向代理 / TLS</text>
+          <rect x="384" y="110" width="140" height="64" rx="8" fill="var(--surface-2)" stroke="var(--line)"/><text class="svc" x="398" y="132" font-size="12">Docker</text><text class="role" x="398" y="148">Spring Boot 容器</text>
+        </g>
+        <g class="node"><rect x="580" y="46" width="150" height="52" rx="10"/><text class="ic" x="596" y="66">EBS</text><text class="svc" x="596" y="72">EBS 磁碟</text><text class="role" x="596" y="88">metrics / 日誌</text></g>
+        <g class="node hl"><rect x="580" y="112" width="150" height="52" rx="10"/><text class="ic" x="596" y="132">AI</text><text class="svc" x="596" y="138">Bedrock</text><text class="role" x="596" y="154">AI brief</text></g>
+        <g class="node hl"><rect x="580" y="178" width="150" height="52" rx="10"/><text class="ic" x="596" y="198">SNS</text><text class="svc" x="596" y="204">SNS / SES</text><text class="role" x="596" y="220">Email 告警</text></g>
+        <path class="edge strong" d="M170 124 H210" marker-end="url(#arrowS)"/>
+        <path class="edge" d="M540 138 H580" marker-end="url(#arrow)"/>
+        <path class="edge" d="M540 130 C 560 100, 565 84, 580 74" marker-end="url(#arrow)"/>
+        <path class="edge" d="M540 150 C 560 180, 565 194, 580 200" marker-end="url(#arrow)"/>
+      </svg>
+    </div><div class="dcap">單位成本最低 · 單台為單點風險，正式上線需自建監控與備援。</div></div>
+    <div class="grid2">
+      <div class="card pros"><h3>◆ 優點</h3><ul>
+        <li>穩定負載下單位成本最低</li>
+        <li>完整掌控 OS、網路、容器編排</li>
+        <li>沒有平台黑箱，除錯直觀</li>
+      </ul></div>
+      <div class="card cons"><h3>◆ 缺點</h3><ul>
+        <li>修補、監控、擴縮全自理</li>
+        <li>單台是單點故障，要自建高可用</li>
+        <li>維運人力成本高，不利小團隊</li>
+      </ul></div>
+    </div>
+    <div class="whenrec"><b>何時選它：</b>負載穩定可預期、已有維運團隊、想把雲帳單壓到最低時。</div>
+  </section>
+
+  <!-- ===================== OPTION E: Data pipeline ===================== -->
+  <section id="optE">
+    <div class="sec-head">
+      <p class="sec-kicker"><span class="tag alt">方案 E</span> Future / Scale-out</p>
+      <h2><span class="num">E</span>完整資料分析管線 — 全船隊即時 ＋ BI ＋ ML</h2>
+      <p class="sec-lede">把眼光放到「不只 15 艘、不只正午一筆」：船端 IoT 即時遙測進 S3 資料湖，Glue/Lambda ETL，Timestream/Athena 查詢，QuickSight 給決策者 BI，SageMaker/Bedrock 做預測。這是規模化的終局形狀。</p>
+    </div>
+    <div class="diagram"><div class="scroll">
+      <svg viewBox="0 0 960 330" role="img" aria-label="完整資料分析管線架構圖">
+        <title>方案 E — 完整資料分析管線</title>
+        <desc>IoT Core 即時船端遙測與 S3 資料湖為來源，Glue/Lambda ETL 清洗，Timestream/Athena 查詢，供給 ECS 應用、QuickSight BI 與 SageMaker/Bedrock 預測，Step Functions 編排。</desc>
+        <rect class="band-rect" x="8" y="40" width="220" height="270" rx="12"/><text class="band-label" x="24" y="62">來源 / Ingest</text>
+        <rect class="band-rect" x="242" y="40" width="230" height="270" rx="12"/><text class="band-label" x="258" y="62">處理 / ETL</text>
+        <rect class="band-rect" x="486" y="40" width="210" height="270" rx="12"/><text class="band-label" x="502" y="62">查詢 / Store</text>
+        <rect class="band-rect" x="710" y="40" width="242" height="270" rx="12"/><text class="band-label" x="726" y="62">消費 / Serve</text>
+
+        <g class="node"><rect x="24" y="86" width="196" height="56" rx="10"/><text class="ic" x="40" y="106">IOT</text><text class="svc" x="40" y="112">IoT Core</text><text class="role" x="40" y="128">即時船端遙測</text></g>
+        <g class="node"><rect x="24" y="158" width="196" height="56" rx="10"/><text class="ic" x="40" y="178">S3</text><text class="svc" x="40" y="184">S3 資料湖</text><text class="role" x="40" y="200">5 年正午報表原始</text></g>
+        <g class="node hl"><rect x="258" y="120" width="198" height="60" rx="10"/><text class="ic" x="274" y="140">ETL</text><text class="svc" x="274" y="146">Glue / Lambda ETL</text><text class="role" x="274" y="162">清洗 · 篩選旗標 · 正規化</text></g>
+        <g class="node"><rect x="258" y="200" width="198" height="56" rx="10"/><text class="ic" x="274" y="220">SFN</text><text class="svc" x="274" y="226">Step Functions</text><text class="role" x="274" y="242">管線編排</text></g>
+        <g class="node hl"><rect x="502" y="120" width="178" height="60" rx="10"/><text class="ic" x="518" y="140">DB</text><text class="svc" x="518" y="146">Timestream / Athena</text><text class="role" x="518" y="162">時序查詢 · SQL on S3</text></g>
+        <g class="node cur"><rect x="726" y="80" width="210" height="52" rx="10"/><text class="ic" x="742" y="100">APP</text><text class="svc" x="742" y="106">ECS 決策應用</text><text class="role" x="742" y="122">FleetMind dashboard</text></g>
+        <g class="node hl"><rect x="726" y="146" width="210" height="52" rx="10"/><text class="ic" x="742" y="166">BI</text><text class="svc" x="742" y="172">QuickSight</text><text class="role" x="742" y="188">決策者 BI 報表</text></g>
+        <g class="node hl"><rect x="726" y="212" width="210" height="52" rx="10"/><text class="ic" x="742" y="232">ML</text><text class="svc" x="742" y="252">SageMaker / Bedrock</text><text class="role" x="742" y="248"> </text></g>
+        <path class="edge" d="M220 114 C 240 120, 245 140, 258 144" marker-end="url(#arrow)"/>
+        <path class="edge" d="M220 186 C 240 180, 245 160, 258 156" marker-end="url(#arrow)"/>
+        <path class="edge strong" d="M456 150 H502" marker-end="url(#arrowS)"/>
+        <path class="edge" d="M680 140 C 700 120, 705 110, 726 106" marker-end="url(#arrow)"/>
+        <path class="edge" d="M680 152 C 700 160, 705 168, 726 172" marker-end="url(#arrow)"/>
+        <path class="edge" d="M680 168 C 700 200, 705 226, 726 234" marker-end="url(#arrow)"/>
+      </svg>
+    </div><div class="dcap">規模化終局：即時 + BI + 預測 · 對三天賽程是過度設計，但畫出成長路線。</div></div>
+    <div class="grid2">
+      <div class="card pros"><h3>◆ 優點</h3><ul>
+        <li>撐得住全船隊、即時遙測與多年歷史</li>
+        <li>QuickSight 讓非工程決策者也能自助分析</li>
+        <li>ETL / 查詢 / ML 各層可獨立擴縮</li>
+      </ul></div>
+      <div class="card cons"><h3>◆ 缺點</h3><ul>
+        <li>元件多、建置與維運成本高</li>
+        <li>對「15 艘 × 正午一筆」是明顯過度設計</li>
+        <li>需要資料工程與 MLOps 能力</li>
+      </ul></div>
+    </div>
+    <div class="whenrec"><b>何時選它：</b>從 demo 走向正式產品、要接船端即時資料與公司級 BI / 預測時的目標架構。</div>
+  </section>
+
+  <!-- ===================== COMPARE ===================== -->
+  <section id="compare">
+    <div class="sec-head">
+      <p class="sec-kicker">One glance</p>
+      <h2><span class="num">＝</span>五案一表看懂</h2>
+      <p class="sec-lede">同一套邏輯，不同形狀的取捨。現行方案（highlight）在「三天賽程」這個情境下綜合最優。</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>方案</th><th>運算</th><th>入口 / 網址</th><th class="num">閒置成本</th><th class="num">維運負擔</th><th class="num">冷啟</th><th>黑客松適配</th>
+        </tr></thead>
+        <tbody>
+          <tr class="is-current"><th>現行 · ECS Fargate</th><td>Fargate ARM64</td><td>ALB 靜態 DNS</td><td class="num"><span class="pill mid">中</span></td><td class="num"><span class="pill hi">低</span></td><td class="num"><span class="pill hi">快</span></td><td><span class="pill hi">最佳</span></td></tr>
+          <tr><th>B · Serverless</th><td>Lambda</td><td>API GW + CloudFront</td><td class="num"><span class="pill hi">近零</span></td><td class="num"><span class="pill hi">低</span></td><td class="num"><span class="pill lo">慢(Java)</span></td><td><span class="pill mid">佳</span></td></tr>
+          <tr><th>C · App Runner</th><td>托管容器</td><td>內建 HTTPS</td><td class="num"><span class="pill mid">中</span></td><td class="num"><span class="pill hi">極低</span></td><td class="num"><span class="pill mid">中</span></td><td><span class="pill mid">佳*</span></td></tr>
+          <tr><th>D · EC2 + Docker</th><td>EC2 自管</td><td>Elastic IP</td><td class="num"><span class="pill lo">常駐</span></td><td class="num"><span class="pill lo">高</span></td><td class="num"><span class="pill hi">快</span></td><td><span class="pill lo">一般</span></td></tr>
+          <tr><th>E · 資料管線</th><td>混合(ECS+ETL+ML)</td><td>多入口</td><td class="num"><span class="pill lo">高</span></td><td class="num"><span class="pill lo">高</span></td><td class="num">—</td><td><span class="pill lo">過度</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sec-lede" style="margin-top:14px; font-size:13px; color:var(--muted)">* App Runner 在本 workshop 帳號回 AccessDenied，故正式部署改走 ECS Fargate。</p>
+  </section>
+
+  <footer>
+    <p class="tagline">數字來自計算，語言來自 AI，決策留給人。</p>
+    <p>FleetMind · 陽明海運 AI 船舶效能節能決策支援系統 · AWS us-east-1 · 本報告為架構決策記錄，可分享給團隊與評審。</p>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeBtn');
+    var txt = document.getElementById('themeTxt');
+    function current() {
+      var t = root.getAttribute('data-theme');
+      if (t) return t;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    function apply(t) { root.setAttribute('data-theme', t); txt.textContent = (t === 'dark') ? '淺色' : '深色'; }
+    btn.addEventListener('click', function () { apply(current() === 'dark' ? 'light' : 'dark'); });
+  })();
+</script>
+
+</body>
+</html>

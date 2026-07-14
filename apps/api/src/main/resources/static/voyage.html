@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FleetMind 航程 · 一艘船的船體污損偵測與決策旅程</title>
+  <meta name="description" content="FleetMind 沈浸式航程敘事：以真實 ISO 19030 資料，帶你看一艘船從入港、下潛、清洗對照到決策建議的完整旅程。" />
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="voyage.css" />
+</head>
+<body>
+  <div class="v-progress" id="v-progress" aria-hidden="true"></div>
+
+  <header class="v-masthead">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span><b>FleetMind</b> · 航程</span>
+    </div>
+    <a class="v-back" href="/">← 首頁</a>
+  </header>
+
+  <nav class="v-nav" id="v-nav" aria-label="航程章節"></nav>
+
+  <main id="voyage">
+    <!-- 1 · arrival -->
+    <section class="scene" id="s-arrival" data-scene="arrival" aria-label="入港">
+      <div class="stage">
+        <div class="sea-layer" id="arrival-sea" aria-hidden="true"></div>
+        <div class="stage-inner">
+          <p class="scene-kicker reveal">第一幕 · 入港</p>
+          <h1 class="scene-title reveal d1">一艘船，正從海平線駛回</h1>
+          <div class="ship-holder reveal d2"><div id="arrival-ship" class="ship-sail-in"></div></div>
+          <div id="arrival-hud" class="reveal d3" style="margin-top:24px"></div>
+          <p class="scene-lead reveal d4" id="arrival-lead" style="margin-top:20px"></p>
+        </div>
+        <div class="scroll-cue" aria-hidden="true">向下捲動啟航<span class="arw"></span></div>
+      </div>
+    </section>
+
+    <!-- 2 · berth -->
+    <section class="scene" id="s-berth" data-scene="berth" aria-label="靠泊">
+      <div class="stage">
+        <div class="stage-inner">
+          <p class="scene-kicker reveal">第二幕 · 靠泊</p>
+          <h2 class="scene-title reveal d1">翻開這艘船的身分證</h2>
+          <p class="scene-lead reveal d2" id="berth-lead"></p>
+          <div class="ship-holder reveal d3" style="margin:26px 0"><div id="berth-ship"></div></div>
+          <div class="metric-grid" id="berth-cards"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · underwater-events -->
+    <section class="scene tall" id="s-events" data-scene="underwater-events" aria-label="下潛：水下事件時間軸">
+      <div class="stage">
+        <div class="bubbles" id="events-bubbles" aria-hidden="true"></div>
+        <div class="stage-inner">
+          <p class="scene-kicker reveal">第三幕 · 下潛</p>
+          <h2 class="scene-title reveal d1">五年來的水下事件時間軸</h2>
+          <p class="scene-lead reveal d2" id="events-lead" style="margin-bottom:24px"></p>
+          <div class="dive-wrap">
+            <div class="dive-rail"><div class="dive-line"></div><div class="diver" id="events-diver"></div></div>
+            <div id="events-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · cleaning-recovery -->
+    <section class="scene" id="s-recovery" data-scene="cleaning-recovery" aria-label="清洗前後對照">
+      <div class="stage">
+        <div class="stage-inner">
+          <p class="scene-kicker reveal">第四幕 · 對照</p>
+          <h2 class="scene-title reveal d1">清洗真的有用嗎？</h2>
+          <p class="scene-lead reveal d2" id="recovery-lead"></p>
+          <div class="ba-wrap reveal d3" style="margin-top:22px">
+            <div class="ba-scrub">
+              <span class="hud-label">選擇事件</span>
+              <div class="stepper" id="recovery-stepper">
+                <button type="button" id="rev-prev" aria-label="上一個事件">‹</button>
+                <span class="cur tnum" id="rev-idx">—</span>
+                <button type="button" id="rev-next" aria-label="下一個事件">›</button>
+              </div>
+              <span class="tag" id="rev-eventlabel">—</span>
+            </div>
+            <div class="ba-stage" id="recovery-stage"></div>
+            <div class="ba-kfaceoff">
+              <div class="ba-k"><div class="cap">清洗前 k 值中位數</div><div class="val tnum" id="rev-kbefore">—</div></div>
+              <div class="ba-arrow" id="rev-arrow">→</div>
+              <div class="ba-k"><div class="cap">清洗後 k 值中位數</div><div class="val tnum" id="rev-kafter">—</div></div>
+            </div>
+            <div id="rev-physical"></div>
+            <div>
+              <div class="hud-label">七次事件的效能回復率（越靠右＝越近期）</div>
+              <div class="recovery-strip" id="rev-strip"></div>
+            </div>
+            <p class="chart-note">k = FOC / STW³（同航速正規化）。回復率為正＝阻力下降；近期趨近零甚至為負，即系統標記的「清洗效益遞減」。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · departure -->
+    <section class="scene" id="s-departure" data-scene="departure" aria-label="離港">
+      <div class="stage">
+        <div class="sea-layer" id="departure-sea" aria-hidden="true"></div>
+        <div class="stage-inner">
+          <p class="scene-kicker reveal">第五幕 · 離港</p>
+          <h2 class="scene-title reveal d1">解纜、加速、駛向外海</h2>
+          <div class="ship-holder reveal d2" style="margin:24px 0"><div id="departure-ship" class="ship-sail-in"></div></div>
+          <div class="metric-grid reveal d3" id="departure-hud"></div>
+          <p class="scene-lead reveal d4" id="departure-lead" style="margin-top:18px"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · telemetry -->
+    <section class="scene tall" id="s-telemetry" data-scene="telemetry" aria-label="航行遙測">
+      <div class="stage">
+        <div class="sea-layer" id="telemetry-sea" aria-hidden="true"></div>
+        <div class="stage-inner">
+          <p class="scene-kicker reveal">第六幕 · 遙測</p>
+          <h2 class="scene-title reveal d1">每天一筆　k = FOC ÷ STW³</h2>
+          <p class="scene-lead reveal d2" id="telemetry-lead" style="margin-bottom:18px"></p>
+          <div class="telem-grid">
+            <div class="chart-card reveal d3" id="telemetry-chart"></div>
+            <div class="reveal d4" id="telemetry-side"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · degradation -->
+    <section class="scene tall" id="s-degradation" data-scene="degradation" aria-label="衰退曲線">
+      <div class="stage">
+        <div class="stage-inner">
+          <p class="scene-kicker reveal">第七幕 · 高潮</p>
+          <h2 class="scene-title reveal d1">五年的緩慢爬升，撞上門檻</h2>
+          <p class="scene-lead reveal d2" id="degradation-lead" style="margin-bottom:18px"></p>
+          <div class="deg-grid">
+            <div class="chart-card reveal d3" id="degradation-chart"></div>
+            <div class="reveal d4">
+              <div style="margin-bottom:16px">
+                <div class="hud-label">告警門檻（與決策看板共享）</div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px">
+                  <div class="stepper">
+                    <button type="button" id="th-dec" aria-label="降低門檻">−</button>
+                    <span class="cur tnum" id="th-cur">—</span>
+                    <button type="button" id="th-inc" aria-label="提高門檻">＋</button>
+                  </div>
+                </div>
+                <div class="preset" id="th-preset" style="margin-top:10px"></div>
+                <div class="notify-status" id="th-status"></div>
+              </div>
+              <div class="donut-wrap" id="degradation-donut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · decision -->
+    <section class="scene" id="s-decision" data-scene="decision" aria-label="決策建議">
+      <div class="stage">
+        <div class="stage-inner">
+          <p class="scene-kicker reveal">第八幕 · 決策</p>
+          <h2 class="scene-title reveal d1">不是報警，是下一步該做什麼</h2>
+          <div class="decision-card reveal d2" id="decision-card" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 · fleet-outro -->
+    <section class="scene" id="s-outro" data-scene="fleet-outro" aria-label="拉遠：回到艦隊">
+      <div class="stage">
+        <div class="stage-inner">
+          <p class="scene-kicker reveal">終幕 · 拉遠</p>
+          <h2 class="scene-title reveal d1">這，只是 15 艘船裡的一艘</h2>
+          <p class="scene-lead reveal d2" id="outro-lead"></p>
+          <div class="fleet-map reveal d3" id="outro-map" style="margin-top:20px"></div>
+          <div class="fleet-legend reveal d3" id="outro-legend"></div>
+          <div class="mini-list reveal d4" id="outro-list"></div>
+          <div class="outro-cta reveal d4">
+            <a class="btn primary" href="/dashboard.html">返回決策看板　→</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="v-error" aria-live="polite"></div>
+
+  <script src="voyage.js"></script>
+</body>
+</html>
