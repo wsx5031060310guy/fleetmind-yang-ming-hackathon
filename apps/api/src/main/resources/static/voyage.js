@@ -1325,3 +1325,41 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();
+
+/* ================= cinematic photo parallax =================
+   Fully isolated, additive layer: its own passive scroll listener + rAF throttle.
+   It NEVER touches the data fetch, scene detection, once/scrub judgement or HUD — it only reads
+   scene geometry and writes transform on the decorative .scene-photo__img backdrops.
+   Under prefers-reduced-motion it bails out entirely, leaving photos as static backgrounds. */
+(function () {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var imgs = Array.prototype.slice.call(document.querySelectorAll(".scene-photo__img"));
+  if (!imgs.length) return;
+  var AMP = 22;            // px of vertical drift, well inside the 10% image bleed
+  var ticking = false;
+
+  function paint() {
+    ticking = false;
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    for (var i = 0; i < imgs.length; i++) {
+      var img = imgs[i];
+      var scene = img.closest ? img.closest(".scene") : null;
+      if (!scene) continue;
+      var r = scene.getBoundingClientRect();
+      if (r.bottom < -vh || r.top > vh * 2) continue;          // offscreen: skip work
+      var rel = (r.top + r.height / 2 - vh / 2) / vh;          // -1 above centre .. +1 below
+      if (rel > 1) rel = 1; else if (rel < -1) rel = -1;
+      img.style.transform = "translate3d(0," + (-rel * AMP).toFixed(1) + "px,0)";
+    }
+  }
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    (window.requestAnimationFrame || function (f) { setTimeout(f, 16); })(paint);
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", paint);
+  else paint();
+})();

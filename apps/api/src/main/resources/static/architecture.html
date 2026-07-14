@@ -106,9 +106,23 @@
   .theme-toggle:hover { border-color: var(--seafoam); color: var(--ink); }
   .theme-toggle:focus-visible, .nav a:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
 
-  /* hero */
-  header.hero { padding: clamp(48px, 8vw, 90px) 0 clamp(30px, 5vw, 54px); }
-  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--seafoam); margin: 0 0 16px; }
+  /* hero — cinematic maritime header band (port-dusk photo under a heavy navy scrim) */
+  header.hero { position: relative; isolation: isolate; padding: clamp(52px, 8vw, 94px) 0 clamp(36px, 5vw, 60px); }
+  header.hero::before {
+    content: ""; position: absolute; z-index: -1;
+    inset: 0 calc(-1 * clamp(16px, 4vw, 40px));
+    background:
+      linear-gradient(179deg, rgba(6, 18, 32, 0.56) 0%, rgba(6, 18, 32, 0.72) 46%, rgba(7, 21, 35, 0.86) 76%, var(--bg) 100%),
+      radial-gradient(120% 92% at 80% -6%, rgba(55, 192, 166, 0.16), transparent 58%),
+      url("/img/port-dusk.jpg") center 34% / cover no-repeat;
+  }
+  /* keep hero text cinematic-light on the photo in BOTH themes (rest of page still themes) */
+  header.hero h1 { color: #F3F8FC; }
+  header.hero h1 .thin { color: #C6D8E8; font-weight: 500; }
+  header.hero .lede { color: #D6E3EF; }
+  header.hero .chip { background: rgba(6, 17, 30, 0.5); border-color: rgba(148, 183, 214, 0.3); color: #E7F0F8; }
+  header.hero .chip b { color: #6FE7CF; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: #6FE7CF; margin: 0 0 16px; }
   h1 { font-size: clamp(30px, 5.4vw, 54px); line-height: 1.04; letter-spacing: -0.025em; margin: 0 0 20px; text-wrap: balance; font-weight: 800; }
   h1 .thin { color: var(--ink-dim); font-weight: 500; }
   .lede { font-size: clamp(15px, 2vw, 18px); color: var(--ink-dim); max-width: 62ch; margin: 0; }
