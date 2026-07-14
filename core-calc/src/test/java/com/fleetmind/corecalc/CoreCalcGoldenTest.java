@@ -24,6 +24,10 @@ public final class CoreCalcGoldenTest {
     private static void vlsfoConversions() {
         assertClose("VLSFO unchanged", 10.0, CoreCalc.vlsfoEquivalent(Arrays.asList(new FuelMass(FuelType.VLSFO, 10.0))));
         assertClose("HFO unchanged", 7.5, CoreCalc.vlsfoEquivalent(Arrays.asList(new FuelMass(FuelType.HFO, 7.5))));
+        assertClose("LSFO uses 40.2 mapping", 7.5,
+                CoreCalc.vlsfoEquivalent(Arrays.asList(new FuelMass(FuelType.LSFO, 7.5))));
+        assertClose("BLSF proxy uses 40.2 mapping", 7.5,
+                CoreCalc.vlsfoEquivalent(Arrays.asList(new FuelMass(FuelType.BLSF, 7.5))));
         assertClose("MGO converts by LCV", 10.62189055, CoreCalc.vlsfoEquivalent(Arrays.asList(new FuelMass(FuelType.MGO, 10.0))));
         assertClose("ULSFO converts by LCV", 10.24875621, CoreCalc.vlsfoEquivalent(Arrays.asList(new FuelMass(FuelType.ULSFO, 10.0))));
         assertClose("multi-fuel day sums", 22.98507463, CoreCalc.vlsfoEquivalent(Arrays.asList(

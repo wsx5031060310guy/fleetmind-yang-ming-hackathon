@@ -11,3 +11,9 @@ curl_post_safe() {
     --connect-timeout 3 --max-time 12 \
     -X POST "$@"
 }
+
+curl_put_safe() {
+  curl --fail --silent --show-error \
+    --connect-timeout 3 --max-time 12 \
+    -X PUT "$@"
+}

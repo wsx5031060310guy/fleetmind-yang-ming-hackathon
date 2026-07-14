@@ -15,6 +15,8 @@ check_contains() {
   echo "checking $label"
   if [[ "$method" == "POST" ]]; then
     body="$(curl_post_safe "$url")"
+  elif [[ "$method" == "PUT" ]]; then
+    body="$(curl_put_safe "$url")"
   else
     body="$(curl_safe "$url")"
   fi
@@ -28,10 +30,15 @@ check_contains() {
 check_contains health GET "$BASE_URL/api/health" "ok"
 check_contains fleet-summary GET "$BASE_URL/api/fleet/summary" "YM-DEMO-01"
 check_contains performance GET "$BASE_URL/api/vessels/YM-DEMO-01/performance" "dailyFoc"
-check_contains before-after GET "$BASE_URL/api/vessels/YM-DEMO-01/before-after?eventId=event-2025-03-cleaning" "paybackDays"
+check_contains before-after GET "$BASE_URL/api/vessels/YM-DEMO-01/before-after?eventId=event-2025-03-cleaning" "recoveryPct"
 check_contains ai-brief POST "$BASE_URL/api/vessels/YM-DEMO-01/ai-brief" '"passed":true'
 check_contains ai-brief-forced-fallback POST "$BASE_URL/api/vessels/YM-DEMO-01/ai-brief?forceFallback=true" "deterministic-forced-fallback"
 check_contains ai-brief-prompt GET "$BASE_URL/api/vessels/YM-DEMO-01/ai-brief/prompt" "systemPrompt"
 check_contains fuel-export GET "$BASE_URL/api/fuel-consump/export" "FUEL_CONSUMP"
+check_contains threshold-config GET "$BASE_URL/api/config/threshold" "thresholdPct"
+check_contains threshold-update PUT "$BASE_URL/api/config/threshold?value=7" '"thresholdPct":7.0'
+check_contains alerts GET "$BASE_URL/api/alerts" "SCHEDULE_UWILD"
+check_contains vessel-decision GET "$BASE_URL/api/vessels/YM-DEMO-01/decision" "WATCH"
+check_contains alerts-notify POST "$BASE_URL/api/alerts/notify" "topicConfigured"
 
 echo "api smoke checks passed"

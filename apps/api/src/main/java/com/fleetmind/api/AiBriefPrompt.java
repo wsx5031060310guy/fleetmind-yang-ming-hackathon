@@ -37,7 +37,12 @@ public final class AiBriefPrompt {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("vesselId", vesselId);
         payload.put("lowConfidence", lowConfidence);
-        payload.put("beforeAfter", beforeAfter);
+        payload.put("beforeAfter", Map.of(
+                "eventId", beforeAfter.eventId(),
+                "vesselId", beforeAfter.vesselId(),
+                "medianKBefore", beforeAfter.medianKBefore(),
+                "medianKAfter", beforeAfter.medianKAfter(),
+                "recoveryPct", beforeAfter.recoveryPct()));
         payload.put("underwaterEvents", events);
         payload.put("citedMetrics", citedMetrics);
         try {

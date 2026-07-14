@@ -24,19 +24,17 @@ public final class MetricsExportCli {
     private static final int EVENT_WINDOW_DAYS = 30;
     private static final int MIN_EVENT_SAMPLES = 5;
 
-    // Hackathon business counterfactual assumption; judges can replace this without changing physics.
-    private static final double FUEL_PRICE_USD_PER_MT = 650.0;
-    private static final double CLEANING_COST_USD = 40_000.0;
-    private static final double CARBON_PRICE_USD_PER_TON = 90.0;
-    private static final double EU_ETS_COVERAGE_RATE = 0.5;
-
+    // Header -> VLSFO-equivalent LCV class. Add aliases here; absent columns are ignored.
     private static final List<FuelColumn> FUEL_COLUMNS = List.of(
-            new FuelColumn("ME_FULLSPEED_CONSUMP_HSHFO", FuelType.HFO),
-            new FuelColumn("ME_FULLSPEED_CONSUMP_ULSFO", FuelType.ULSFO),
-            new FuelColumn("ME_FULLSPEED_CONSUMP_VLSFO", FuelType.VLSFO),
-            new FuelColumn("ME_FULLSPEED_CONSUMP_LSMGO", FuelType.MGO),
-            // No separate LCV was supplied for BIO_HSFO; use the HFO/VLSFO 40.2 baseline.
-            new FuelColumn("ME_FULLSPEED_CONSUMP_BIO_HSFO", FuelType.HFO));
+            new FuelColumn("ME_FULLSPEED_CONSUMP_HSHFO", FuelType.HFO, "HFO"),
+            new FuelColumn("ME_FULLSPEED_CONSUMP_HFO", FuelType.HFO, "HFO"),
+            new FuelColumn("ME_FULLSPEED_CONSUMP_LSFO", FuelType.LSFO, "LSFO"),
+            new FuelColumn("ME_FULLSPEED_CONSUMP_ULSFO", FuelType.ULSFO, "ULSFO"),
+            new FuelColumn("ME_FULLSPEED_CONSUMP_VLSFO", FuelType.VLSFO, "VLSFO"),
+            new FuelColumn("ME_FULLSPEED_CONSUMP_LSMGO", FuelType.MGO, "MGO"),
+            new FuelColumn("ME_FULLSPEED_CONSUMP_BLSF", FuelType.BLSF, "BLSF"),
+            // No distinct official LCV was supplied for BIO_HSFO/BLSF; use 40.2.
+            new FuelColumn("ME_FULLSPEED_CONSUMP_BIO_HSFO", FuelType.BLSF, "BLSF"));
 
     private MetricsExportCli() {
     }
@@ -56,6 +54,7 @@ public final class MetricsExportCli {
         Map<String, List<DailyPoint>> pointsByShip = new LinkedHashMap<>();
         Map<String, Integer> rowsByShip = new HashMap<>();
         Map<String, Integer> qualifiedByShip = new HashMap<>();
+        Map<String, Map<LocalDate, String>> fuelTypesByShip = new HashMap<>();
         Map<String, Integer> flagCounts = new LinkedHashMap<>();
         int finiteFocRows = 0;
         int totalRows = 0;
@@ -91,6 +90,8 @@ public final class MetricsExportCli {
             DailyPoint point = new DailyPoint(SYNTHETIC_EPOCH.plusDays(day), dailyFoc,
                     speed == null ? Double.NaN : speed, flags);
             pointsByShip.computeIfAbsent(shipId, ignored -> new ArrayList<>()).add(point);
+            fuelTypesByShip.computeIfAbsent(shipId, ignored -> new HashMap<>())
+                    .put(point.date(), fuel.activeFuelType);
             rowsByShip.merge(shipId, 1, Integer::sum);
             if (isQualified(point)) {
                 qualifiedByShip.merge(shipId, 1, Integer::sum);
@@ -115,6 +116,7 @@ public final class MetricsExportCli {
             int qualified = qualifiedByShip.getOrDefault(shipId, 0);
             totalQualified += qualified;
             shipResults.add(processShip(shipId, points, eventRecords, events,
+                    fuelTypesByShip.getOrDefault(shipId, Map.of()),
                     rowsByShip.getOrDefault(shipId, 0), qualified));
         }
 
@@ -137,6 +139,7 @@ public final class MetricsExportCli {
         quality.put("totalRows", totalRows);
         quality.put("flagCounts", flagCounts);
         Map<String, Object> root = new LinkedHashMap<>();
+        root.put("transformVersion", "decision-support-v2");
         root.put("fleet", fleet);
         root.put("vessels", vessels);
         root.put("dataQuality", quality);
@@ -145,6 +148,7 @@ public final class MetricsExportCli {
 
     private static ShipResult processShip(String shipId, List<DailyPoint> points,
             List<EventRecord> eventRecords, List<MaintenanceEvent> events,
+            Map<LocalDate, String> fuelTypesByDate,
             int totalRows, int qualifiedDays) {
         ReferenceWindow reference = SpeedLoss.referenceWindow(points,
                 SpeedLoss.DEFAULT_REFERENCE_MIN_DAYS,
@@ -176,6 +180,7 @@ public final class MetricsExportCli {
             metric.put("dailyFoc", finiteOrNull(point.dailyFoc()));
             metric.put("kValue", finiteOrNull(kValues[i]));
             metric.put("speedLossPct", finiteOrNull(loss));
+            metric.put("activeFuelType", fuelTypesByDate.getOrDefault(point.date(), "UNKNOWN"));
             metric.put("qualityFlags", point.qualityFlags().stream().map(Enum::name).sorted().toList());
             performance.add(metric);
         }
@@ -192,7 +197,12 @@ public final class MetricsExportCli {
             event.put("type", record.originalType);
             event.put("eventType", record.originalType);
             event.put("verdict", validation.verdict().name());
-            event.put("expectedImprovement", validation.expectedImprovement());
+            event.put("expectedImprovement", record.event.type() == MaintenanceEvent.EventType.DD
+                    ? null : validation.expectedImprovement());
+            if (record.event.type() == MaintenanceEvent.EventType.DD) {
+                event.put("effectInterpretation",
+                        "Higher probability of improvement; before/after data determines outcome.");
+            }
             event.put("measuredDeltaPct", finiteOrNull(validation.measuredDeltaPct()));
             event.put("noiseThresholdPct", finiteOrNull(validation.noiseThresholdPct()));
             event.put("lowConfidence", validation.lowConfidence());
@@ -203,17 +213,12 @@ public final class MetricsExportCli {
 
             BeforeAfterResult comparison = SpeedLoss.beforeAfter(points, record.event.date(),
                     EVENT_WINDOW_DAYS, MIN_EVENT_SAMPLES);
-            FocWindow foc = eventFocWindow(points, record.event.date(), EVENT_WINDOW_DAYS);
-            BusinessImpactResult impact = BusinessImpact.estimate(
-                    foc.afterMedian, foc.beforeMedian, FUEL_PRICE_USD_PER_MT,
-                    CLEANING_COST_USD, CARBON_PRICE_USD_PER_TON, EU_ETS_COVERAGE_RATE);
             Map<String, Object> comparisonJson = new LinkedHashMap<>();
             comparisonJson.put("eventId", record.eventId);
             comparisonJson.put("vesselId", shipId);
             comparisonJson.put("medianKBefore", finiteOrNull(comparison.medianKBefore()));
             comparisonJson.put("medianKAfter", finiteOrNull(comparison.medianKAfter()));
             comparisonJson.put("recoveryPct", finiteOrNull(comparison.recoveryPct()));
-            comparisonJson.put("businessImpact", businessImpactJson(impact));
             beforeAfter.put(record.eventId, comparisonJson);
         }
 
@@ -227,16 +232,23 @@ public final class MetricsExportCli {
         double savedFraction = penaltyPct / (100.0 + penaltyPct); // 0..1
         double totalSavingsMtDay = Double.isFinite(medianFoc)
                 ? medianFoc * savedFraction : Double.NaN;
-        double savingsPct = savedFraction * 100.0; // 0..100, reported to the UI/deck
-        double uwcSavings = totalSavingsMtDay * attribution.hullShare();
-        double ppSavings = totalSavingsMtDay * attribution.propellerShare();
-        Map<String, Object> counterfactual = new LinkedHashMap<>();
-        counterfactual.put("uwcSavingsMtDay", finiteOrNull(uwcSavings));
-        counterfactual.put("ppSavingsMtDay", finiteOrNull(ppSavings));
-        counterfactual.put("pct", finiteOrNull(savingsPct));
-        counterfactual.put("annualSavingsUsd", finiteOrNull(totalSavingsMtDay * 365.0
-                * FUEL_PRICE_USD_PER_MT));
-        counterfactual.put("fuelPriceUsdPerMt", FUEL_PRICE_USD_PER_MT);
+        double estimatedAnnualExcessFuelMt = totalSavingsMtDay * 365.0;
+
+        List<DecisionSupport.SeriesPoint> decisionSeries = new ArrayList<>();
+        for (int i = 0; i < points.size(); i++) {
+            decisionSeries.add(new DecisionSupport.SeriesPoint(points.get(i).date(),
+                    SpeedLoss.fuelPenaltyPct(kValues[i], reference.kRef()),
+                    Double.isFinite(rawLoss[i])));
+        }
+        DecisionSupport.Forecast fittedForecast = DecisionSupport.forecastDaysToThreshold(
+                decisionSeries, DecisionSupport.DEFAULT_THRESHOLD_PCT,
+                SpeedLoss.DEFAULT_EXPONENT);
+        // The dashboard's current value is the rolling-median latest value. Persist the robust
+        // slope, then evaluate crossing from that same displayed current value so export-time
+        // and runtime threshold decisions are identical.
+        DecisionSupport.Forecast forecast = DecisionSupport.forecastFromTrend(
+                finiteOrZero(latestSpeedLoss), DecisionSupport.DEFAULT_THRESHOLD_PCT,
+                fittedForecast.slopePctPerDay(), fittedForecast.lowConfidence());
 
         Map<String, Object> attributionJson = new LinkedHashMap<>();
         attributionJson.put("hullPct", attribution.hullShare() * 100.0);
@@ -248,6 +260,12 @@ public final class MetricsExportCli {
                 : (int) Math.round(qualifiedDays * 100.0 / totalRows);
         String confidence = reference.lowConfidence() || attribution.lowConfidence()
                 ? "LOW" : qualifiedDays < 30 ? "MEDIUM" : "HIGH";
+        DecisionSupport.Recommendation recommendation = DecisionSupport.recommend(
+                finiteOrZero(latestSpeedLoss), DecisionSupport.DEFAULT_THRESHOLD_PCT,
+                forecast.daysToThreshold(), DecisionSupport.DEFAULT_ALERT_HORIZON_DAYS,
+                attribution.hullShare() * 100.0, confidence);
+        CleaningHistory cleaningHistory = cleaningHistory(points, events);
+        String activeFuelType = latestFuelType(points, fuelTypesByDate);
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("vesselId", shipId);
         summary.put("latestSpeedLossPct", finiteOrZero(latestSpeedLoss));
@@ -256,49 +274,40 @@ public final class MetricsExportCli {
         summary.put("sampleDays", qualifiedDays);
         summary.put("daysSinceLastCleaning", daysSinceLastHullReset(points, events));
         summary.put("dataQualityScore", dataQualityScore);
+        summary.put("thresholdPct", DecisionSupport.DEFAULT_THRESHOLD_PCT);
+        summary.put("forecastDaysToThreshold", forecast.daysToThreshold());
+        summary.put("projectedCrossValuePct", forecast.projectedCrossValuePct());
+        summary.put("trendSlopePctPerDay", finiteOrNull(forecast.slopePctPerDay()));
+        summary.put("forecastLowConfidence", forecast.lowConfidence());
+        summary.put("status", recommendation.status().name());
+        summary.put("recommendedAction", recommendation.action().name());
+        summary.put("rationale", recommendation.rationale());
+        summary.put("cleaningsSinceDryDock", cleaningHistory.cleaningsSinceDryDock);
+        summary.put("daysSinceDryDock", cleaningHistory.daysSinceDryDock);
+        summary.put("cleaningEffectiveness", DecisionSupport.cleaningEffectiveness(
+                cleaningHistory.cleaningsSinceDryDock).name());
+        summary.put("fuelPenaltyPct", penaltyPct);
+        summary.put("activeFuelType", activeFuelType);
+        summary.put("estimatedAnnualExcessFuelMt", finiteOrNull(estimatedAnnualExcessFuelMt));
 
         Map<String, Object> vessel = new LinkedHashMap<>();
         vessel.put("performance", performance);
         vessel.put("events", eventJson);
         vessel.put("beforeAfter", beforeAfter);
         vessel.put("attribution", attributionJson);
-        vessel.put("counterfactual", counterfactual);
+        vessel.put("decision", Map.of(
+                "thresholdPct", DecisionSupport.DEFAULT_THRESHOLD_PCT,
+                "status", recommendation.status().name(),
+                "recommendedAction", recommendation.action().name(),
+                "cleaningEffectiveness", DecisionSupport.cleaningEffectiveness(
+                        cleaningHistory.cleaningsSinceDryDock).name()));
+        Map<String, Object> fuelImpact = new LinkedHashMap<>();
+        fuelImpact.put("fuelPenaltyPct", penaltyPct);
+        fuelImpact.put("estimatedAnnualExcessFuelMt", finiteOrNull(estimatedAnnualExcessFuelMt));
+        vessel.put("fuelImpact", fuelImpact);
         return new ShipResult(shipId, latestSpeedLoss, summary, vessel,
                 attribution.hullShare() * 100.0, attribution.propellerShare() * 100.0,
-                uwiVerdicts);
-    }
-
-    private static Map<String, Object> businessImpactJson(BusinessImpactResult impact) {
-        Map<String, Object> json = new LinkedHashMap<>();
-        json.put("extraFuelMtPerDay", finiteOrNull(impact.extraFuelMtPerDay()));
-        json.put("dailyFuelCostUsd", finiteOrNull(impact.dailyFuelCostUsd()));
-        json.put("annualizedFuelCostUsd", finiteOrNull(impact.annualizedFuelCostUsd()));
-        json.put("dailyCo2MetricTons", finiteOrNull(impact.dailyCo2MetricTons()));
-        json.put("annualizedCo2MetricTons", finiteOrNull(impact.annualizedCo2MetricTons()));
-        json.put("dailyEuEtsCostUsd", finiteOrNull(impact.dailyEuEtsCostUsd()));
-        json.put("annualizedEuEtsCostUsd", finiteOrNull(impact.annualizedEuEtsCostUsd()));
-        json.put("dailyAvoidableCostUsd", finiteOrNull(impact.dailyAvoidableCostUsd()));
-        json.put("paybackDays", finiteOrNull(impact.paybackDays()));
-        return json;
-    }
-
-    private static FocWindow eventFocWindow(List<DailyPoint> points, LocalDate eventDate,
-            int windowDays) {
-        List<Double> before = new ArrayList<>();
-        List<Double> after = new ArrayList<>();
-        for (DailyPoint point : points) {
-            if (!isQualified(point)) {
-                continue;
-            }
-            long beforeDistance = ChronoUnit.DAYS.between(point.date(), eventDate);
-            long afterDistance = ChronoUnit.DAYS.between(eventDate, point.date());
-            if (beforeDistance >= 1 && beforeDistance <= windowDays) {
-                before.add(point.dailyFoc());
-            } else if (afterDistance >= 1 && afterDistance <= windowDays) {
-                after.add(point.dailyFoc());
-            }
-        }
-        return new FocWindow(SpeedLoss.median(toArray(before)), SpeedLoss.median(toArray(after)));
+                uwiVerdicts, recommendation.status().name(), recommendation.action().name());
     }
 
     private static double medianQualifiedFoc(List<DailyPoint> points) {
@@ -315,11 +324,49 @@ public final class MetricsExportCli {
         LocalDate latest = points.getLast().date();
         LocalDate baseline = points.getFirst().date();
         for (MaintenanceEvent event : events) {
-            if (event.resetsHull() && !event.date().isAfter(latest)) {
+            if ((event.type() == MaintenanceEvent.EventType.UWC
+                    || event.type() == MaintenanceEvent.EventType.UWC_PP)
+                    && !event.date().isAfter(latest)) {
                 baseline = event.date();
             }
         }
         return Math.max(0, Math.toIntExact(ChronoUnit.DAYS.between(baseline, latest)));
+    }
+
+    private static CleaningHistory cleaningHistory(List<DailyPoint> points,
+            List<MaintenanceEvent> events) {
+        if (points.isEmpty()) {
+            return new CleaningHistory(0, null);
+        }
+        LocalDate latest = points.getLast().date();
+        LocalDate latestDryDock = null;
+        int cleaningCount = 0;
+        for (MaintenanceEvent event : events) {
+            if (event.date().isAfter(latest)) {
+                continue;
+            }
+            if (event.type() == MaintenanceEvent.EventType.DD) {
+                latestDryDock = event.date();
+                cleaningCount = 0;
+            } else if (event.type() == MaintenanceEvent.EventType.UWC
+                    || event.type() == MaintenanceEvent.EventType.UWC_PP) {
+                cleaningCount++;
+            }
+        }
+        Integer days = latestDryDock == null ? null
+                : Math.max(0, Math.toIntExact(ChronoUnit.DAYS.between(latestDryDock, latest)));
+        return new CleaningHistory(cleaningCount, days);
+    }
+
+    private static String latestFuelType(List<DailyPoint> points,
+            Map<LocalDate, String> fuelTypesByDate) {
+        for (int i = points.size() - 1; i >= 0; i--) {
+            String fuel = fuelTypesByDate.get(points.get(i).date());
+            if (fuel != null && !"UNKNOWN".equals(fuel)) {
+                return fuel;
+            }
+        }
+        return "UNKNOWN";
     }
 
     private static Map<String, List<EventRecord>> mapEvents(List<MaintenanceRow> rows) {
@@ -366,9 +413,13 @@ public final class MetricsExportCli {
 
     private static FuelReading readFuel(CsvTable table, List<String> row) {
         List<FuelMass> masses = new ArrayList<>();
+        List<String> activeFuelTypes = new ArrayList<>();
         EnumSet<QualityFlag> flags = EnumSet.noneOf(QualityFlag.class);
         boolean invalid = false;
         for (FuelColumn column : FUEL_COLUMNS) {
+            if (!table.hasHeader(column.header)) {
+                continue;
+            }
             String raw = table.cell(row, column.header).trim();
             if (raw.isEmpty()) {
                 continue;
@@ -381,6 +432,7 @@ public final class MetricsExportCli {
                 invalid = true;
             } else if (value > 0.0) {
                 masses.add(new FuelMass(column.type, value));
+                activeFuelTypes.add(column.displayName);
             }
         }
         if (masses.isEmpty()) {
@@ -390,7 +442,9 @@ public final class MetricsExportCli {
             flags.add(QualityFlag.INVALID_FUEL_CONSUMP);
         }
         double equivalent = masses.isEmpty() ? Double.NaN : CoreCalc.vlsfoEquivalent(masses);
-        return new FuelReading(equivalent, flags);
+        String activeFuelType = activeFuelTypes.isEmpty() ? "UNKNOWN"
+                : String.join("+", activeFuelTypes.stream().distinct().sorted().toList());
+        return new FuelReading(equivalent, flags, activeFuelType);
     }
 
     private static List<MaintenanceRow> readMaintenance(CsvTable table) {
@@ -423,8 +477,15 @@ public final class MetricsExportCli {
                 + ", finite FOC rows=" + result.finiteFocRows + "/" + result.totalRows
                 + ", out=" + output);
         for (ShipResult ship : result.ships) {
-            System.out.printf(Locale.US, "ship: %s latestSpeedLossPct=%.4f%n",
-                    ship.shipId, finiteOrZero(ship.latestSpeedLossPct));
+            String icon = switch (ship.status) {
+                case "ACT" -> "🔴";
+                case "WATCH" -> "🟡";
+                default -> "🟢";
+            };
+            System.out.printf(Locale.US,
+                    "%s %s status=%s action=%s latestSpeedLossPct=%.4f%n",
+                    icon, ship.shipId, ship.status, ship.recommendedAction,
+                    finiteOrZero(ship.latestSpeedLossPct));
         }
         if (!result.ships.isEmpty()) {
             ShipResult example = result.ships.stream()
@@ -574,6 +635,10 @@ public final class MetricsExportCli {
             }
             return index < row.size() ? row.get(index) : "";
         }
+
+        private boolean hasHeader(String header) {
+            return indexes.containsKey(header);
+        }
     }
 
     private static final class Json {
@@ -648,10 +713,11 @@ public final class MetricsExportCli {
         }
     }
 
-    private record FuelColumn(String header, FuelType type) {
+    private record FuelColumn(String header, FuelType type, String displayName) {
     }
 
-    private record FuelReading(double vlsfoEquivalent, EnumSet<QualityFlag> flags) {
+    private record FuelReading(double vlsfoEquivalent, EnumSet<QualityFlag> flags,
+            String activeFuelType) {
     }
 
     private record MaintenanceRow(String shipId, String eventType, int eventDay) {
@@ -661,12 +727,13 @@ public final class MetricsExportCli {
             MaintenanceEvent event) {
     }
 
-    private record FocWindow(double beforeMedian, double afterMedian) {
+    private record CleaningHistory(int cleaningsSinceDryDock, Integer daysSinceDryDock) {
     }
 
     private record ShipResult(String shipId, double latestSpeedLossPct,
             Map<String, Object> summary, Map<String, Object> vessel,
-            double hullPct, double propPct, List<String> uwiVerdicts) {
+            double hullPct, double propPct, List<String> uwiVerdicts,
+            String status, String recommendedAction) {
     }
 
     private record ExportResult(Map<String, Object> root, List<ShipResult> ships,

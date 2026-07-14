@@ -4,6 +4,8 @@ public enum FuelType {
     MGO(42.7),
     ULSFO(41.2),
     HFO(40.2),
+    LSFO(40.2),
+    BLSF(40.2),
     VLSFO(40.2);
 
     private final double lcv;

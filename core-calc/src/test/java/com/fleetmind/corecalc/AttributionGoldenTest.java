@@ -115,6 +115,11 @@ public final class AttributionGoldenTest {
                 && MaintenanceEvent.EventType.UWC_PP.resetsPropeller());
         assertTrue("UWI resets nothing", !MaintenanceEvent.EventType.UWI.resetsHull()
                 && !MaintenanceEvent.EventType.UWI.resetsPropeller());
+        MaintenanceEvent dryDock = event(60, MaintenanceEvent.EventType.DD);
+        EventImpact dryDockImpact = Attribution.eventImpact(flat, dryDock, 30, 3);
+        assertTrue("DD does not guarantee improvement", !dryDockImpact.expectedImprovement());
+        assertEquals("DD verdict is data-only", EventValidation.Verdict.DATA_OBSERVED,
+                Attribution.validateEvents(flat, List.of(dryDock), 30).getFirst().verdict());
     }
 
     private static void dryDockCases() {
