@@ -15,3 +15,10 @@ target/
 # to be stored in this private repository.
 data/raw/
 data/private/
+
+# Yang Ming competition data (event-period use only, never commit)
+data/
+predict/output/
+__pycache__/
+*.pyc
+predict/.venv/
