@@ -418,8 +418,8 @@
       var NODES = [
         {p:0.00,k:'dawn'},    {p:0.22,k:'dawn'},
         {p:0.34,k:'dusk'},    {p:0.56,k:'dusk'},
-        {p:0.62,k:'deep'},    {p:0.68,k:'rays'},
-        {p:0.74,k:'fouling'}, {p:0.90,k:'fouling'},
+        {p:0.60,k:'deep'},    {p:0.65,k:'rays'},
+        {p:0.70,k:'fouling'}, {p:0.90,k:'fouling'},
         {p:1.01,k:'dawn'}
       ];
       var running=true, needMeasure=true, started=false;
@@ -598,8 +598,8 @@
         ctx.clearRect(0,0,W,H);
         var dawnF = 1 - smooth(clamp01(p/0.24));
         var det   = clamp01((p-0.32)/0.03) * (1 - clamp01((p-0.55)/0.05));
-        var uw    = smooth(clamp01((p-0.58)/0.08)) * (1 - smooth(clamp01((p-0.93)/0.07)));
-        var foulF = smooth(clamp01((p-0.70)/0.05)) * (1 - smooth(clamp01((p-0.93)/0.07)));
+        var uw    = smooth(clamp01((p-0.57)/0.07)) * (1 - smooth(clamp01((p-0.93)/0.07)));
+        var foulF = smooth(clamp01((p-0.66)/0.05)) * (1 - smooth(clamp01((p-0.93)/0.07)));
 
         drawPhotoBase(p);
         drawGrade(dawnF, uw, foulF);
