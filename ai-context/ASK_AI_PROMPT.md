@@ -26,7 +26,7 @@ Custom ML training, heavy computer vision, video processing, unrealistic autonom
 Competition constraints:
 - Use AWS-provided environment.
 - Use AWS models and services only.
-- Submit seven items: proposal deck, challenge link, enterprise data application description, technical architecture, GitHub repo link, live demo link, demo recording link.
+- Submit six items via the team surveycake form: team info, proposal outline, complete deck (enterprise-data application + technical architecture inside the deck), GitHub repo link, live demo link, demo recording link. Plus the 25% prediction file: 102-row CSV `ship_id,day,fuel_type,predicted_value` (fuel-consumption prediction for masked PREDICT cells — the `predict/` Python pipeline owns this).
 - Presentation: 8 minutes + 4 minutes Q&A.
 
 Finalized architecture (do not propose alternatives unless asked):

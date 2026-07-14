@@ -2,6 +2,7 @@
 
 > Owner：Sunny。目的：Day1 拿到 AWS/event account 後，用 30 分鐘確認部署、Bedrock、資料清理三件事是否可用。
 > 原則：先保住 demo URL 與 deterministic dashboard；Bedrock 是加分，不得阻塞 55% 主分數。
+> **2026-07-14 官方環境更新**（docs/22 §1）：region 白名單 **us-east-1（預設）/ us-west-2**——`AWS_REGION=us-east-1`，遇 access denied 先查 region。**Kiro**（官方 AI 開發工具）每人有固定 credit，賽前裝好註冊。S3 一律 Block Public Access；不建 wide-open SG / public RDS/EMR；Bedrock 請求節流、模型申請最小化。官方資料包已下載至 repo 外（`data/` gitignored）；賽後帳號自動回收，需要的資料/程式自行備份。
 
 ## 1. 先跑本機健康檢查
 
