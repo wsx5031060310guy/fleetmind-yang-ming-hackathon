@@ -17,12 +17,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 /** Exports the private Yang Ming CSVs into the dependency-free dashboard metrics snapshot. */
 public final class MetricsExportCli {
     private static final LocalDate SYNTHETIC_EPOCH = LocalDate.of(2021, 1, 1);
-    private static final Set<String> PREDICT_SHIPS = Set.of("S21", "S22", "S23");
     private static final int EVENT_WINDOW_DAYS = 30;
     private static final int MIN_EVENT_SAMPLES = 5;
 
@@ -48,16 +46,13 @@ public final class MetricsExportCli {
         CsvTable voyages = CsvTable.read(options.dataDir.resolve("vt_fd.csv"));
         CsvTable maintenanceTable = CsvTable.read(options.dataDir.resolve("maintenance.csv"));
         List<MaintenanceRow> maintenance = readMaintenance(maintenanceTable);
-        AnchorSolution anchor = solveAnchor(voyages, maintenance);
-        printAnchorReport(anchor);
 
-        ExportResult result = export(voyages, maintenance, anchor);
+        ExportResult result = export(voyages, maintenance);
         writeJson(options.output, result.root);
         printSummary(result, options.output);
     }
 
-    private static ExportResult export(CsvTable voyages, List<MaintenanceRow> maintenance,
-            AnchorSolution anchor) {
+    private static ExportResult export(CsvTable voyages, List<MaintenanceRow> maintenance) {
         Map<String, List<DailyPoint>> pointsByShip = new LinkedHashMap<>();
         Map<String, Integer> rowsByShip = new HashMap<>();
         Map<String, Integer> qualifiedByShip = new HashMap<>();
@@ -108,7 +103,8 @@ public final class MetricsExportCli {
             flagCounts.putIfAbsent(flag.name(), 0);
         }
 
-        Map<String, List<EventRecord>> eventsByShip = mapEvents(maintenance, anchor);
+        Map<String, List<EventRecord>> eventsByShip = mapEvents(maintenance);
+        printEventMappingReport(pointsByShip, eventsByShip);
         List<ShipResult> shipResults = new ArrayList<>();
         int totalQualified = 0;
         for (String shipId : pointsByShip.keySet()) {
@@ -320,121 +316,46 @@ public final class MetricsExportCli {
         return Math.max(0, Math.toIntExact(ChronoUnit.DAYS.between(baseline, latest)));
     }
 
-    private static Map<String, List<EventRecord>> mapEvents(List<MaintenanceRow> rows,
-            AnchorSolution anchor) {
+    private static Map<String, List<EventRecord>> mapEvents(List<MaintenanceRow> rows) {
         Map<String, Integer> duplicateCounter = new HashMap<>();
         Map<String, List<EventRecord>> result = new LinkedHashMap<>();
         for (MaintenanceRow row : rows) {
-            int eventDay = anchor.effectiveEventDays.getOrDefault(row.rowId,
-                    Math.toIntExact(ChronoUnit.DAYS.between(anchor.globalDayZero, row.eventDate)));
             MaintenanceEvent.EventType type = parseEventType(row.eventType);
+            LocalDate eventDate = SYNTHETIC_EPOCH.plusDays(row.eventDay);
             MaintenanceEvent event = MaintenanceEvent.of(row.shipId,
-                    SYNTHETIC_EPOCH.plusDays(eventDay), type);
-            String base = row.shipId + "-" + row.eventType.replace('+', '-') + "-" + row.eventDate;
+                    eventDate, type);
+            String base = row.shipId + "-" + row.eventType.replace('+', '-') + "-" + eventDate;
             int occurrence = duplicateCounter.merge(base, 1, Integer::sum);
             String eventId = "event-" + base + (occurrence == 1 ? "" : "-" + occurrence);
             result.computeIfAbsent(row.shipId, ignored -> new ArrayList<>())
-                    .add(new EventRecord(eventId, row.eventType, row.eventDate, eventDay, event));
+                    .add(new EventRecord(eventId, row.eventType, row.eventDay, event));
         }
         result.values().forEach(events -> events.sort(
                 Comparator.comparingInt(EventRecord::eventDay).thenComparing(EventRecord::eventId)));
         return result;
     }
 
-    private static AnchorSolution solveAnchor(CsvTable voyages,
-            List<MaintenanceRow> maintenance) {
-        Map<String, List<MaskedRun>> runsByShip = maskedRuns(voyages);
-        List<AnchorMatch> matches = new ArrayList<>();
-        for (String shipId : PREDICT_SHIPS.stream().sorted().toList()) {
-            List<MaintenanceRow> events = maintenance.stream()
-                    .filter(row -> row.shipId.equals(shipId))
-                    .sorted(Comparator.comparing(MaintenanceRow::eventDate))
-                    .toList();
-            List<MaskedRun> runs = runsByShip.getOrDefault(shipId, List.of());
-            if (events.size() != runs.size()) {
-                throw new IllegalArgumentException("cannot align " + shipId + ": "
-                        + events.size() + " events vs " + runs.size() + " masked windows");
-            }
-            for (int i = 0; i < events.size(); i++) {
-                MaintenanceRow event = events.get(i);
-                MaskedRun run = runs.get(i);
-                LocalDate impliedDayZero = event.eventDate.minusDays(run.startDay - 1L);
-                matches.add(new AnchorMatch(event, run, impliedDayZero));
-            }
-        }
-        if (matches.size() != 14) {
-            throw new IllegalArgumentException("expected 14 predict-window events, found "
-                    + matches.size());
-        }
-
-        Map<LocalDate, Integer> counts = new HashMap<>();
-        matches.forEach(match -> counts.merge(match.impliedDayZero, 1, Integer::sum));
-        int bestCount = counts.values().stream().max(Integer::compareTo).orElseThrow();
-        double medianEpochDay = SpeedLoss.median(matches.stream()
-                .mapToDouble(match -> match.impliedDayZero.toEpochDay()).toArray());
-        LocalDate globalDayZero = counts.entrySet().stream()
-                .filter(entry -> entry.getValue() == bestCount)
-                .map(Map.Entry::getKey)
-                .min(Comparator.comparingDouble((LocalDate date) ->
-                                Math.abs(date.toEpochDay() - medianEpochDay))
-                        .thenComparing(LocalDate::toString))
-                .orElseThrow();
-
-        Map<Integer, Integer> effective = new HashMap<>();
-        int exactGlobal = 0;
-        for (AnchorMatch match : matches) {
-            int globalEventDay = Math.toIntExact(
-                    ChronoUnit.DAYS.between(globalDayZero, match.event.eventDate));
-            if (match.run.startDay == globalEventDay + 1) {
-                exactGlobal++;
-            }
-            effective.put(match.event.rowId, match.run.startDay - 1);
-        }
-        return new AnchorSolution(globalDayZero, exactGlobal, effective, List.copyOf(matches));
-    }
-
-    private static Map<String, List<MaskedRun>> maskedRuns(CsvTable voyages) {
-        Map<String, List<MaskedRow>> maskedByShip = new LinkedHashMap<>();
-        for (int rowId = 0; rowId < voyages.rows.size(); rowId++) {
-            List<String> row = voyages.rows.get(rowId);
-            if (isEmpty(row) || !isMaskedFuelRow(voyages, row)) {
-                continue;
-            }
-            String shipId = voyages.cell(row, "De-identification Name").trim();
-            int day = parseRequiredInt(voyages.cell(row, "NOON_UTC"), "NOON_UTC");
-            maskedByShip.computeIfAbsent(shipId, ignored -> new ArrayList<>())
-                    .add(new MaskedRow(rowId, day));
-        }
-        Map<String, List<MaskedRun>> result = new LinkedHashMap<>();
-        for (Map.Entry<String, List<MaskedRow>> entry : maskedByShip.entrySet()) {
-            List<MaskedRun> runs = new ArrayList<>();
-            MaskedRow start = null;
-            MaskedRow previous = null;
-            for (MaskedRow current : entry.getValue()) {
-                if (start == null || current.rowId != previous.rowId + 1) {
-                    if (start != null) {
-                        runs.add(new MaskedRun(start.day, previous.day, start.rowId, previous.rowId));
-                    }
-                    start = current;
+    private static void printEventMappingReport(Map<String, List<DailyPoint>> pointsByShip,
+            Map<String, List<EventRecord>> eventsByShip) {
+        int mapped = 0;
+        int outOfRange = 0;
+        for (Map.Entry<String, List<EventRecord>> entry : eventsByShip.entrySet()) {
+            List<DailyPoint> points = pointsByShip.getOrDefault(entry.getKey(), List.of());
+            LocalDate first = points.stream().map(DailyPoint::date).min(LocalDate::compareTo)
+                    .orElse(null);
+            LocalDate last = points.stream().map(DailyPoint::date).max(LocalDate::compareTo)
+                    .orElse(null);
+            for (EventRecord record : entry.getValue()) {
+                mapped++;
+                LocalDate date = record.event.date();
+                if (first == null || date.isBefore(first) || date.isAfter(last)) {
+                    outOfRange++;
+                    System.out.println("event out-of-range: " + record.eventId + " ship="
+                            + entry.getKey() + " day=" + record.eventDay);
                 }
-                previous = current;
-            }
-            if (start != null) {
-                runs.add(new MaskedRun(start.day, previous.day, start.rowId, previous.rowId));
-            }
-            result.put(entry.getKey(), List.copyOf(runs));
-        }
-        return result;
-    }
-
-    private static boolean isMaskedFuelRow(CsvTable table, List<String> row) {
-        for (FuelColumn column : FUEL_COLUMNS) {
-            String value = table.cell(row, column.header).trim();
-            if (isMarker(value)) {
-                return true;
             }
         }
-        return false;
+        System.out.println("events mapped: " + mapped + "; out-of-range: " + outOfRange);
     }
 
     private static FuelReading readFuel(CsvTable table, List<String> row) {
@@ -468,12 +389,11 @@ public final class MetricsExportCli {
 
     private static List<MaintenanceRow> readMaintenance(CsvTable table) {
         List<MaintenanceRow> result = new ArrayList<>();
-        int rowId = 0;
         for (List<String> row : table.rows) {
             if (!isEmpty(row)) {
-                result.add(new MaintenanceRow(rowId++, table.cell(row, "ship_id").trim(),
+                result.add(new MaintenanceRow(table.cell(row, "ship_id").trim(),
                         table.cell(row, "event_type").trim(),
-                        LocalDate.parse(table.cell(row, "event_date").trim())));
+                        parseRequiredInt(table.cell(row, "event_day"), "event_day")));
             }
         }
         return List.copyOf(result);
@@ -489,21 +409,6 @@ public final class MetricsExportCli {
             case "UWI" -> MaintenanceEvent.EventType.UWI;
             default -> throw new IllegalArgumentException("unsupported maintenance event: " + value);
         };
-    }
-
-    private static void printAnchorReport(AnchorSolution anchor) {
-        System.out.println("anchor: 14/14 predict-window events aligned; global Day0 offset="
-                + anchor.globalDayZero + " (" + anchor.exactGlobalMatches
-                + "/14 exact without fallback)");
-        for (AnchorMatch match : anchor.matches) {
-            int effectiveDay = anchor.effectiveEventDays.get(match.event.rowId);
-            System.out.println("anchor-event: " + match.event.shipId + " " + match.event.eventType
-                    + " recorded=" + match.event.eventDate + " maskedStart=" + match.run.startDay
-                    + " mappedDay=" + effectiveDay + " aligned="
-                    + (match.run.startDay == effectiveDay + 1));
-        }
-        System.out.println("anchor-note: S21-S23 use masked-window-start fallback; S1-S12 use "
-                + anchor.globalDayZero + " as approximate Day0");
     }
 
     private static void printSummary(ExportResult result, Path output) {
@@ -743,26 +648,11 @@ public final class MetricsExportCli {
     private record FuelReading(double vlsfoEquivalent, EnumSet<QualityFlag> flags) {
     }
 
-    private record MaintenanceRow(int rowId, String shipId, String eventType,
-            LocalDate eventDate) {
+    private record MaintenanceRow(String shipId, String eventType, int eventDay) {
     }
 
-    private record MaskedRow(int rowId, int day) {
-    }
-
-    private record MaskedRun(int startDay, int endDay, int startRowId, int endRowId) {
-    }
-
-    private record AnchorMatch(MaintenanceRow event, MaskedRun run,
-            LocalDate impliedDayZero) {
-    }
-
-    private record AnchorSolution(LocalDate globalDayZero, int exactGlobalMatches,
-            Map<Integer, Integer> effectiveEventDays, List<AnchorMatch> matches) {
-    }
-
-    private record EventRecord(String eventId, String originalType, LocalDate recordedDate,
-            int eventDay, MaintenanceEvent event) {
+    private record EventRecord(String eventId, String originalType, int eventDay,
+            MaintenanceEvent event) {
     }
 
     private record FocWindow(double beforeMedian, double afterMedian) {
