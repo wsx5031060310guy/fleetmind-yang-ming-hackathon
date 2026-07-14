@@ -17,7 +17,7 @@
 
 ## 2. 關鍵坑（先解再建模）
 
-1. **時間軸錨點**：`maintenance.csv` 用日曆日期、`vt_fd.csv` 用相對天數（Day0=各船最早紀錄）。join 前必須解出各船 Day0 日曆錨點。假說：全船隊同錨（資料窗 ≈2021-01-01–2025-12-31，max day 1823≈5 年）。驗證法：14 個遮蔽窗起點應緊接對應事件日。`predict/anchor.py` 自動驗證並輸出報告。
+1. ~~時間軸錨點難題~~ **（2026-07-14 資料 v2 已解決）**：官方重釋出資料，`maintenance.csv` 由 `event_date`（日曆）改為 **`event_day`（相對天數，與 vt_fd `NOON_UTC` 同軸）**。養護事件現直接 `(ship_id, event_day)` join vt_fd，**不需再解錨**。先前「全船同錨只 7/14 精確」的近似作廢；fouling-clock 特徵改用精確事件日。
 2. **提交值語義**：`predicted_value`＝**全速時段內消耗的油料總量（MT/day，原欄位語義）**，不是 per-24h 正規化值。模型內部可用 rate×hours 校正，**提交時務必還原原語義**（官方 README 明示）。
 3. **STW vs SOG**：兩欄皆 100% 填充但因洋流可有明顯差異；阻力物理用 STW（對水），距離/營運用 SOG。
 4. HSHFO 佔 91/102——模型重心放 HSHFO；VLSFO 11 格靠熱值折算＋fuel_type 特徵共用模型。
@@ -25,7 +25,7 @@
 ## 3. 管線（`predict/`，Python 3.12 + uv，僅 pandas/numpy/sklearn）
 
 ```
-load → anchor（錨點解謎+驗證）→ features → models → validate → submit
+load → anchor（直讀 event_day，直接 join）→ features → models → validate → submit
 ```
 
 - **特徵**：STW/STW³/RPM/滑差；吃水/排水量/載貨；風浪湧/水溫/水深；**污損時鐘**（距上次船殼介入天數、距上次螺旋槳介入天數、水溫×天數積溫=生物污損壓力 proxy；**UWI 不重置任何時鐘**）；船別/船型 W1/W2/燃料+熱值；HOURS_FULL_SPEED。
@@ -46,13 +46,13 @@ load → anchor（錨點解謎+驗證）→ features → models → validate →
 
 ## 5. 分工（Day1 下午起）
 
-- **Feng+Chen**：跑通 `predict/` 全管線、確認錨點報告 14/14、審 validation 表、迭代特徵。
+- **Feng+Chen**：跑通 `predict/` 全管線（anchor 現為 event_day 直接 join）、審 validation 表、迭代特徵。
 - **Eddie**：Bedrock env 兩變數+smoke；把反事實數字接進 AI brief citations。
 - **Sunny**：AWS 環境（region 一律 us-east-1）、S3 放資料、部署路線。
 - **P5**：surveycake 表單欄位確認（六項）、10:00 說明會記錄評分細則（尤其油耗預測的比對指標——RMSE? MAPE? 公布否）。
 
 ## 6. 開放風險
 
-- 錨點假說若不成立 → fallback：遮蔽窗起點即事件日+1 直接推（`anchor.py` 內建）。
+- ~~錨點假說~~ 已由 v2 資料 `event_day` 消除，無此風險。
 - 官方評分指標未公布（RMSE/MAPE/其他）→ 10:00 說明會必問；模型選擇以兩指標同時看。
 - 外部資料（洋流/海溫 reanalysis）官方允許 → P2 加分項，時間允許才做。
