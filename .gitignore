@@ -22,3 +22,5 @@ predict/output/
 __pycache__/
 *.pyc
 predict/.venv/
+
+data/

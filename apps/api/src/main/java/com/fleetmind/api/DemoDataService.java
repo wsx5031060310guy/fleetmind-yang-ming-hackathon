@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 
 @Service
-public class DemoDataService {
+public class DemoDataService implements FleetDataProvider {
     private static final String TRANSFORM_VERSION = "demo-static-v1";
     private final AiBriefService aiBriefService;
 

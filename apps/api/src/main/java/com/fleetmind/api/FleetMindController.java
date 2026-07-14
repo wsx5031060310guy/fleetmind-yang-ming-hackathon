@@ -1,13 +1,16 @@
 package com.fleetmind.api;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
@@ -17,10 +20,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api")
 public class FleetMindController {
-    private final DemoDataService demoData;
+    private final FleetDataProvider fleetData;
 
-    public FleetMindController(DemoDataService demoData) {
-        this.demoData = demoData;
+    public FleetMindController(FleetDataProvider fleetData) {
+        this.fleetData = fleetData;
     }
 
     @GetMapping("/health")
@@ -30,50 +33,58 @@ public class FleetMindController {
 
     @GetMapping("/fleet/summary")
     public List<VesselSummaryDto> fleetSummary() {
-        return demoData.fleetSummary();
+        return fleetData.fleetSummary();
     }
 
     @GetMapping("/vessels/{vesselId}/performance")
     public List<DailyMetricDto> performance(@PathVariable("vesselId") String vesselId) {
-        return demoData.performance(vesselId);
+        return fleetData.performance(vesselId);
     }
 
     @GetMapping("/vessels/{vesselId}/underwater-events")
     public List<UnderwaterEventDto> underwaterEvents(@PathVariable("vesselId") String vesselId) {
-        return demoData.underwaterEvents(vesselId);
+        return fleetData.underwaterEvents(vesselId);
     }
 
     @GetMapping("/vessels/{vesselId}/before-after")
     public BeforeAfterDto beforeAfter(
             @PathVariable("vesselId") String vesselId,
             @RequestParam(name = "eventId", required = false) String eventId) {
-        return demoData.beforeAfter(vesselId, eventId);
+        return fleetData.beforeAfter(vesselId, eventId);
     }
 
     @PostMapping("/vessels/{vesselId}/ai-brief")
     public AiBriefDto aiBrief(
             @PathVariable("vesselId") String vesselId,
             @RequestParam(name = "forceFallback", defaultValue = "false") boolean forceFallback) {
-        return demoData.aiBrief(vesselId, forceFallback);
+        return fleetData.aiBrief(vesselId, forceFallback);
     }
 
     @GetMapping("/vessels/{vesselId}/ai-brief/prompt")
     public AiBriefPromptDto aiBriefPrompt(@PathVariable("vesselId") String vesselId) {
-        return demoData.aiBriefPrompt(vesselId);
+        return fleetData.aiBriefPrompt(vesselId);
     }
 
     @GetMapping("/data-quality/summary")
     public DataQualityDto dataQuality() {
-        return demoData.dataQuality();
+        return fleetData.dataQuality();
     }
 
     @GetMapping("/fuel-consump/export")
     public ResponseEntity<String> fuelConsumpExport() {
-        FuelConsumpExportDto export = demoData.fuelExport();
+        FuelConsumpExportDto export = fleetData.fuelExport();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=fuel-consump-demo.csv")
                 .header("X-Transform-Version", export.transformVersion())
                 .contentType(new MediaType("text", "csv"))
                 .body(export.csv());
+    }
+
+    // An unknown vessel/event id is a missing resource, not a server fault:
+    // return 404 instead of a 500 (e.g. before-after for a vessel not in the dataset).
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, Object> handleUnknownResource(IllegalArgumentException exception) {
+        return Map.of("status", "not_found", "message", String.valueOf(exception.getMessage()));
     }
 }
