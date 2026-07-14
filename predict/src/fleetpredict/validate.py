@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 
 from .anchor import AnchorSolution, maintenance_with_relative_days
-from .features import FeatureSet
+from .features import FOULING_FEATURES, FeatureSet
 from .models import (
-    BASELINE_FEATURE_COLUMNS,
     BLEND_NAME,
     GBM_BASELINE_NAME,
     GBM_FOULING_NAME,
@@ -21,15 +21,20 @@ from .models import (
     GBMModel,
     PhysicsBaseline,
     choose_blend_weight,
+    fit_named_model,
 )
 
 TRAIN_SHIPS = tuple(f"S{i}" for i in range(1, 13))
+PREDICTION_SHIPS = ("S21", "S22", "S23")
 
 
 @dataclass(frozen=True)
 class ValidationResult:
     comparison: pd.DataFrame
     segment_metrics: pd.DataFrame
+    validation_report: pd.DataFrame
+    residual_std: pd.DataFrame
+    overall_residual_std: float
     per_window: pd.DataFrame
     blend_weight: float
     selected_model: str
@@ -47,6 +52,12 @@ class ValidationResult:
                 index=False, float_format=lambda x: f"{x:.4f}"
             )
         )
+        print(f"\nSelected-model persisted validation report ({self.selected_model})")
+        print(
+            self.validation_report.to_string(
+                index=False, float_format=lambda x: f"{x:.4f}"
+            )
+        )
         print(f"\nSelected-model per-window breakdown ({self.selected_model})")
         selected_windows = self.per_window.loc[
             self.per_window["model"].eq(self.selected_model)
@@ -56,6 +67,12 @@ class ValidationResult:
                 index=False, float_format=lambda x: f"{x:.4f}"
             )
         )
+
+    def write_report(self, output_path: str | Path) -> Path:
+        destination = Path(output_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        self.validation_report.to_csv(destination, index=False, float_format="%.6f")
+        return destination
 
 
 def _metrics(actual: np.ndarray, predicted: np.ndarray) -> tuple[float, float, float]:
@@ -71,14 +88,17 @@ def _metrics(actual: np.ndarray, predicted: np.ndarray) -> tuple[float, float, f
 
 
 def _candidate_windows(
-    features: FeatureSet, maintenance: pd.DataFrame, anchor: AnchorSolution
+    features: FeatureSet,
+    maintenance: pd.DataFrame,
+    anchor: AnchorSolution,
+    ships: tuple[str, ...] = TRAIN_SHIPS,
 ) -> list[dict[str, object]]:
-    """Use every eligible training-ship event, not a hand-picked 14-window subset."""
+    """Use every eligible event, not a hand-picked window subset."""
 
     frame = features.frame
     events = maintenance_with_relative_days(maintenance, anchor)
     candidates: list[dict[str, object]] = []
-    for ship_id in TRAIN_SHIPS:
+    for ship_id in ships:
         ship_events = events.loc[events["ship_id"].eq(ship_id)].sort_values(
             ["event_day", "_event_id"]
         )
@@ -113,11 +133,16 @@ def _candidate_windows(
 
 
 def _fit_candidate_models(
-    train: pd.DataFrame, heldout: pd.DataFrame
+    train: pd.DataFrame,
+    heldout: pd.DataFrame,
+    feature_columns: tuple[str, ...],
 ) -> tuple[dict[str, object], dict[str, np.ndarray], float]:
     physics = PhysicsBaseline().fit(train)
-    baseline = GBMModel(feature_columns=BASELINE_FEATURE_COLUMNS).fit(train)
-    exact_fouling = GBMModel().fit(train)
+    baseline_features = tuple(
+        column for column in feature_columns if column not in FOULING_FEATURES
+    )
+    baseline = GBMModel(feature_columns=baseline_features).fit(train)
+    exact_fouling = GBMModel(feature_columns=feature_columns).fit(train)
 
     predictions = {
         GBM_BASELINE_NAME: baseline.predict(heldout),
@@ -180,6 +205,116 @@ def _segment_records(
     return records
 
 
+def _metric_record(
+    dimension: str,
+    segment: str,
+    actual: np.ndarray,
+    predicted: np.ndarray,
+) -> dict[str, object]:
+    rmse, mape, bias = _metrics(actual, predicted)
+    return {
+        "dimension": dimension,
+        "segment": segment,
+        "n": len(actual),
+        "RMSE_MT": rmse,
+        "MAPE_pct": mape,
+        "Bias_MT": bias,
+    }
+
+
+def _prediction_ship_report(
+    features: FeatureSet,
+    maintenance: pd.DataFrame,
+    anchor: AnchorSolution,
+    selected_model: str,
+    blend_weight: float,
+) -> list[dict[str, object]]:
+    """Evaluate selected model on separate visible masks for S21-S23.
+
+    These diagnostics never participate in model selection. Actual official
+    PREDICT cells remain hidden; only visible post-event rows are held out.
+    """
+
+    windows = _candidate_windows(
+        features, maintenance, anchor, ships=PREDICTION_SHIPS
+    )
+    heldout_ids = {row_id for window in windows for row_id in window["row_ids"]}
+    frame = features.frame
+    train = frame.loc[
+        frame["is_trainable"] & ~frame["_row_id"].isin(heldout_ids)
+    ].copy()
+    heldout = frame.loc[frame["_row_id"].isin(heldout_ids)].copy()
+    if heldout.empty:
+        raise ValueError("no visible prediction-ship rows for diagnostic masks")
+    model = fit_named_model(
+        selected_model, train, blend_weight, features.feature_columns
+    )
+    predicted = model.predict(heldout)
+    records: list[dict[str, object]] = []
+    for ship_id in PREDICTION_SHIPS:
+        mask = heldout["ship_id"].eq(ship_id).to_numpy()
+        if not mask.any():
+            raise ValueError(
+                f"no visible simulated-mask diagnostic rows for {ship_id}"
+            )
+        records.append(
+            _metric_record(
+                "prediction_ship",
+                ship_id,
+                heldout.loc[mask, "target_raw_mass"].to_numpy(dtype=float),
+                predicted[mask],
+            )
+        )
+    return records
+
+
+def _selected_validation_report(
+    heldout: pd.DataFrame,
+    predicted: np.ndarray,
+    prediction_ship_records: list[dict[str, object]],
+) -> pd.DataFrame:
+    actual = heldout["target_raw_mass"].to_numpy(dtype=float)
+    records = [_metric_record("overall", "overall", actual, predicted)]
+    for fuel in ("HSHFO", "VLSFO"):
+        fuel_type = f"ME_FULLSPEED_CONSUMP_{fuel}"
+        mask = heldout["fuel_used"].eq(fuel_type).to_numpy()
+        if not mask.any():
+            raise ValueError(f"validation slice missing required fuel: {fuel}")
+        records.append(_metric_record("fuel", fuel, actual[mask], predicted[mask]))
+    for ship_class in ("W1", "W2"):
+        mask = heldout["ship_class"].eq(ship_class).to_numpy()
+        if not mask.any():
+            raise ValueError(
+                f"validation slice missing required ship class: {ship_class}"
+            )
+        records.append(
+            _metric_record(
+                "ship_class", ship_class, actual[mask], predicted[mask]
+            )
+        )
+    records.extend(prediction_ship_records)
+    return pd.DataFrame(records)
+
+
+def _residual_std_report(
+    heldout: pd.DataFrame, predicted: np.ndarray
+) -> tuple[pd.DataFrame, float]:
+    residuals = heldout[["ship_class", "fuel_used"]].copy()
+    residuals["residual"] = (
+        np.asarray(predicted, dtype=float)
+        - heldout["target_raw_mass"].to_numpy(dtype=float)
+    )
+    grouped = (
+        residuals.groupby(["ship_class", "fuel_used"], dropna=False)["residual"]
+        .agg(n="size", residual_std_mt="std")
+        .reset_index()
+        .rename(columns={"fuel_used": "fuel_type"})
+    )
+    overall = float(residuals["residual"].std(ddof=1))
+    grouped["residual_std_mt"] = grouped["residual_std_mt"].fillna(overall)
+    return grouped, overall
+
+
 def validate_models(
     features: FeatureSet,
     maintenance: pd.DataFrame,
@@ -196,7 +331,9 @@ def validate_models(
     ].copy()
     heldout = frame.loc[frame["_row_id"].isin(heldout_ids)].copy()
 
-    models, predictions, weight = _fit_candidate_models(train, heldout)
+    models, predictions, weight = _fit_candidate_models(
+        train, heldout, features.feature_columns
+    )
     actual = heldout["target_raw_mass"].to_numpy(dtype=float)
     comparison_records: list[dict[str, object]] = []
     for model_name in MODEL_NAMES:
@@ -242,7 +379,9 @@ def validate_models(
     for train_index, test_index in splitter.split(cv_source, groups=cv_source["ship_id"]):
         fold_train = cv_source.iloc[train_index]
         fold_test = cv_source.iloc[test_index]
-        fold_models, fold_pred, _ = _fit_candidate_models(fold_train, fold_test)
+        fold_models, fold_pred, _ = _fit_candidate_models(
+            fold_train, fold_test, features.feature_columns
+        )
         del fold_models
         fold_actual.append(fold_test["_visible_fuel_mass"].to_numpy(dtype=float))
         # Blend selection weight must come only from primary extended validation.
@@ -268,6 +407,16 @@ def validate_models(
 
     comparison = pd.DataFrame(comparison_records)
     selected = _select_model(comparison)
+    selected_predictions = predictions[selected]
+    prediction_ship_records = _prediction_ship_report(
+        features, maintenance, anchor, selected, weight
+    )
+    validation_report = _selected_validation_report(
+        heldout, selected_predictions, prediction_ship_records
+    )
+    residual_std, overall_residual_std = _residual_std_report(
+        heldout, selected_predictions
+    )
     selected_model_object = models[selected]
     if isinstance(selected_model_object, BlendModel):
         importance_model = selected_model_object.gbm
@@ -291,6 +440,9 @@ def validate_models(
     return ValidationResult(
         comparison=comparison,
         segment_metrics=pd.DataFrame(_segment_records(heldout, predictions)),
+        validation_report=validation_report,
+        residual_std=residual_std,
+        overall_residual_std=overall_residual_std,
         per_window=pd.DataFrame(window_records),
         blend_weight=weight,
         selected_model=selected,
