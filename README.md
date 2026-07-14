@@ -177,16 +177,17 @@ Remaining open items:
 
 ## Deliverables
 
-Official submission is **seven items** (missing any = forfeit under the 14:30 deadline rule; see docs/12 §3 G5). Owner: P5.
+Official submission is **six items via the team's dedicated surveycake form** (missing any = forfeit under the 14:30 deadline rule; confirmed on the official workshop page 2026-07-14 — see [docs/22](docs/22-official-workshop-rules.md) §6). Owner: P5.
 Control sheet: [docs/18](docs/18-submission-control-sheet.md).
 
-- Complete proposal deck: [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx)
-- Challenge link
-- Enterprise data and data application description: [docs/17](docs/17-enterprise-data-application.md)
-- Technical architecture: [docs/19](docs/19-technical-architecture-submission.md) backed by [docs/09](docs/09-architecture-and-execution-plan.md) + [docs/12](docs/12-requirements-fit-and-final-architecture.md)
+- Team basic information
+- Proposal outline
+- Complete proposal deck (**with enterprise-data application and technical architecture as chapters inside the deck** — source material: [docs/17](docs/17-enterprise-data-application.md), [docs/19](docs/19-technical-architecture-submission.md)): [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx)
 - GitHub repository link
 - Live demo link
 - Demo recording link
+
+Plus the **prediction submission file** for the 25% auto-graded score: `predict/output/submission.csv` (102 rows, `ship_id,day,fuel_type,predicted_value` — see [docs/23](docs/23-fuel-prediction-plan.md)); its exact upload channel is a Day1 briefing question.
 
 Presentation format:
 

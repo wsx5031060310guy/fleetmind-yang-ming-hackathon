@@ -40,8 +40,10 @@ Do not position AI as directly ordering captains to change routes. The credible 
 - Must use AWS-provided environment.
 - Must use AWS models and services only.
 - Finalized architecture (docs/09 §2.2, docs/12 §4): core-calc Java pure-function library + single Spring Boot service (same-origin vanilla-JS static dashboard — no React) + S3 + DynamoDB + Bedrock + CloudWatch. Default deployment is App Runner; ECS Express Mode and EC2 docker are the sanctioned fallbacks (docs/16 §3). Deliberately NOT using RDS/CloudFront/QuickSight/Bedrock Agents — six-route evaluation in docs/11. Do not re-propose those eliminated services.
-- Iron rule: Daily FOC is computed for every row unconditionally; filters only set quality flags (protects the 25% auto-scored output).
-- Avoid custom ML training, heavy computer vision, video pipelines, and research-heavy optimization unless explicitly requested.
+- **2026-07-14 official-data update**: the 25% auto-scored deliverable is a fuel-consumption **prediction** task — predict the 102 masked `PREDICT` cells, submission `ship_id,day,fuel_type,predicted_value` (see `docs/23`) — served by the `predict/` Python pipeline (pandas/sklearn). core-calc stays the deterministic core for the dashboard.
+- Iron rule (dashboard/export side): Daily FOC is computed for every row unconditionally; filters only set quality flags.
+- Submission is **six items via the team surveycake form** (docs/18 2026-07-14 update, docs/22 §6) — no standalone challenge link.
+- Tabular ML (sklearn-level) for the prediction task is in scope; still avoid deep learning, computer vision, video pipelines, and research-heavy optimization unless explicitly requested.
 - Prefer a narrow working MVP over broad unfinished architecture.
 
 ## Winning Bias

@@ -2,6 +2,7 @@
 
 > 目的：把 `09`（執行計畫）與 `11`（六路線研究）收斂成一張定稿架構，並逐項稽核「題目到底要什麼 vs 我們的架構給了什麼」，找出缺口並修正。
 > 狀態：Draft，待團隊 review。
+> **2026-07-14 更新（官方資料到位後）**：①25% 客觀評分確認為**油耗預測任務**（102 個 PREDICT 格），非確定性 Daily FOC——預測管線見 `docs/23`，本文件 R9 的 FUEL_CONSUMP harness 重定位為 dashboard/品質面板用；②提交物確認為**六項經 surveycake**（見 `docs/18` 2026-07-14 更新、`docs/22` §6），本文件 R3/G5「七項/challenge link」為賽前舊資訊，以 `docs/18` 現行管制表為準。
 
 ## 1. 題目需求清單（Requirement Register）
 

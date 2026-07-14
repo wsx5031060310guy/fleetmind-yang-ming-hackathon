@@ -52,7 +52,7 @@ Constraints:
 - Use AWS-provided environment.
 - Use AWS models and services only.
 - Build during the competition window.
-- Submit **seven items**: proposal deck, challenge link, enterprise data application description, technical architecture, GitHub repository link, live demo link, demo recording link. Missing any = forfeit (docs/12 §3 G5).
+- Submit **six items via the team surveycake form** (confirmed 2026-07-14, docs/22 §6): team info, proposal outline, complete deck (enterprise-data application + technical architecture as chapters inside the deck), GitHub repo link, live demo link, demo recording link. Missing any = forfeit. Plus the 25% prediction file `predict/output/submission.csv` (102 rows — docs/23); upload channel confirmed at the Day1 briefing.
 - Presentation is 8 minutes plus 4 minutes Q&A.
 
 Official scoring:

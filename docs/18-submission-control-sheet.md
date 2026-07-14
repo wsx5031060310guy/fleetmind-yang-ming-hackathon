@@ -1,31 +1,32 @@
 # Day3 Submission Control Sheet
 
-> Owner：P5。目的：避免 2026-07-16 14:30 前七項官方提交物漏交。  
+> Owner：P5。目的：避免 2026-07-16 14:30 前官方提交物漏交。  
 > 原則：12:00 開始上傳，14:00 前完成，不等 14:30 死線。  
-> 狀態：可直接列印/貼到提交工作台；Day1 補平台欄位名稱與檔案限制。
+> 狀態：可直接列印/貼到提交工作台；Day1 補平台欄位名稱與檔案限制。  
+> **2026-07-14 更新**：官方 workshop 頁（docs/22 §6）確認為**六項**、經**本組專屬 surveycake 表單**（https://www.surveycake.com/s/xyeWy）繳交；「challenge link」非獨立提交物，企業資料應用與技術架構**併入 deck 內章節**。早期「七項」說法作廢；仍以 7/14 09:40 現場公告為最終準。
 
-## 1. 七項提交物總表
+## 1. 六項提交物總表（繳交管道：surveycake 表單）
 
 | # | 官方提交物 | Repo 起手素材 | Day3 最終值 | Owner | 驗證 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Complete proposal deck | `presentation/fleetmind-proposal-deck.pptx`、`docs/10`、`docs/15` | final PPTX/平台檔案 | P5 | 可開啟、9 頁正片 + backup、數字與 demo 一致 |
-| 2 | Challenge link | Day1 09:40-10:00 向主辦方確認 | TBD | P5 | 連結格式符合平台要求 |
-| 3 | Enterprise data and data application description | `docs/17-enterprise-data-application.md` | final doc/pdf/form text | Feng + P5 | 不含 raw data；schema/列數/檔名已補 |
-| 4 | Technical architecture | `docs/19-technical-architecture-submission.md`；細節回查 `docs/09` §2、`docs/12` §4、`docs/16` | architecture doc/image/form text | Sunny + Eddie | 與實際部署路線一致：App Runner/ECS Express/EC2 |
-| 5 | GitHub repository link | README、GitHub main branch | repo URL | Sunny + P5 | main 綠燈；無 raw data、無憑證、無未 merge branch |
-| 6 | Live demo link | `docs/16` deployment route | HTTPS/URL | Sunny | `/api/health` OK；評審無登入即可開 |
-| 7 | Demo recording video link | Day3 凍結快照錄影 | video URL | P5 + demo operator | 可播放、長度/格式符合平台限制 |
+| 1 | 團隊基本資料 | docs/02-team.md | 表單填寫 | P5 | 隊名/成員與報名一致 |
+| 2 | 提案大綱 | `docs/10`、`docs/13` | 表單文字/檔案 | P5 | 與 deck 故事線一致 |
+| 3 | 完整提案簡報（**含企業數據及資料應用、技術架構章節**） | `presentation/fleetmind-proposal-deck.pptx` + `docs/17`（資料應用章節素材）+ `docs/19`（架構章節素材） | final PPTX/PDF | P5（章節素材 Feng/Sunny/Eddie） | 可開啟；含資料應用+架構兩章節；數字與 demo 一致 |
+| 4 | GitHub repository link | README、GitHub main branch | repo URL | Sunny + P5 | main 綠燈；無 raw data、無憑證、無未 merge branch |
+| 5 | Live demo link | `docs/16` deployment route | HTTPS/URL | Sunny | `/api/health` OK；評審無登入即可開 |
+| 6 | Demo recording video link | Day3 凍結快照錄影 | video URL | P5 + demo operator | 可播放、長度/格式符合平台限制 |
+
+另有**預測提交檔**（25% 客觀評分）：`predict/output/submission.csv`（102 列，`ship_id,day,fuel_type,predicted_value`，見 `docs/23`）——繳交管道/欄位於 Day1 說明會確認（可能併入 surveycake 或另行收檔）。
 
 ## 2. Day1 必問欄位
 
 | 問題 | 用途 | 記錄 |
 | --- | --- | --- |
-| Challenge link 是題目頁、隊伍頁、demo challenge URL，還是平台自動產生？ | 提交物 #2 | TBD |
-| Proposal deck 可上傳 PPTX、PDF，還是只能連結？大小限制？ | 提交物 #1 | TBD |
-| 企業資料與資料應用說明是否有官方模板？字數/格式？ | 提交物 #3 | TBD |
-| 技術架構是否需獨立檔，或 deck 內架構頁即可？ | 提交物 #4 | TBD |
-| Live demo link 可否需要登入？若雲端故障可否以錄影替代？ | 提交物 #6 | TBD |
-| Demo recording 格式、長度、上傳位置、是否可用雲端連結？ | 提交物 #7 | TBD |
+| **預測 submission.csv 交到哪？surveycake 附件？評分指標（RMSE/MAPE）？** | 25% 客觀評分 | TBD |
+| surveycake 表單各欄位格式/檔案大小限制？deck 收 PPTX 還是 PDF？ | 提交物 #3 | TBD |
+| 企業資料應用/技術架構是否併入 deck 即可（官方頁如此），有無官方模板？ | 提交物 #3 | TBD |
+| Live demo link 可否需要登入？若雲端故障可否以錄影替代？ | 提交物 #5 | TBD |
+| Demo recording 格式、長度、上傳位置、是否可用雲端連結？ | 提交物 #6 | TBD |
 | 原始資料、截圖、錄影是否可留在 repo/artifact/簡報？ | R19/security | TBD |
 
 ## 3. Day3 時間表
