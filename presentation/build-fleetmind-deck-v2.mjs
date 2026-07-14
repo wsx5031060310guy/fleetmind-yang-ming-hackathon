@@ -55,7 +55,7 @@ s.addText([
   { text: "    |    AWS Summit Taipei 2026 百工百業瘋 AI — AI Everywhere Hackathon", options: { color: "AEC4D6" } },
 ], { x: M, y: 5.9, w: 11.8, h: 0.4, fontFace: BODY, fontSize: 14, margin: 0 });
 s.addText("團隊 FleetMind（工程 4 + 簡報 1）", { x: M, y: 6.35, w: 11, h: 0.35, fontFace: BODY, fontSize: 12, color: "8FA8BD", margin: 0 });
-s.addNotes("開場 30 秒：船舶推進效率隨時間衰退、油耗上升；養護能恢復但決策靠經驗。FleetMind 把它變成可計算、可解釋、人可拍板的決策支援。一句話定位：數字來自計算，語言來自 AI，決策留給人。");
+s.addNotes("[0:00–0:30] 開場：船舶推進效率隨時間衰退、油耗上升；養護能恢復但決策靠經驗。FleetMind 把它變成可計算、可解釋、人可拍板的決策支援。一句話定位：數字來自計算，語言來自 AI，決策留給人。");
 
 // ---------- Slide 2: problem ----------
 s = pptx.addSlide(); lightBg(s);
@@ -75,7 +75,7 @@ probStats.forEach((p, i) => {
   s.addText(p.d, { x: x + 0.15, y: 4.75, w: w - 0.3, h: 0.9, fontFace: BODY, fontSize: 11.5, color: C.mute, lineSpacingMultiple: 1.1, margin: 0 });
 });
 s.addText("資料由命題企業提供，僅存於競賽 AWS 帳號、不進版控、賽後刪除。", { x: M, y: 6.25, w: W - 2 * M, h: 0.35, fontFace: BODY, fontSize: 11, italic: true, color: C.mute, margin: 0 });
-s.addNotes("點出痛點：污損偷油、養護決策靠經驗。用真資料規模帶出我們有本錢做量化。");
+s.addNotes("[0:30–1:10] 點出痛點：污損偷油、養護決策靠經驗。用真資料規模帶出我們有本錢做量化。");
 
 // ---------- Slide 3: what we built (2 deliverables) ----------
 s = pptx.addSlide(); lightBg(s);
@@ -93,7 +93,7 @@ deliv.forEach((d, i) => {
   s.addText(d.foot, { x: x + 0.35, y: 5.05, w: w - 0.7, h: 0.35, fontFace: BODY, fontSize: 11, italic: true, color: C.teal, bold: true, margin: 0 });
 });
 s.addText("＋ 20% 商務決策價值（ROI 反事實）　＋ 15% 技術可行性　＋ 10% AI 協作創意", { x: M, y: 5.85, w: W - 2 * M, h: 0.4, align: "center", fontFace: BODY, fontSize: 13.5, bold: true, color: C.mute, margin: 0 });
-s.addNotes("兩個產出對應 30%+25% 硬分數；其餘三維度靠 ROI、單服務架構、AI guardrail。");
+s.addNotes("[1:10–1:50] 兩個產出對應 30%+25% 硬分數；其餘三維度靠 ROI、單服務架構、AI guardrail。");
 
 // ---------- Slide 4: data & method ----------
 s = pptx.addSlide(); lightBg(s);
@@ -127,7 +127,7 @@ shipRows.forEach((r, i) => {
   s.addText(r[1], { x: 7.85, y: y + 0.32, w: 4.9, h: 0.35, fontFace: BODY, fontSize: 11.5, color: typeof r[2] === "string" && r[2].length === 6 ? r[2] : C.white, margin: 0 });
 });
 s.addText("被遮蔽的 3 艘預測船，在同型訓練船上有大量可見歷史 → 遷移學習。", { x: 7.85, y: 6.05, w: 4.9, h: 0.6, fontFace: BODY, fontSize: 11, italic: true, color: C.seafoam, lineSpacingMultiple: 1.1, margin: 0 });
-s.addNotes("方法核心：k=FOC/STW³ 把速度與洋流正規化，只在同速帶比 k，減速不會被誤記成污損。");
+s.addNotes("[1:50–2:35] 方法核心：k=FOC/STW³ 把速度與洋流正規化，只在同速帶比 k，減速不會被誤記成污損。");
 
 // ---------- Slide 5: dashboard + fleet chart (official item 1) ----------
 s = pptx.addSlide(); lightBg(s);
@@ -157,7 +157,7 @@ feats.forEach((f, i) => {
   s.addText(f[0], { x: 8.35, y, w: 4.3, h: 0.35, fontFace: HEAD, fontSize: 15, bold: true, color: C.navy, margin: 0 });
   s.addText(f[1], { x: 8.35, y: y + 0.34, w: 4.35, h: 0.62, fontFace: BODY, fontSize: 11.5, color: C.mute, lineSpacingMultiple: 1.08, margin: 0 });
 });
-s.addNotes("Demo：真資料 15 船，點 S11（最嚴重、692 天沒清）看趨勢；再點 S23 看歸因。強調數字全來自 core-calc 確定性計算。");
+s.addNotes("[2:35–3:35] Demo（最長，實機操作）：真資料 15 船，點 S11（最嚴重、692 天沒清）看趨勢；再點 S23 看歸因。強調數字全來自 core-calc 確定性計算。");
 
 // ---------- Slide 6: attribution + UWI honesty ----------
 s = pptx.addSlide(); lightBg(s);
@@ -180,7 +180,7 @@ s.addText([
   { text: "預測模型：污損時鐘在 UWI 不重置 → 模型不會幻覺出一段恢復（物理先驗放這裡）。", options: { bullet: { code: "2022" }, color: C.ink, breakLine: true, paraSpaceAfter: 6 } },
   { text: "Dashboard：呈現實測 k 變化 + 信心，不宣稱「零變化」（稀疏資料上仍有雜訊，誠實顯示）。", options: { bullet: { code: "2022" }, color: C.ink, breakLine: true } },
 ], { x: 7.05, y: 2.65, w: 5.4, h: 3.4, fontFace: BODY, fontSize: 12.5, lineSpacingMultiple: 1.12, margin: 0 });
-s.addNotes("這頁是誠信亮點。把物理先驗（模型時鐘不重置）和統計實測（dashboard 顯示雜訊）分開，準備好回答『你模型說 UWI 不改善但圖上有變化』。");
+s.addNotes("[3:35–4:25] 這頁是誠信亮點。把物理先驗（模型時鐘不重置）和統計實測（dashboard 顯示雜訊）分開，準備好回答『你模型說 UWI 不改善但圖上有變化』。");
 
 // ---------- Slide 7: prediction model (official item 2 + 4) ----------
 s = pptx.addSlide(); lightBg(s);
@@ -214,7 +214,7 @@ s.addText("刻意的簡單", { x: 8.35, y: 2.1, w: 4.3, h: 0.4, fontFace: HEAD, 
 s.addText("我們試過更複雜的堆疊與單調約束——在防漏驗證上都沒贏過樸素 GBM baseline，於是資料驅動地選 baseline。", { x: 8.35, y: 2.55, w: 4.35, h: 1.3, fontFace: BODY, fontSize: 13, color: C.ink, lineSpacingMultiple: 1.18, margin: 0 });
 s.addText("「不 ship 比 baseline 差的模型」是原則，不是能力上限。", { x: 8.35, y: 3.95, w: 4.35, h: 0.9, fontFace: BODY, fontSize: 12, italic: true, color: C.teal, bold: true, lineSpacingMultiple: 1.15, margin: 0 });
 s.addText("提交標的：全速時段油耗總量（MT），以每小時率×全速時數還原。", { x: 8.35, y: 5.0, w: 4.35, h: 0.7, fontFace: BODY, fontSize: 11, color: C.mute, lineSpacingMultiple: 1.1, margin: 0 });
-s.addNotes("誠實：baseline 勝出。強調防漏驗證的嚴謹（模擬真實遮蔽），這是評審會追問的點。");
+s.addNotes("[4:25–5:25] 誠實：baseline 勝出。強調防漏驗證的嚴謹（模擬真實遮蔽），這是評審會追問的點。");
 
 // ---------- Slide 8: ROI / business value ----------
 s = pptx.addSlide(); darkBg(s);
@@ -240,7 +240,7 @@ roi.forEach((r, ri) => {
   });
 });
 s.addText("決策支援，非自動指令：低信心→先做便宜的水下檢查；高信心且回本快→建議清潔；最終由輪機主管拍板。", { x: M, y: 6.25, w: W - 2 * M, h: 0.5, fontFace: BODY, fontSize: 12.5, italic: true, color: "8FA8BD", margin: 0 });
-s.addNotes("主打 S23（HIGH 信心、船殼 96%）：清一次年省近 400 萬美金。S11 是極端案例。強調人在迴路、數字可回溯。");
+s.addNotes("[5:25–6:20] 主打 S23（HIGH 信心、船殼 96%）：清一次年省近 400 萬美金。S11 是極端案例。強調人在迴路、數字可回溯。");
 
 // ---------- Slide 9: gaps & more data (official item 3) ----------
 s = pptx.addSlide(); lightBg(s);
@@ -267,7 +267,7 @@ gaps.forEach((g, i) => {
 card(s, 7.0, 1.75, W - M - 7.0, 4.65, C.navy);
 s.addText("給我們更多資料，能強化的決策價值", { x: 7.3, y: 2.0, w: 5.1, h: 0.4, fontFace: HEAD, fontSize: 15, bold: true, color: C.white, margin: 0 });
 s.addText(wants.map((w2, j) => ({ text: w2, options: { bullet: { code: "2022", indent: 14 }, color: "E6EEF5", breakLine: j < wants.length - 1, paraSpaceAfter: 12 } })), { x: 7.3, y: 2.6, w: 5.1, h: 3.4, fontFace: BODY, fontSize: 13, lineSpacingMultiple: 1.1, margin: 0 });
-s.addNotes("主動揭露限制 = 誠信分。同時把『要什麼資料』講清楚，回應官方必含第 3 項與商務價值。");
+s.addNotes("[6:20–6:55] 主動揭露限制 = 誠信分。同時把『要什麼資料』講清楚，回應官方必含第 3 項與商務價值。");
 
 // ---------- Slide 10: architecture + AI role (official item 4 + 5) ----------
 s = pptx.addSlide(); lightBg(s);
@@ -294,7 +294,7 @@ s.addText([
   { text: "Bedrock(Claude) 只把已算好的指標改寫成營運語言；guardrail 逐一比對每個數字的引用來源，未引用或引錯即攔下——AI 無法發明數字。", options: { color: C.ink, breakLine: true, paraSpaceAfter: 6 } },
   { text: "失敗降級：Bedrock 不可用 → 該船快取簡報 → deterministic 模板；dashboard 與 55% 硬分數不受影響。開發全程以 Kiro 為 AI 助手。", options: { color: C.ink } },
 ], { x: M + 0.35, y: 4.95, w: W - 2 * M - 0.7, h: 1.3, fontFace: BODY, fontSize: 12.5, lineSpacingMultiple: 1.15, margin: 0 });
-s.addNotes("架構一句話：單服務同源、AWS-only、AI 有 guardrail 不亂編。回應官方第 4、5 項。");
+s.addNotes("[6:55–7:35] 架構一句話：單服務同源、AWS-only、AI 有 guardrail 不亂編。回應官方第 4、5 項。");
 
 // ---------- Slide 11: close ----------
 s = pptx.addSlide(); darkBg(s);
@@ -312,29 +312,50 @@ closeItems.forEach((c, i) => {
   s.addText(c[1], { x, y: 5.75, w, h: 0.7, fontFace: BODY, fontSize: 11.5, color: "AEC4D6", lineSpacingMultiple: 1.1, margin: 0 });
 });
 s.addText("謝謝聆聽　·　FleetMind × 陽明海運", { x: M, y: 6.7, w: 11, h: 0.4, fontFace: BODY, fontSize: 13, color: "8FA8BD", margin: 0 });
-s.addNotes("收尾：三個交付一句話帶過，回到定位句，進 Q&A。");
+s.addNotes("[7:35–8:00] 收尾：三個交付一句話帶過，回到定位句，進 Q&A。");
 
-// ---------- Q&A backup slides ----------
+// ---------- Q&A backup slides (full 20, from docs/07) ----------
 function qaSlide(title, qas) {
   const b = pptx.addSlide(); lightBg(b);
   head(b, "Q&A Backup", title);
-  let y = 1.9;
+  const gap = (5.4) / qas.length;
+  let y = 1.85;
   qas.forEach((qa) => {
-    b.addText("Q　" + qa[0], { x: M, y, w: W - 2 * M, h: 0.4, fontFace: HEAD, fontSize: 15, bold: true, color: C.navy, margin: 0 });
-    b.addText("A　" + qa[1], { x: M, y: y + 0.42, w: W - 2 * M, h: 0.9, fontFace: BODY, fontSize: 12.5, color: C.ink, lineSpacingMultiple: 1.12, margin: 0 });
-    y += 1.55;
+    b.addText("Q　" + qa[0], { x: M, y, w: W - 2 * M, h: 0.35, fontFace: HEAD, fontSize: 13.5, bold: true, color: C.navy, margin: 0 });
+    b.addText("A　" + qa[1], { x: M, y: y + 0.36, w: W - 2 * M, h: gap - 0.42, fontFace: BODY, fontSize: 11.5, color: C.ink, lineSpacingMultiple: 1.08, margin: 0 });
+    y += gap;
   });
   return b;
 }
-qaSlide("預測與驗證", [
-  ["怎麼確定沒偷看答案？", "不用隨機 K-fold。在可見船 S1–S12 上模擬真實遮蔽——挑真養護事件後的合格日窗把答案藏起來再預測、逐窗評 RMSE/MAPE；另跑 GroupKFold 確認跨船遷移。"],
-  ["RPM 不是幾乎能反推油耗？", "H 類主機性能欄位（SFOC、馬力）在預測窗本就被遮蔽，我們不用。ME_AVG_RPM 屬可見的運轉條件、非答案代理；使用邊界也列入給主辦的問題。"],
-  ["整隊都降速了，怎麼分商業減速與污損？", "從不比原始 FOC 或航速。k=FOC/STW³ 先正規化速度，只在 ±1 kn 同速帶內比 k；速度偏離自動降低信心。"],
+qaSlide("資料與方法", [
+  ["拿到什麼資料？怎麼跟養護事件對上？", "15 船×5 年日報（21,282 列）+ 77 養護事件。maintenance 用 event_day 與日報 NOON_UTC 同軸，直接 join，無日曆錨點問題。"],
+  ["只有 3 艘要預測，樣本夠嗎？", "船型 W1/W2 姊妹船；預測船在同型訓練船上有大量可見歷史 → 遷移學習，正是官方要的能力。"],
+  ["STW 還是 SOG？洋流怎麼處理？", "阻力物理一律用 STW（對水）；k=FOC/STW³ 正規化速度，只在 ±1 kn 同速帶比 k，洋流不會被誤記成污損。"],
+  ["預測的到底是什麼值？", "當日全速時段主機油耗總量（MT，原欄位語義），非 24h 正規化。內部以每小時率×全速時數還原。"],
 ]);
-qaSlide("方法與商務", [
-  ["對齊到 ISO 19030 哪個層級？", "noon-report 粒度的務實改編，不宣稱全合規。用 k=FOC/STW³ 當 performance value 代理，骨架照 ISO：定參考期、控速帶、看偏移；偏離四點有明列表。"],
-  ["UWI 你說不改善，但圖上有變化？", "兩個地方兩種角色：物理先驗放在『預測模型污損時鐘不因 UWI 重置』；dashboard 誠實顯示實測 delta+信心，不硬壓成零。刻意分開統計實測與物理先驗。"],
+qaSlide("預測模型", [
+  ["用什麼模型？效果多少？", "sklearn；物理 baseline→HistGBM→擇優。最佳為樸素 GBM baseline，模擬遮蔽 RMSE 3.51 MT / MAPE 5.22%。更複雜的沒贏過 → 不上。"],
+  ["怎麼確定沒偷看答案？", "不用隨機 K-fold。在可見船上模擬真實遮蔽（事件後合格日窗藏答案再預測、逐窗評分）+ GroupKFold 確認跨船遷移。"],
+  ["RPM/SFOC 不是能反推油耗？算洩漏？", "H 類（SFOC/馬力/推力）在預測窗本就遮蔽、不用。ME_AVG_RPM 屬可見運轉條件、非答案代理；使用邊界也列入問主辦。"],
+  ["模型有信心區間嗎？", "每格附 ±band（同船型×燃料 slice 的殘差 std）；submission 主檔維持 4 欄 102 列，信心另存輔助檔。"],
+]);
+qaSlide("Speed Loss / ISO 19030", [
+  ["對齊 ISO 19030 哪個層級？", "noon-report 粒度務實改編，不宣稱全合規。k=FOC/STW³ 當 performance value 代理，骨架照 ISO：定參考期、控速帶、看偏移；偏離四點有明列表。"],
+  ["全隊都降速了，怎麼分商業減速與污損？", "從不比原始 FOC/航速。k 先正規化速度，只在同速帶比；基準取事件後首 10–15 合格日、上限 60 天。減速改變 V 不改變 k。"],
+  ["Speed Loss % 可信嗎？", "段內對 k 做 Theil-Sen 穩健迴歸（抗離群）；主 KPI 顯示 3.5%（±0.8）· 中信心 · n=12，未解釋殘差一定顯示，不做假精確。"],
+  ["船殼 vs 螺旋槳怎麼拆？", "隔離區段各量 k 漂移率拆分；區段稀疏時退回標記過的 50/50，明講『因區段不足暫用預設』，不假裝精準。"],
+]);
+qaSlide("UWI 判讀 · 商務價值", [
+  ["UWI 你說不改善，但圖上有變化？", "兩個地方兩種角色：物理先驗放『預測模型污損時鐘不因 UWI 重置』；dashboard 誠實顯示實測 delta+信心，不硬壓成零。刻意分開統計實測與物理先驗。"],
+  ["這系統怎麼幫我省錢？講數字。", "反事實：把污損時鐘歸零重預測，得每天可省油量、年省金額、回本天數（油價 US$650/MT）。S23 清一次年省近 US$3.9M。"],
   ["AI 會自己排清潔嗎？", "不會，決策支援、人拍板。低信心→先做便宜水下檢查；高信心且回本快→建議清潔。反事實是檢視證據，不是自動指令。"],
+  ["資料品質差的日子會硬給建議嗎？", "被拒列標原因+品質分；可比樣本不足時不出高信心建議，改建議先做檢查。信心與 n 永遠跟著數字顯示。"],
+]);
+qaSlide("AI · AWS · 限制", [
+  ["AI 扮演什麼角色？怎麼防亂編數字？", "數字來自計算、語言來自 AI。Bedrock(Claude) 只改寫已算好的指標；guardrail 逐一比對每個數字的引用來源，未引用/引錯即攔——無法發明數字。開發用 Kiro。"],
+  ["架構？成本？為何不上 SageMaker？", "單一 Spring Boot on App Runner + S3 + DynamoDB + Bedrock + CloudWatch，us-east-1，約 <US$70/月。ISO 19030 本身確定性、樣本少硬煉會過擬合，且複雜模型沒贏過 baseline。"],
+  ["最大的限制是什麼？（主動揭露）", "①SOG 非對水速度、洋流系統偏差 ②無軸功率、k 是代理 ③歸因稀疏時退 50/50 ④UWI 仍有量測雜訊，呈現而非壓平。都在 UI/偏離表明示。"],
+  ["給更多資料會怎麼強化？", "軸功率計+對水速度計→升級 ISO 19030 全合規；海試曲線→更準基準；貴司 UWC/PP 恢復幅度紀錄→歸因與 ROI 有 ground truth。框架不改、餵更好量測即升級。"],
 ]);
 
 const out = path.join(__dirname, "fleetmind-proposal-deck.pptx");
