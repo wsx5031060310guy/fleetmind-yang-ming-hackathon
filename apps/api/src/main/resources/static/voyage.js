@@ -117,69 +117,109 @@
   /* ---------- SVG: container-ship side profile with fouling ---------- */
   let uid = 0;
   function shipSVG(foulingRatio) {
-    const id = "clip" + (++uid);
+    const u = ++uid;
+    const clipId = "hclip" + u;
     const s = svg("svg", { viewBox: "0 0 680 300", class: "ship-svg", role: "img", "aria-label": "船側剖視圖" });
     const foul = clamp(Number(foulingRatio) || 0, 0, 1);
-    // waterline
     const WL = 188;
-    // sky/sea faint backdrop handled by page; draw subtle sea band
-    s.append(svg("rect", { x: 0, y: WL, width: 680, height: 300 - WL, fill: "rgba(10,40,60,0.28)" }));
 
-    // underwater hull path (fill dark)
+    // ----- defs: metal / hull / sea / biofilm gradients -----
+    const defs = svg("defs");
+    const grFree = svg("linearGradient", { id: "grFree" + u, x1: 0, y1: 0, x2: 0, y2: 1 });
+    grFree.append(svg("stop", { offset: "0%", "stop-color": "#f4f9fd" }));
+    grFree.append(svg("stop", { offset: "52%", "stop-color": "#d4e4f0" }));
+    grFree.append(svg("stop", { offset: "100%", "stop-color": "#a9bccd" }));
+    const grHull = svg("linearGradient", { id: "grHull" + u, x1: 0, y1: 0, x2: 0, y2: 1 });
+    grHull.append(svg("stop", { offset: "0%", "stop-color": "#123648" }));
+    grHull.append(svg("stop", { offset: "100%", "stop-color": "#061520" }));
+    const grSea = svg("linearGradient", { id: "grSea" + u, x1: 0, y1: 0, x2: 0, y2: 1 });
+    grSea.append(svg("stop", { offset: "0%", "stop-color": "rgba(16,52,72,0.55)" }));
+    grSea.append(svg("stop", { offset: "100%", "stop-color": "rgba(4,14,22,0.08)" }));
+    const grBio = svg("linearGradient", { id: "grBio" + u, x1: 0, y1: 0, x2: 0, y2: 1 });
+    grBio.append(svg("stop", { offset: "0%", "stop-color": "rgba(96,150,86,0.0)" }));
+    grBio.append(svg("stop", { offset: "45%", "stop-color": "rgba(84,138,78,0.9)" }));
+    grBio.append(svg("stop", { offset: "100%", "stop-color": "rgba(70,58,36,0.85)" }));
+    defs.append(grFree, grHull, grSea, grBio);
+    s.append(defs);
+
+    // subtle sea band under the waterline
+    s.append(svg("rect", { x: 0, y: WL, width: 680, height: 300 - WL, fill: "url(#grSea" + u + ")" }));
+
+    // underwater hull body (graded steel)
     const hull = "M96,150 L600,150 L636,168 L620,196 L560,232 L150,232 L110,206 L96,150 Z";
-    s.append(svg("path", { d: hull, fill: "#0a2536", stroke: "rgba(120,160,190,0.25)", "stroke-width": 1.4 }));
+    s.append(svg("path", { d: hull, fill: "url(#grHull" + u + ")", stroke: "rgba(120,160,190,0.28)", "stroke-width": 1.4 }));
+    // bulbous bow hint + hull plating seams
+    s.append(svg("path", { d: "M600,150 L636,168 L620,196 Q642,182 636,168 Z", fill: "#0e2a3c", opacity: 0.8 }));
+    [164, 178, 200].forEach(function (yy) {
+      s.append(svg("line", { x1: 120, y1: yy, x2: 590, y2: yy, stroke: "rgba(150,190,210,0.08)", "stroke-width": 1 }));
+    });
 
-    // clip to underwater portion of the hull for fouling speckles
-    const clip = svg("clipPath", { id: id });
+    // clip to the underwater hull for fouling + biofilm
+    const clip = svg("clipPath", { id: clipId });
     clip.append(svg("path", { d: "M96," + WL + " L636," + WL + " L620,196 L560,232 L150,232 L110,206 L96," + WL + " Z" }));
     s.append(clip);
-    // darker underwater tint
-    s.append(svg("rect", { x: 90, y: WL, width: 560, height: 60, fill: "rgba(4,18,28,0.55)", "clip-path": "url(#" + id + ")" }));
 
-    // fouling speckles — density bound to daysSinceLastCleaning ratio
+    // biofilm band clinging just below the waterline — intensity tracks fouling
+    s.append(svg("rect", { x: 90, y: WL, width: 560, height: 26, fill: "url(#grBio" + u + ")",
+      opacity: 0.22 + foul * 0.55, "clip-path": "url(#" + clipId + ")" }));
+
+    // fouling speckles + growth streaks — density bound to daysSinceLastCleaning ratio (honest)
     const count = Math.round(foul * 90);
     let seed = 20240714;
-    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-    const g = svg("g", { "clip-path": "url(#" + id + ")" });
+    const rnd = function () { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const g = svg("g", { "clip-path": "url(#" + clipId + ")" });
     for (let i = 0; i < count; i += 1) {
       const x = 110 + rnd() * 500;
       const y = WL + 4 + rnd() * 40;
-      const r = 2 + rnd() * 4;
-      const green = rnd() > 0.5;
-      g.append(svg("ellipse", {
-        cx: x, cy: y, rx: r, ry: r * 0.72,
-        fill: green ? "rgba(70,150,90,0.45)" : "rgba(120,95,55,0.42)"
-      }));
+      const r = 1.6 + rnd() * 4.2;
+      const kind = rnd();
+      const fill = kind > 0.62 ? "rgba(74,158,96,0.5)" : kind > 0.3 ? "rgba(120,95,55,0.46)" : "rgba(150,182,120,0.34)";
+      g.append(svg("ellipse", { cx: x, cy: y, rx: r, ry: r * 0.7, fill: fill }));
+      // occasional trailing streak of growth
+      if (rnd() > 0.86) g.append(svg("line", { x1: x, y1: y, x2: x + (rnd() - 0.5) * 6, y2: y + 4 + rnd() * 8,
+        stroke: "rgba(74,158,96,0.3)", "stroke-width": 1.2, "stroke-linecap": "round" }));
     }
     s.append(g);
 
-    // freeboard (above water) — light hull
-    s.append(svg("path", { d: "M96,150 L600,150 L636,168 L636," + WL + " L96," + WL + " Z", fill: "#d7e6f1", stroke: "rgba(180,205,225,0.5)", "stroke-width": 1 }));
+    // freeboard (above water) — light graded steel
+    s.append(svg("path", { d: "M96,150 L600,150 L636,168 L636," + WL + " L96," + WL + " Z", fill: "url(#grFree" + u + ")", stroke: "rgba(180,205,225,0.55)", "stroke-width": 1 }));
+    // accent boot-topping stripe right above the waterline
+    s.append(svg("rect", { x: 96, y: WL - 7, width: 540, height: 7, fill: "rgba(47,176,154,0.55)" }));
 
-    // superstructure / bridge (aft-left)
-    s.append(svg("rect", { x: 116, y: 96, width: 70, height: 54, rx: 3, fill: "#eef4f9" }));
-    s.append(svg("rect", { x: 126, y: 106, width: 50, height: 8, fill: "#9fc0d6" }));
-    s.append(svg("rect", { x: 126, y: 120, width: 50, height: 8, fill: "#9fc0d6" }));
-    // funnel
-    s.append(svg("rect", { x: 150, y: 74, width: 20, height: 24, rx: 2, fill: "#20475c" }));
+    // superstructure / bridge (aft-left) with lit windows
+    s.append(svg("rect", { x: 116, y: 96, width: 70, height: 54, rx: 3, fill: "#eef5fb" }));
+    for (let r = 0; r < 2; r += 1) {
+      for (let c = 0; c < 5; c += 1) {
+        s.append(svg("rect", { x: 126 + c * 10, y: 106 + r * 14, width: 7, height: 8, rx: 1,
+          fill: (r + c) % 3 === 0 ? "#3FE0C5" : "#9fc0d6", opacity: (r + c) % 3 === 0 ? 0.85 : 0.7 }));
+      }
+    }
+    // funnel with brand band + wisp
+    s.append(svg("rect", { x: 150, y: 74, width: 20, height: 24, rx: 2, fill: "#1c4256" }));
     s.append(svg("rect", { x: 150, y: 80, width: 20, height: 5, fill: "#2FB09A" }));
+    // mast
+    s.append(svg("line", { x1: 205, y1: 150, x2: 205, y2: 112, stroke: "#cde0ee", "stroke-width": 2 }));
+    s.append(svg("circle", { cx: 205, cy: 110, r: 2, fill: "#F4A72B" }));
 
-    // container stacks on deck
+    // container stacks on deck — with top-edge highlight
     const cols = ["#2E8DB0", "#3FE0C5", "#F4A72B", "#4a7fa0", "#2FB09A", "#8fb6cc"];
-    let cx = 200;
+    let cx = 226;
     while (cx < 590) {
       const stackH = 3 + Math.floor(rnd() * 3);
       for (let r = 0; r < stackH; r += 1) {
-        s.append(svg("rect", {
-          x: cx, y: 150 - 14 * (r + 1), width: 34, height: 13, rx: 1.5,
-          fill: cols[(cx + r) % cols.length], opacity: 0.9
-        }));
+        const yy = 150 - 14 * (r + 1);
+        s.append(svg("rect", { x: cx, y: yy, width: 34, height: 13, rx: 1.5, fill: cols[(cx + r) % cols.length], opacity: 0.92 }));
+        s.append(svg("rect", { x: cx, y: yy, width: 34, height: 2.4, rx: 1, fill: "rgba(255,255,255,0.22)" }));
       }
       cx += 38;
     }
 
-    // waterline (dashed)
-    s.append(svg("line", { x1: 40, y1: WL, x2: 660, y2: WL, stroke: "rgba(63,224,197,0.55)", "stroke-width": 1.4, "stroke-dasharray": "7 5" }));
+    // waterline — soft glow underlay + crisp dashed line + draft marks
+    s.append(svg("line", { x1: 40, y1: WL, x2: 660, y2: WL, stroke: "rgba(63,224,197,0.18)", "stroke-width": 5 }));
+    s.append(svg("line", { x1: 40, y1: WL, x2: 660, y2: WL, stroke: "rgba(63,224,197,0.6)", "stroke-width": 1.4, "stroke-dasharray": "7 5" }));
+    for (let d = 0; d < 5; d += 1) {
+      s.append(svg("line", { x1: 116, y1: WL + 2 + d * 8, x2: 122, y2: WL + 2 + d * 8, stroke: "rgba(215,230,241,0.5)", "stroke-width": 1.4 }));
+    }
     s.append(svg("text", { x: 44, y: WL - 6, fill: "rgba(63,224,197,0.85)", "font-size": 11, "font-family": "monospace" }, "吃水線 / waterline"));
     return s;
   }
@@ -187,6 +227,11 @@
   /* ---------- SVG: diver silhouette ---------- */
   function diverSVG() {
     const s = svg("svg", { viewBox: "0 0 34 46", role: "img", "aria-label": "潛水員" });
+    const gd = svg("radialGradient", { id: "diverGlow" + (++uid) });
+    gd.append(svg("stop", { offset: "0%", "stop-color": "rgba(63,224,197,0.42)" }));
+    gd.append(svg("stop", { offset: "100%", "stop-color": "rgba(63,224,197,0)" }));
+    const gdefs = svg("defs"); gdefs.append(gd); s.append(gdefs);
+    s.append(svg("circle", { cx: 17, cy: 23, r: 16, fill: "url(#diverGlow" + uid + ")" }));
     s.append(svg("circle", { cx: 17, cy: 9, r: 6, fill: "#0c3040", stroke: "#3FE0C5", "stroke-width": 1.4 }));
     s.append(svg("rect", { x: 12, y: 4, width: 10, height: 6, rx: 2, fill: "rgba(63,224,197,0.4)" }));
     s.append(svg("path", { d: "M17,15 C11,17 10,26 12,34 L14,44 L20,44 L22,34 C24,26 23,17 17,15 Z", fill: "#0c3040", stroke: "#3FE0C5", "stroke-width": 1.2 }));
@@ -242,6 +287,72 @@
       b.style.animationDelay = (-Math.random() * 10) + "s";
       host.append(b);
     }
+  }
+
+  /* ---------- ambient depth field: rising marine-snow motes (fixed canvas) ---------- */
+  function atmosphere() {
+    if (RM) return;
+    const canvas = document.createElement("canvas");
+    canvas.id = "atmos";
+    canvas.setAttribute("aria-hidden", "true");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    document.body.appendChild(canvas);
+
+    // pre-rendered soft glow sprite — one radial gradient, then cheap drawImage per frame
+    const SP = 28;
+    const sprite = document.createElement("canvas");
+    sprite.width = sprite.height = SP;
+    const sctx = sprite.getContext("2d");
+    const sg = sctx.createRadialGradient(SP / 2, SP / 2, 0, SP / 2, SP / 2, SP / 2);
+    sg.addColorStop(0, "rgba(168, 246, 232, 0.95)");
+    sg.addColorStop(0.35, "rgba(96, 224, 205, 0.4)");
+    sg.addColorStop(1, "rgba(63, 224, 197, 0)");
+    sctx.fillStyle = sg;
+    sctx.fillRect(0, 0, SP, SP);
+
+    let W = 0, H = 0, motes = [];
+    function spawn(anywhere) {
+      return {
+        x: Math.random() * W,
+        y: anywhere ? Math.random() * H : H + 16,
+        r: 0.8 + Math.random() * 2.6,
+        vy: -(3 + Math.random() * 10) / 60,
+        phase: Math.random() * Math.PI * 2,
+        sway: 4 + Math.random() * 9,
+        a: 0.1 + Math.random() * 0.42
+      };
+    }
+    function resize() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + "px"; canvas.style.height = H + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const target = Math.round(clamp(W / 26, 26, 60));
+      motes = [];
+      for (let i = 0; i < target; i += 1) motes.push(spawn(true));
+    }
+    let raf = 0, running = false;
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < motes.length; i += 1) {
+        const m = motes[i];
+        m.y += m.vy; m.phase += 0.01;
+        if (m.y < -SP) { motes[i] = spawn(false); continue; }
+        const x = m.x + Math.sin(m.phase) * m.sway;
+        const s = m.r * 3.2;
+        ctx.globalAlpha = m.a;
+        ctx.drawImage(sprite, x - s, m.y - s, s * 2, s * 2);
+      }
+      ctx.globalAlpha = 1;
+      if (running) raf = requestAnimationFrame(frame);
+    }
+    function start() { if (!running) { running = true; raf = requestAnimationFrame(frame); } }
+    function stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+    window.addEventListener("resize", resize, { passive: true });
+    document.addEventListener("visibilitychange", function () { if (document.hidden) stop(); else start(); });
+    resize(); start();
   }
 
   /* ================= data store ================= */
@@ -371,33 +482,64 @@
 
   /* ---- before/after wipe stage ---- */
   function baStageSVG(cleanRatio) {
-    // left = fouled, right = clean; a vertical wipe line at cleanRatio (0..1)
+    // left = fouled, right = clean; a vertical wipe seam at cleanRatio (0..1)
+    const u = ++uid;
+    const hullPath = "M30,60 L560,60 L580,120 L520,190 L90,190 L20,120 Z";
     const s = svg("svg", { viewBox: "0 0 600 240", preserveAspectRatio: "xMidYMid slice", role: "img", "aria-label": "清洗前後對照" });
     const wipeX = 40 + clamp(cleanRatio, 0, 1) * 520;
-    // hull background
-    s.append(svg("rect", { x: 0, y: 0, width: 600, height: 240, fill: "#06131f" }));
-    s.append(svg("path", { d: "M30,60 L560,60 L580,120 L520,190 L90,190 L20,120 Z", fill: "#0c2a3c", stroke: "rgba(120,160,190,0.3)", "stroke-width": 1.5 }));
-    // fouled speckles only on the left of wipe
-    const clip = svg("clipPath", { id: "baclip" + (++uid) });
+
+    const defs = svg("defs");
+    const grBg = svg("linearGradient", { id: "baBg" + u, x1: 0, y1: 0, x2: 0, y2: 1 });
+    grBg.append(svg("stop", { offset: "0%", "stop-color": "#08202f" }));
+    grBg.append(svg("stop", { offset: "100%", "stop-color": "#040e17" }));
+    const grClean = svg("linearGradient", { id: "baClean" + u, x1: 0, y1: 0, x2: 0, y2: 1 });
+    grClean.append(svg("stop", { offset: "0%", "stop-color": "rgba(120,240,220,0.22)" }));
+    grClean.append(svg("stop", { offset: "100%", "stop-color": "rgba(63,224,197,0.06)" }));
+    defs.append(grBg, grClean);
+    s.append(defs);
+
+    // deep background + hull
+    s.append(svg("rect", { x: 0, y: 0, width: 600, height: 240, fill: "url(#baBg" + u + ")" }));
+    s.append(svg("path", { d: hullPath, fill: "#0c2a3c", stroke: "rgba(120,160,190,0.32)", "stroke-width": 1.5 }));
+
+    let seed = 77;
+    const rnd = function () { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+
+    // fouled side (left of seam): biofilm haze + speckles
+    const clip = svg("clipPath", { id: "baclip" + u });
     clip.append(svg("rect", { x: 0, y: 0, width: wipeX, height: 240 }));
     s.append(clip);
-    const g = svg("g", { "clip-path": "url(#baclip" + uid + ")" });
-    let seed = 77;
-    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-    for (let i = 0; i < 120; i += 1) {
-      g.append(svg("ellipse", { cx: 30 + rnd() * 540, cy: 62 + rnd() * 126, rx: 2 + rnd() * 4, ry: 2, fill: rnd() > 0.5 ? "rgba(70,150,90,0.5)" : "rgba(120,95,55,0.45)" }));
+    s.append(svg("rect", { x: 0, y: 140, width: 600, height: 50, fill: "rgba(74,120,66,0.35)", "clip-path": "url(#baclip" + u + ")" }));
+    const g = svg("g", { "clip-path": "url(#baclip" + u + ")" });
+    for (let i = 0; i < 130; i += 1) {
+      const kind = rnd();
+      g.append(svg("ellipse", { cx: 30 + rnd() * 540, cy: 62 + rnd() * 126, rx: 1.6 + rnd() * 4, ry: 2,
+        fill: kind > 0.6 ? "rgba(74,158,96,0.5)" : kind > 0.3 ? "rgba(120,95,55,0.46)" : "rgba(150,182,120,0.32)" }));
     }
     s.append(g);
-    // clean sheen on the right
-    const clip2 = svg("clipPath", { id: "baclip2" + uid });
+
+    // clean side (right of seam): sheen + caustic light streaks + sparkles
+    const clip2 = svg("clipPath", { id: "baclip2" + u });
     clip2.append(svg("rect", { x: wipeX, y: 0, width: 600 - wipeX, height: 240 }));
     s.append(clip2);
-    const sheen = svg("path", { d: "M30,60 L560,60 L580,120 L520,190 L90,190 L20,120 Z", fill: "rgba(63,224,197,0.12)", "clip-path": "url(#baclip2" + uid + ")" });
-    s.append(sheen);
-    // wipe line
-    s.append(svg("line", { x1: wipeX, y1: 20, x2: wipeX, y2: 220, stroke: "#3FE0C5", "stroke-width": 2.4 }));
-    s.append(svg("text", { x: 46, y: 40, fill: "rgba(233,105,78,0.9)", "font-size": 13, "font-family": "monospace" }, "清洗前"));
-    s.append(svg("text", { x: 500, y: 40, fill: "rgba(63,224,197,0.9)", "font-size": 13, "font-family": "monospace", "text-anchor": "end" }, "清洗後"));
+    s.append(svg("path", { d: hullPath, fill: "url(#baClean" + u + ")", "clip-path": "url(#baclip2" + u + ")" }));
+    const cg = svg("g", { "clip-path": "url(#baclip2" + u + ")" });
+    [0, 1, 2, 3].forEach(function (k) {
+      cg.append(svg("line", { x1: 300 + k * 70, y1: 60, x2: 260 + k * 70, y2: 190,
+        stroke: "rgba(160,245,230,0.12)", "stroke-width": 10 }));
+    });
+    for (let i = 0; i < 10; i += 1) {
+      cg.append(svg("circle", { cx: 320 + rnd() * 250, cy: 70 + rnd() * 110, r: 0.8 + rnd() * 1.4, fill: "rgba(200,255,246,0.7)" }));
+    }
+    s.append(cg);
+
+    // wipe seam — glowing edge + handle
+    s.append(svg("line", { x1: wipeX, y1: 20, x2: wipeX, y2: 220, stroke: "rgba(63,224,197,0.25)", "stroke-width": 7 }));
+    s.append(svg("line", { x1: wipeX, y1: 20, x2: wipeX, y2: 220, stroke: "#8ff5e6", "stroke-width": 2 }));
+    s.append(svg("circle", { cx: wipeX, cy: 120, r: 6, fill: "#06131f", stroke: "#3FE0C5", "stroke-width": 2 }));
+
+    s.append(svg("text", { x: 46, y: 40, fill: "rgba(233,105,78,0.95)", "font-size": 13, "font-family": "monospace" }, "清洗前"));
+    s.append(svg("text", { x: 554, y: 40, fill: "rgba(63,224,197,0.95)", "font-size": 13, "font-family": "monospace", "text-anchor": "end" }, "清洗後"));
     return s;
   }
 
@@ -551,9 +693,17 @@
     });
     chart.append(svg("text", { x: m.l, y: rugY + 16, fill: "#52708b", "font-size": 10, "font-family": "monospace" }, "↑ 被剔除的無效日（灰色空心，未連入曲線）"));
 
-    // valid polyline (scrub-draw)
+    // valid polyline (scrub-draw) — graded stroke over a static soft-glow underlay
     const pts = vSorted.map((r, i) => X(times[i]) + "," + Y(values[i])).join(" ");
-    const line = svg("polyline", { points: pts, fill: "none", stroke: "#3FE0C5", "stroke-width": 2.2, "stroke-linejoin": "round", "stroke-linecap": "round", pathLength: 1 });
+    const tdefs = svg("defs");
+    const grTelem = svg("linearGradient", { id: "grTelem", x1: 0, y1: 0, x2: 1, y2: 0 });
+    grTelem.append(svg("stop", { offset: "0%", "stop-color": "#2E8DB0" }));
+    grTelem.append(svg("stop", { offset: "58%", "stop-color": "#3FE0C5" }));
+    grTelem.append(svg("stop", { offset: "100%", "stop-color": "#9af6e6" }));
+    tdefs.append(grTelem);
+    chart.append(tdefs);
+    chart.append(svg("polyline", { points: pts, fill: "none", stroke: "rgba(63,224,197,0.16)", "stroke-width": 7, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    const line = svg("polyline", { points: pts, fill: "none", stroke: "url(#grTelem)", "stroke-width": 2.4, "stroke-linejoin": "round", "stroke-linecap": "round", pathLength: 1 });
     line.style.strokeDasharray = "1"; line.style.strokeDashoffset = RM ? "0" : "1";
     chart.append(line);
 
@@ -567,6 +717,11 @@
       dotG.append(c);
     });
     chart.append(dotG);
+    // pulsing "latest reading" beacon on the most recent valid k
+    const exT = times[times.length - 1], exV = values[values.length - 1];
+    const ex = X(exT), ey = Y(exV);
+    chart.append(svg("circle", { cx: ex, cy: ey, r: 9, fill: "rgba(63,224,197,0.3)", class: "chart-endpoint-halo" }));
+    chart.append(svg("circle", { cx: ex, cy: ey, r: 4, fill: "#eafff9", stroke: "#3FE0C5", "stroke-width": 2 }));
     chart.append(svg("text", { x: m.l, y: H - 6, fill: "#7F9CB6", "font-size": 11, "font-family": "monospace" }, String(vSorted[0].date)));
     chart.append(svg("text", { x: W - m.r, y: H - 6, fill: "#7F9CB6", "font-size": 11, "text-anchor": "end", "font-family": "monospace" }, String(vSorted[vSorted.length - 1].date)));
     host.append(chart);
@@ -619,12 +774,25 @@
       chart.append(svg("line", { x1: m.l, y1: yy, x2: W - m.r, y2: yy, stroke: "rgba(148,183,214,0.12)" }));
       chart.append(svg("text", { x: m.l - 8, y: yy + 4, fill: "#7F9CB6", "font-size": 11, "text-anchor": "end", "font-family": "monospace" }, v.toFixed(1) + "%"));
     }
-    // base area (teal)
+    // graded fills + stroke
+    const ddefs = svg("defs");
+    const grArea = svg("linearGradient", { id: "grDegArea", x1: 0, y1: 0, x2: 0, y2: 1 });
+    grArea.append(svg("stop", { offset: "0%", "stop-color": "rgba(63,224,197,0.28)" }));
+    grArea.append(svg("stop", { offset: "100%", "stop-color": "rgba(47,176,154,0.02)" }));
+    const grDeg = svg("linearGradient", { id: "grDegLine", x1: 0, y1: 0, x2: 1, y2: 0 });
+    grDeg.append(svg("stop", { offset: "0%", "stop-color": "#2E8DB0" }));
+    grDeg.append(svg("stop", { offset: "72%", "stop-color": "#3FE0C5" }));
+    grDeg.append(svg("stop", { offset: "100%", "stop-color": "#F4A72B" }));
+    ddefs.append(grArea, grDeg);
+    chart.append(ddefs);
+    // base area (graded teal)
     const baseline = H - m.b;
     const areaPts = valid.map((r, i) => X(times[i]) + "," + Y(values[i])).join(" ");
-    chart.append(svg("polygon", { points: m.l + "," + baseline + " " + areaPts + " " + (W - m.r) + "," + baseline, fill: "rgba(47,176,154,0.10)" }));
+    chart.append(svg("polygon", { points: m.l + "," + baseline + " " + areaPts + " " + (W - m.r) + "," + baseline, fill: "url(#grDegArea)" }));
+    // static soft-glow underlay the crisp curve lights up over
+    chart.append(svg("polyline", { points: areaPts, fill: "none", stroke: "rgba(63,224,197,0.16)", "stroke-width": 7.5, "stroke-linejoin": "round", "stroke-linecap": "round" }));
     // main curve (scrub-draw)
-    const line = svg("polyline", { points: areaPts, fill: "none", stroke: "#3FE0C5", "stroke-width": 2.4, "stroke-linejoin": "round", "stroke-linecap": "round", pathLength: 1 });
+    const line = svg("polyline", { points: areaPts, fill: "none", stroke: "url(#grDegLine)", "stroke-width": 2.6, "stroke-linejoin": "round", "stroke-linecap": "round", pathLength: 1 });
     line.style.strokeDasharray = "1"; line.style.strokeDashoffset = RM ? "0" : "1";
     chart.append(line);
     // dynamic layer (threshold line, over-threshold overlay, crossing burst)
@@ -671,7 +839,7 @@
     // crossing burst
     if (crossIdx >= 0) {
       const cx = st.X(st.times[crossIdx]), cy = st.Y(st.values[crossIdx]);
-      st.dyn.append(svg("circle", { cx: cx, cy: cy, r: 12, fill: "rgba(233,105,78,0.25)" }));
+      st.dyn.append(svg("circle", { cx: cx, cy: cy, r: 12, fill: "rgba(233,105,78,0.32)", class: "chart-crossing-halo" }));
       st.dyn.append(svg("circle", { cx: cx, cy: cy, r: 5.5, fill: "#E9694E", stroke: "#fff", "stroke-width": 1.4 }));
       st.dyn.append(svg("text", { x: clamp(cx, st.m.l + 40, st.W - st.m.r - 40), y: cy - 18, fill: "#ffd8cd", "font-size": 12, "text-anchor": "middle", "font-family": "monospace" }, "跨越門檻 · " + String(store.summary.vesselId)));
     }
@@ -685,9 +853,17 @@
     const propPct = 100 - hullPct;
     const R = 52, C = 2 * Math.PI * R;
     const s = svg("svg", { viewBox: "0 0 140 140", role: "img", "aria-label": "污損歸因" });
-    s.append(svg("circle", { cx: 70, cy: 70, r: R, fill: "none", stroke: "rgba(47,176,154,0.25)", "stroke-width": 16 }));
-    const hullArc = svg("circle", { cx: 70, cy: 70, r: R, fill: "none", stroke: "#2E8DB0", "stroke-width": 16, "stroke-dasharray": (C * hullPct / 100) + " " + C, transform: "rotate(-90 70 70)", "stroke-linecap": "butt" });
+    const defs = svg("defs");
+    const grD = svg("linearGradient", { id: "grDonut", x1: 0, y1: 0, x2: 1, y2: 1 });
+    grD.append(svg("stop", { offset: "0%", "stop-color": "#3FE0C5" }));
+    grD.append(svg("stop", { offset: "100%", "stop-color": "#2E8DB0" }));
+    defs.append(grD);
+    s.append(defs);
+    s.append(svg("circle", { cx: 70, cy: 70, r: R, fill: "none", stroke: "rgba(47,176,154,0.22)", "stroke-width": 16 }));
+    const hullArc = svg("circle", { cx: 70, cy: 70, r: R, fill: "none", stroke: "url(#grDonut)", "stroke-width": 16, "stroke-dasharray": (C * hullPct / 100) + " " + C, transform: "rotate(-90 70 70)", "stroke-linecap": "round" });
     s.append(hullArc);
+    s.append(svg("text", { x: 70, y: 66, fill: "#eaf4fb", "font-size": 26, "font-weight": "800", "text-anchor": "middle", "font-family": "monospace" }, fmt(hullPct, 0) + "%"));
+    s.append(svg("text", { x: 70, y: 84, fill: "#7F9CB6", "font-size": 10, "text-anchor": "middle", "font-family": "monospace", "letter-spacing": "1" }, "船體"));
     host.append(s);
     const cap = el("div", "donut-center");
     cap.append(el("div", "hud-label", "污損歸因"));
@@ -919,7 +1095,7 @@
       const x = 60 + rnd() * (W - 120);
       const y = 50 + rnd() * (H - 100);
       const r = isSelf ? 11 : 7;
-      if (isSelf) s.append(svg("circle", { cx: x, cy: y, r: 22, fill: "rgba(63,224,197,0.12)", stroke: "rgba(63,224,197,0.5)" }));
+      if (isSelf) s.append(svg("circle", { cx: x, cy: y, r: 22, fill: "rgba(63,224,197,0.12)", stroke: "rgba(63,224,197,0.5)", class: "fleet-self-halo" }));
       const c = svg("circle", { cx: x, cy: y, r: r, fill: color(vv.status), stroke: isSelf ? "#fff" : "rgba(6,19,31,0.8)", "stroke-width": isSelf ? 2 : 1, class: "fleet-dot" });
       c.append(svg("title", {}, String(vv.vesselId) + " · " + statusLabel(vv.status) + " · " + fmt(vv.latestSpeedLossPct, 1) + "%"));
       s.append(c);
@@ -1128,6 +1304,8 @@
 
     // seed background particles for underwater scene
     bubbles($("#events-bubbles"), 26);
+    // ambient depth field behind every scene (skipped under reduced-motion)
+    try { atmosphere(); } catch (e) { /* atmosphere is decorative; never block the page */ }
 
     setupReveals();
     window.addEventListener("scroll", onScroll, { passive: true });
