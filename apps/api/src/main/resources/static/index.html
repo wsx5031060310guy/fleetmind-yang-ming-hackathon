@@ -2,220 +2,336 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>FleetMind · AI 船舶效能節能決策支援系統</title>
-  <meta name="description" content="FleetMind 首頁：一艘船駛回港的沈浸式入口，通往決策看板、AWS 架構藍圖、航程 Demo 與後台設定。數字來自計算，語言來自 AI，決策留給人。">
+  <meta name="description" content="FleetMind 首頁：從破曉海平線、船駛入偵測、下潛看見船殼污損、到浮出換你決策的電影級沈浸入口，通往決策看板、AWS 架構藍圖、航程 Demo 與後台。數字來自計算，語言來自 AI，決策留給人。">
+  <meta name="theme-color" content="#04101c">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232FB09A'/%3E%3Cpath d='M6 20c3 2 5 2 8 0s5-2 8 0 5 2 6 1' fill='none' stroke='%23052029' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 6l5 9H11z' fill='%23052029'/%3E%3C/svg%3E">
   <style>
     :root{
-      --bg:#071523;--surface:#0E2B49;--surface2:#12385C;
-      --line:rgba(148,183,214,.15);--ink:#EAF2F9;--ink-dim:#B7CBDD;--muted:#8AA6BF;
-      --teal:#3BA0C4;--seafoam:#37C0A6;--amber:#F4A72B;--coral:#EC7358;
-      --mono:ui-monospace,"SFMono-Regular",Menlo,monospace;
+      --navy-950:#04101c;--navy-900:#061a2e;
+      --ink:#EAF2F9;--ink-dim:#B7CBDD;--muted:#7F9CB6;
+      --line:rgba(148,183,214,.16);--line-lit:rgba(63,224,197,.42);
+      --accent:#3FE0C5;--teal:#2E8DB0;
+      --normal:#2FB09A;--watch:#F4A72B;--act:#E9694E;
+      --hud-bg:rgba(6,22,38,.58);--hud-bg-2:rgba(9,30,48,.7);
+      --mono:"SFMono-Regular","JetBrains Mono",ui-monospace,Menlo,monospace;
       --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;
+      --pad:clamp(18px,4vw,44px);
     }
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth;overflow-x:hidden}
-    body{margin:0;font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;background:var(--bg);overflow-x:hidden;max-width:100%}
+    html{scroll-behavior:smooth;overflow-x:hidden;-webkit-text-size-adjust:100%}
+    body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--navy-950);
+      overflow-x:hidden;max-width:100%;-webkit-font-smoothing:antialiased;line-height:1.6}
     a{color:inherit}
-    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0}
 
-    .fm-topnav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px clamp(16px,4vw,40px);background:rgba(6,17,30,.55);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);position:fixed;top:0;left:0;right:0;z-index:900}
+    /* ---------- top nav (canonical, preserved) ---------- */
+    .fm-topnav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px var(--pad);
+      background:rgba(4,14,26,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line);position:fixed;top:0;left:0;right:0;z-index:900}
     .fm-topnav .fm-brand{color:var(--ink);font-weight:800;text-decoration:none;font-size:15.5px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
-    .fm-topnav .fm-brand b{color:var(--seafoam)}
+    .fm-topnav .fm-brand b{color:var(--normal)}
     .fm-topnav .fm-brand svg{width:20px;height:20px}
     .fm-topnav .fm-links{display:flex;gap:3px;flex-wrap:wrap;margin-left:auto}
-<<<<<<< Updated upstream
-    .fm-topnav .fm-links a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:7px 12px;border-radius:8px;transition:background .2s,color .2s;min-height:38px;display:inline-flex;align-items:center}
-=======
     .fm-topnav .fm-links a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:10px 12px;border-radius:8px;transition:background .2s,color .2s;min-height:44px;display:inline-flex;align-items:center}
->>>>>>> Stashed changes
     .fm-topnav .fm-links a:hover{background:rgba(47,176,154,.14);color:var(--ink)}
-    .fm-topnav .fm-links a[aria-current="page"]{background:rgba(47,176,154,.16);color:var(--seafoam)}
-    .fm-topnav .fm-links a:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
-    @media(max-width:600px){.fm-topnav .fm-links{margin-left:0;width:100%}}
+    .fm-topnav .fm-links a[aria-current="page"]{background:rgba(47,176,154,.16);color:var(--normal)}
+    .fm-topnav .fm-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    @media(max-width:600px){.fm-topnav{gap:8px}.fm-topnav .fm-links{margin-left:0;width:100%}}
 
-    /* ---- immersive sea hero ---- */
-    .sea{position:relative;min-height:100vh;min-height:100svh;min-height:100dvh;overflow:hidden;display:flex;align-items:center;
-      background:linear-gradient(180deg,#0a2036 0%,#0b2c47 42%,#0e3a5c 62%,#0c2f4d 100%)}
-    .sea .sky-glow{position:absolute;inset:0;background:radial-gradient(60% 55% at 74% 26%,rgba(244,167,43,.22),transparent 60%),radial-gradient(50% 45% at 20% 12%,rgba(55,192,166,.16),transparent 62%);pointer-events:none}
-    .sea .stars{position:absolute;inset:0;opacity:.5;pointer-events:none;
-      background-image:radial-gradient(1.4px 1.4px at 18% 22%,rgba(234,242,249,.7),transparent),radial-gradient(1.2px 1.2px at 62% 16%,rgba(234,242,249,.5),transparent),radial-gradient(1.5px 1.5px at 84% 30%,rgba(234,242,249,.6),transparent),radial-gradient(1px 1px at 40% 10%,rgba(234,242,249,.4),transparent)}
+    /* ---------- scroll progress rail ---------- */
+    .rail{position:fixed;top:0;left:0;height:3px;width:100%;z-index:950;background:transparent;pointer-events:none}
+    .rail i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--accent));
+      box-shadow:0 0 10px rgba(63,224,197,.6)}
 
-    /* ship */
-    .ship{position:absolute;left:50%;bottom:20%;width:min(46vw,560px);z-index:3;transform:translateX(-50%);
-      animation:sail-in 2.4s cubic-bezier(.22,.61,.36,1) both, bob 6s ease-in-out 2.4s infinite}
-    .ship svg{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 24px rgba(2,10,20,.5))}
-    @keyframes sail-in{from{transform:translateX(60vw);opacity:0}to{transform:translateX(-50%);opacity:1}}
-    @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-.4deg)}50%{transform:translateX(-50%) translateY(-9px) rotate(.4deg)}}
-    .ship .wake{opacity:.0;animation:wake 6s ease-in-out 2.6s infinite}
-    @keyframes wake{0%,100%{opacity:.15}50%{opacity:.4}}
+    /* ---------- cinematic canvas (only when motion allowed) ---------- */
+    #cine{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:none;pointer-events:none}
+    body.has-canvas #cine{display:block}
 
-    /* wave layers */
-    .waves{position:absolute;left:0;right:0;bottom:0;z-index:4;pointer-events:none}
-    .waves .layer{position:absolute;bottom:0;left:0;width:200%;height:auto}
-    .waves .l1{opacity:.9;animation:drift 13s linear infinite}
-    .waves .l2{opacity:.75;animation:drift 19s linear infinite reverse}
-    .waves .l3{opacity:.6;animation:drift 27s linear infinite}
-    @keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    /* ---------- film scaffold ---------- */
+    #film{position:relative;z-index:1}
+    .act{position:relative;min-height:150vh}
+    .act.a2{min-height:190vh}
+    .act.a3{min-height:210vh}
+    .stage{position:sticky;top:0;min-height:100vh;min-height:100dvh;height:100vh;height:100dvh;
+      display:flex;align-items:center;overflow:hidden;
+      padding:clamp(76px,13vh,120px) var(--pad) clamp(48px,9vh,90px)}
+    .stage-in{position:relative;z-index:5;width:100%;max-width:1080px;margin:0 auto;
+      opacity:1;will-change:transform,opacity}
 
-    .hero-inner{position:relative;z-index:6;max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px);width:100%}
-    .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--seafoam);margin:0 0 16px}
-    h1{font-size:clamp(32px,6.4vw,64px);line-height:1.02;letter-spacing:-.025em;margin:0 0 18px;font-weight:800;text-wrap:balance;text-shadow:0 2px 30px rgba(2,10,20,.5)}
-    h1 b{color:var(--seafoam)}
-    .lede{font-size:clamp(15px,2vw,18px);color:var(--ink-dim);max-width:56ch;margin:0;text-shadow:0 1px 12px rgba(2,10,20,.5)}
-    .tagline{margin:16px 0 0;font-style:italic;color:var(--muted);font-size:14px}
-    .meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
-    .chip{font-family:var(--mono);font-size:12px;color:var(--ink-dim);padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(8,26,44,.5);backdrop-filter:blur(6px)}
-    .chip b{color:var(--seafoam)}
-    .scrollcue{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:6;color:var(--muted);font-size:12px;letter-spacing:.1em;text-align:center;animation:cue 2.4s ease-in-out infinite}
-    .scrollcue svg{display:block;margin:6px auto 0;width:20px;height:20px}
-    @keyframes cue{0%,100%{transform:translateX(-50%) translateY(0);opacity:.65}50%{transform:translateX(-50%) translateY(6px);opacity:1}}
+    /* per-act static background (used when canvas is OFF / reduced-motion) */
+    .act.a1{background:
+      radial-gradient(58% 52% at 74% 24%,rgba(244,178,90,.30),transparent 60%),
+      radial-gradient(50% 44% at 18% 12%,rgba(63,224,197,.12),transparent 62%),
+      linear-gradient(180deg,#0a2036 0%,#0b2c47 46%,#0e3a5c 66%,#0c2f4d 100%)}
+    .act.a2{background:linear-gradient(180deg,#0c2f4d 0%,#0a2a42 50%,#082238 100%)}
+    .act.a3{background:linear-gradient(180deg,#082238 0%,#061a2b 46%,#04121e 100%)}
+    body.has-canvas .act{background:transparent}
+    body.has-canvas .svg-scene{display:none}
 
-    /* ---- menu ---- */
-    .menu-wrap{background:linear-gradient(180deg,#0c2f4d,#071523 40%);padding:clamp(40px,6vw,72px) 0}
-    .wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
-    .menu-head{margin-bottom:22px}
-    .menu-head .k{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--seafoam);margin:0 0 6px}
-    .menu-head h2{margin:0;font-size:clamp(20px,3vw,28px);font-weight:800;letter-spacing:-.02em}
-    .menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:16px}
-    .card{position:relative;display:flex;flex-direction:column;gap:11px;padding:22px 22px 20px;border-radius:18px;border:1px solid var(--line);
-      background:linear-gradient(180deg,rgba(18,56,92,.5),rgba(10,32,54,.42));text-decoration:none;color:inherit;
-      box-shadow:0 16px 40px -24px rgba(2,10,20,.85);transition:transform .22s cubic-bezier(.22,.61,.36,1),border-color .2s,box-shadow .2s}
-    .card:hover{transform:translateY(-4px);border-color:rgba(55,192,166,.42);box-shadow:0 28px 60px -26px rgba(2,10,20,.9)}
+    /* fallback SVG scenes (visible only without canvas) */
+    .svg-scene{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+    .svg-scene svg{position:absolute;display:block}
+
+    /* ---------- act 1 typography ---------- */
+    .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin:0 0 18px;text-shadow:0 0 16px rgba(63,224,197,.3)}
+    h1{font-size:clamp(34px,7.2vw,72px);line-height:1.02;letter-spacing:-.028em;margin:0 0 16px;font-weight:800;text-wrap:balance;max-width:16ch;
+      text-shadow:0 2px 34px rgba(2,10,20,.6)}
+    h1 b{color:transparent;background:linear-gradient(180deg,#7ff0dd,var(--accent));-webkit-background-clip:text;background-clip:text}
+    @supports not ((-webkit-background-clip:text) or (background-clip:text)){h1 b{color:var(--accent)}}
+    .tagline{margin:0 0 18px;font-size:clamp(15px,2.1vw,20px);font-weight:700;color:var(--ink);letter-spacing:.01em}
+    .lede{font-size:clamp(14.5px,1.9vw,17px);color:var(--ink-dim);max-width:54ch;margin:0;text-shadow:0 1px 12px rgba(2,10,20,.5)}
+    .meta-row{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}
+    .chip{font-family:var(--mono);font-size:12px;color:var(--ink-dim);padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:rgba(6,22,38,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+    .chip b{color:var(--accent)}
+
+    .scrollcue{position:absolute;left:50%;bottom:max(22px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:6;
+      color:var(--muted);font-size:11px;letter-spacing:.18em;text-transform:uppercase;text-align:center;text-decoration:none;
+      display:flex;flex-direction:column;align-items:center;gap:8px;min-height:44px;justify-content:center;padding:6px 12px}
+    .scrollcue:hover{color:var(--ink)}
+    .scrollcue:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+    .scrollcue .arw{width:16px;height:16px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);animation:bob 1.9s ease-in-out infinite}
+    @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.55}50%{transform:rotate(45deg) translate(4px,4px);opacity:1}}
+
+    /* ---------- act 2 / 3 typography ---------- */
+    .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);
+      display:flex;align-items:center;gap:11px;margin:0 0 16px}
+    .kicker::before{content:"";width:32px;height:1px;background:linear-gradient(90deg,transparent,var(--accent));box-shadow:0 0 8px rgba(63,224,197,.6)}
+    .kicker.act-hot{color:var(--act)}
+    .kicker.act-hot::before{background:linear-gradient(90deg,transparent,var(--act));box-shadow:0 0 8px rgba(233,105,78,.6)}
+    .scene-title{font-size:clamp(27px,5.4vw,54px);font-weight:800;line-height:1.08;letter-spacing:-.02em;margin:0 0 18px;max-width:18ch;text-wrap:balance;
+      text-shadow:0 2px 34px rgba(2,10,20,.6)}
+    .scene-title b{color:var(--accent)}
+    .scene-title.hot b{color:var(--act)}
+    .scene-lead{font-size:clamp(15px,2vw,18px);color:var(--ink-dim);max-width:58ch;margin:0;text-wrap:pretty;text-shadow:0 1px 12px rgba(2,10,20,.5)}
+    .scene-lead b{color:var(--ink);font-weight:700}
+    .scene-lead.sub{margin-top:20px}
+    .scroll-hint{margin:22px 0 0;font-size:13px;color:var(--muted);font-family:var(--mono);letter-spacing:.04em}
+
+    /* ---------- callout HUD (memory hit) ---------- */
+    .callout{display:inline-flex;align-items:stretch;gap:0;flex-wrap:wrap;padding:0;overflow:hidden;
+      border:1px solid rgba(233,105,78,.4);border-radius:16px;
+      background:linear-gradient(160deg,rgba(90,34,26,.34),var(--hud-bg));
+      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      box-shadow:inset 0 1px 0 rgba(255,200,180,.06),0 18px 50px rgba(2,12,20,.45),0 0 0 1px rgba(233,105,78,.1)}
+    .co-cell{display:flex;flex-direction:column;gap:5px;padding:16px 22px}
+    .co-k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+    .co-v{font-family:var(--mono);font-size:clamp(26px,4.6vw,40px);font-weight:800;line-height:1;letter-spacing:-.01em}
+    .co-v.hot{color:var(--act);text-shadow:0 0 26px rgba(233,105,78,.4)}
+    .co-sep{width:1px;background:linear-gradient(180deg,transparent,var(--line),transparent);margin:12px 0}
+    .co-badge{align-self:flex-start;font-family:var(--mono);font-size:13px;font-weight:800;color:#ffd8cd;
+      background:rgba(233,105,78,.18);border:1px solid rgba(233,105,78,.5);padding:6px 12px;border-radius:999px;
+      box-shadow:0 0 0 4px rgba(233,105,78,.08)}
+    @media(max-width:560px){
+      .callout{width:100%}
+      .co-cell{flex:1 1 42%;padding:13px 16px}
+      .co-sep{display:none}
+    }
+
+    /* ---------- dock (scene 4: surface + fleet + menu) ---------- */
+    .dock{position:relative;z-index:1;background:linear-gradient(180deg,#0c2f4d 0%,#08243c 30%,#04101c 100%);
+      padding:clamp(56px,9vw,110px) 0 0}
+    .wrap{max-width:1120px;margin:0 auto;padding:0 var(--pad)}
+    .dock-head{margin-bottom:30px}
+    .dock-head h2{margin:8px 0 20px;font-size:clamp(24px,4vw,38px);font-weight:800;letter-spacing:-.02em;
+      background:linear-gradient(176deg,#fff,#eaf4fb 46%,#bfe6e0);-webkit-background-clip:text;background-clip:text;color:transparent}
+    @supports not ((-webkit-background-clip:text) or (background-clip:text)){.dock-head h2{color:var(--ink)}}
+    .fleet-stat{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+    .fleet-stat .fs{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-dim);
+      border:1px solid var(--line);background:var(--hud-bg);border-radius:999px;padding:8px 15px;min-height:40px}
+    .fleet-stat .fs b{font-family:var(--mono);font-size:19px;font-weight:800;color:var(--ink)}
+    .fleet-stat .fs.total{background:linear-gradient(160deg,rgba(63,224,197,.12),var(--hud-bg));border-color:var(--line-lit)}
+    .dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:0 0 auto}
+    .dot.n{background:var(--normal);box-shadow:0 0 0 3px rgba(47,176,154,.16),0 0 10px rgba(47,176,154,.5)}
+    .dot.w{background:var(--watch);box-shadow:0 0 0 3px rgba(244,167,43,.16),0 0 10px rgba(244,167,43,.5)}
+    .dot.a{background:var(--act);box-shadow:0 0 0 3px rgba(233,105,78,.16),0 0 12px rgba(233,105,78,.6)}
+
+    .menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:16px;margin-top:6px}
+    .card{position:relative;display:flex;flex-direction:column;gap:11px;padding:22px 22px 20px;border-radius:18px;
+      border:1px solid var(--line);background:linear-gradient(160deg,var(--hud-bg-2),var(--hud-bg));
+      backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);text-decoration:none;color:inherit;min-height:44px;
+      box-shadow:inset 0 1px 0 rgba(180,220,240,.05),0 16px 40px -24px rgba(2,10,20,.85);
+      transition:transform .24s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s}
+    .card:hover{transform:translateY(-4px);border-color:var(--line-lit);box-shadow:inset 0 1px 0 rgba(180,220,240,.08),0 28px 60px -26px rgba(2,10,20,.9),0 0 0 1px rgba(63,224,197,.08)}
     .card:active{transform:translateY(-1px)}
-    .card:focus-visible{outline:2px solid var(--seafoam);outline-offset:3px}
-    .card .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(150deg,var(--teal),var(--seafoam))}
+    .card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+    .card .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(150deg,var(--teal),var(--normal))}
     .card .ic svg{width:24px;height:24px}
     .card .ic.b2{background:linear-gradient(150deg,#5468c9,#3BA0C4)}
     .card .ic.b3{background:linear-gradient(150deg,#2f9e86,#37C0A6)}
     .card .ic.b4{background:linear-gradient(150deg,#c98a3b,#F4A72B)}
     .card h3{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
     .card p{margin:0;font-size:13.5px;color:var(--ink-dim);line-height:1.6}
-    .card .go{margin-top:auto;font-size:13px;font-weight:700;color:var(--seafoam);display:inline-flex;align-items:center;gap:6px}
+    .card .go{margin-top:auto;font-size:13px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:6px}
     .badge{font-size:10.5px;font-weight:700;font-family:var(--mono);padding:2px 8px;border-radius:6px}
-    .badge.live{color:var(--seafoam);background:rgba(55,192,166,.16);border:1px solid rgba(55,192,166,.4)}
-    .badge.new{color:var(--amber);background:rgba(244,167,43,.15);border:1px solid rgba(244,167,43,.4)}
+    .badge.live{color:var(--accent);background:rgba(63,224,197,.14);border:1px solid rgba(63,224,197,.4)}
+    .badge.new{color:var(--watch);background:rgba(244,167,43,.15);border:1px solid rgba(244,167,43,.4)}
 
-<<<<<<< Updated upstream
-    footer{padding:26px 0 60px;color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
-    footer a{color:var(--ink-dim)}
-=======
     footer{padding:30px 0 max(48px,env(safe-area-inset-bottom));color:var(--muted);font-size:12.5px;
       display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;margin-top:40px;border-top:1px solid var(--line)}
     footer a{color:var(--ink-dim);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
     footer a:hover{color:var(--ink)}
     footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
->>>>>>> Stashed changes
 
+    /* ---------- scroll-reveal (dock items) ---------- */
+    .reveal{opacity:0;transform:translateY(26px) scale(.995);filter:blur(5px);
+      transition:opacity .8s ease,transform .9s cubic-bezier(.19,1,.22,1),filter .8s ease}
+    .reveal.in{opacity:1;transform:none;filter:none}
+    .reveal.d1{transition-delay:.06s}.reveal.d2{transition-delay:.14s}
+    .reveal.d3{transition-delay:.22s}.reveal.d4{transition-delay:.3s}
+
+    /* ---------- reduced motion: elegant static, everything visible ---------- */
     @media(prefers-reduced-motion:reduce){
       html{scroll-behavior:auto}
-      .ship{animation:none;transform:translateX(-50%)}
-      .waves .layer{animation:none}
-      .scrollcue{animation:none}
-      *{transition:none!important}
+      *{animation:none!important;transition:none!important}
+      .scrollcue .arw{animation:none!important}
+      .reveal{opacity:1!important;transform:none!important;filter:none!important}
+      .stage-in{opacity:1!important;transform:none!important}
+      .stage{position:relative;min-height:auto;height:auto;padding-top:clamp(90px,16vh,140px)}
+      .act,.act.a2,.act.a3{min-height:auto}
     }
   </style>
 </head>
 <body>
-  <p class="sr-only">FleetMind 首頁：沈浸式入口，通往決策看板、AWS 架構藍圖、航程 Demo 與後台設定。</p>
+  <p class="sr-only">FleetMind 首頁：從破曉海平線、船駛入偵測、下潛看見船殼污損、到浮出換你決策的沈浸式入口，通往決策看板、AWS 架構藍圖、航程 Demo 與後台設定。數字來自計算，語言來自 AI，決策留給人。</p>
 
   <nav class="fm-topnav" aria-label="主選單">
-    <a class="fm-brand" href="/"><svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
+    <a class="fm-brand" href="/"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
     <div class="fm-links">
       <a href="/" aria-current="page">首頁</a>
       <a href="/dashboard.html">決策看板</a>
       <a href="/voyage.html">航程 Demo</a>
+      <a href="/map.html">地圖</a>
       <a href="/architecture.html">AWS 架構</a>
+      <a href="/deck.html">簡報</a>
       <a href="/admin.html">後台</a>
     </div>
   </nav>
 
-  <section class="sea" aria-label="船舶駛回港的沈浸式開場">
-    <div class="sky-glow" aria-hidden="true"></div>
-    <div class="stars" aria-hidden="true"></div>
+  <div class="rail" aria-hidden="true"><i class="rail-fill"></i></div>
+  <canvas id="cine" aria-hidden="true"></canvas>
 
-    <div class="ship" aria-hidden="true">
-      <svg viewBox="0 0 560 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- hull -->
-        <path d="M60 150 H500 L470 205 Q465 214 452 214 H120 Q104 214 96 202 Z" fill="#0b2233" stroke="#16466F" stroke-width="2"/>
-        <rect x="60" y="139" width="440" height="14" rx="3" fill="#123f39"/>
-        <!-- containers -->
-        <g>
-          <rect x="120" y="96" width="52" height="44" rx="2" fill="#2E8DB0"/>
-          <rect x="176" y="96" width="52" height="44" rx="2" fill="#37C0A6"/>
-          <rect x="232" y="86" width="52" height="54" rx="2" fill="#F4A72B"/>
-          <rect x="288" y="96" width="52" height="44" rx="2" fill="#3BA0C4"/>
-          <rect x="344" y="104" width="52" height="36" rx="2" fill="#2f9e86"/>
-          <rect x="146" y="70" width="52" height="26" rx="2" fill="#1C7293"/>
-          <rect x="258" y="60" width="52" height="26" rx="2" fill="#EC7358"/>
-        </g>
-        <!-- bridge -->
-        <rect x="408" y="86" width="60" height="54" rx="3" fill="#0E2B49" stroke="#2E8DB0" stroke-width="1.5"/>
-        <rect x="418" y="96" width="10" height="9" fill="#8AA6BF"/><rect x="434" y="96" width="10" height="9" fill="#8AA6BF"/><rect x="450" y="96" width="10" height="9" fill="#8AA6BF"/>
-        <rect x="455" y="58" width="6" height="30" fill="#16466F"/>
-        <!-- waterline shimmer -->
-        <path class="wake" d="M20 178 Q60 172 96 180" stroke="#37C0A6" stroke-width="3" stroke-linecap="round" fill="none"/>
-      </svg>
-    </div>
-
-    <div class="waves" aria-hidden="true">
-      <svg class="layer l3" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 60 C180 30 360 90 720 60 C1080 30 1260 90 1440 60 V120 H0 Z" fill="#0e3a5c"/></svg>
-      <svg class="layer l2" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 70 C240 40 420 100 720 72 C1020 44 1200 100 1440 72 V120 H0 Z" fill="#0b2f4d"/></svg>
-      <svg class="layer l1" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 84 C220 58 460 108 720 86 C980 64 1220 108 1440 86 V120 H0 Z" fill="#081f34"/></svg>
-    </div>
-
-    <div class="hero-inner">
-      <p class="eyebrow">Yang Ming · AWS Summit Hackathon</p>
-      <h1>一艘船正悄悄<br>多燒<b>油</b>——我們看得見</h1>
-      <p class="lede">FleetMind 依 ISO 19030（k = FOC / STW³）從 15 艘同型船、5 年正午報表偵測船體污損造成的 Speed Loss，把「該不該安排水下檢查與清洗」變成有圖有據的決策。往下選一個入口進入 Demo。</p>
-      <p class="tagline">數字來自計算，語言來自 AI，決策留給人。</p>
-      <div class="meta-row">
-        <span class="chip">帳號 <b>516665228894</b></span>
-        <span class="chip">Region <b>us-east-1</b></span>
-        <span class="chip">運算 <b>ECS Fargate</b></span>
-        <span class="chip">AI <b>Amazon Bedrock</b></span>
+  <main id="film">
+    <!-- ACT 1 · 破曉海平線 -->
+    <section class="act a1" data-act="1" aria-label="破曉的海平線">
+      <div class="stage">
+        <div class="stage-in">
+          <p class="eyebrow">FLEETMIND · 陽明海運 × AWS Summit Hackathon</p>
+          <h1>破曉的海平線上，看得見<b>看不見</b>的油耗</h1>
+          <p class="tagline">數字來自計算，語言來自 AI，決策留給人。</p>
+          <p class="lede">依 ISO 19030（k = FOC ÷ STW³）從 15 艘同型船、5 年正午報表，偵測船體污損造成的 Speed Loss——把「該不該安排水下檢查與清洗」變成有圖有據的決策。</p>
+          <div class="meta-row">
+            <span class="chip">帳號 <b>516665228894</b></span>
+            <span class="chip">Region <b>us-east-1</b></span>
+            <span class="chip">運算 <b>ECS Fargate</b></span>
+            <span class="chip">AI <b>Amazon Bedrock</b></span>
+          </div>
+        </div>
+        <a class="scrollcue" href="#detect" aria-label="向下捲動探索">向下捲動<span class="arw" aria-hidden="true"></span></a>
       </div>
-    </div>
+    </section>
 
-    <a class="scrollcue" href="#menu" aria-label="往下探索">探索<svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-  </section>
+    <!-- ACT 2 · 船駛入 / 偵測 -->
+    <section class="act a2" id="detect" data-act="2" aria-label="一艘船駛入偵測範圍">
+      <div class="svg-scene" aria-hidden="true">
+        <svg viewBox="0 0 640 260" width="min(84vw,640px)" style="left:50%;bottom:14%;transform:translateX(-50%)" preserveAspectRatio="xMidYMid meet">
+          <path d="M70 168 H540 L508 220 Q503 228 490 228 H126 Q110 228 102 216 Z" fill="#0b2233" stroke="#16466F" stroke-width="2"/>
+          <rect x="70" y="156" width="470" height="14" rx="3" fill="#123f39"/>
+          <rect x="130" y="112" width="52" height="44" rx="2" fill="#2E8DB0"/><rect x="186" y="112" width="52" height="44" rx="2" fill="#37C0A6"/>
+          <rect x="242" y="102" width="52" height="54" rx="2" fill="#F4A72B"/><rect x="298" y="112" width="52" height="44" rx="2" fill="#3BA0C4"/>
+          <rect x="354" y="120" width="52" height="36" rx="2" fill="#2f9e86"/><rect x="156" y="86" width="52" height="26" rx="2" fill="#1C7293"/>
+          <rect x="268" y="76" width="52" height="26" rx="2" fill="#EC7358"/>
+          <rect x="418" y="102" width="60" height="54" rx="3" fill="#0E2B49" stroke="#2E8DB0" stroke-width="1.5"/>
+          <rect x="428" y="112" width="10" height="9" fill="#8AA6BF"/><rect x="444" y="112" width="10" height="9" fill="#8AA6BF"/><rect x="460" y="112" width="10" height="9" fill="#8AA6BF"/>
+          <path d="M0 210 Q160 200 320 210 T640 210" stroke="#2E8DB0" stroke-width="2" fill="none" opacity=".5"/>
+        </svg>
+      </div>
+      <div class="stage">
+        <div class="stage-in">
+          <p class="kicker">偵測 · DETECTION</p>
+          <h2 class="scene-title">一艘船，正駛入我們的<b>雷達</b></h2>
+          <p class="scene-lead">同型船 15 艘、5 年每日正午報表逐一比對。當航速修正後的燃油係數 <b>k</b> 悄悄抬頭，代表船殼正在長「鬍子」——阻力上升、油耗上升，肉眼卻看不見。</p>
+          <p class="scroll-hint">繼續下潛，看看水線之下發生什麼事 ↓</p>
+        </div>
+      </div>
+    </section>
 
-  <div class="menu-wrap" id="menu">
+    <!-- ACT 3 · 潛入水下 / 記憶點 -->
+    <section class="act a3" id="subsea" data-act="3" aria-label="下潛看見船殼污損">
+      <div class="svg-scene" aria-hidden="true">
+        <svg viewBox="0 0 640 300" width="min(92vw,700px)" style="left:50%;top:34%;transform:translateX(-50%)" preserveAspectRatio="xMidYMid meet">
+          <rect x="0" y="0" width="640" height="14" fill="#7d2a26"/>
+          <path d="M0 14 H640 V210 Q320 300 0 210 Z" fill="#08202f"/>
+          <g fill="#4a6632" opacity=".7">
+            <ellipse cx="120" cy="90" rx="16" ry="10"/><ellipse cx="360" cy="120" rx="20" ry="12"/><ellipse cx="520" cy="80" rx="14" ry="9"/>
+            <ellipse cx="240" cy="150" rx="18" ry="11"/><ellipse cx="440" cy="170" rx="22" ry="13"/><ellipse cx="80" cy="150" rx="12" ry="8"/>
+          </g>
+          <g fill="#684e2a" opacity=".65">
+            <ellipse cx="300" cy="70" rx="14" ry="8"/><ellipse cx="180" cy="120" rx="16" ry="10"/><ellipse cx="480" cy="140" rx="18" ry="11"/><ellipse cx="360" cy="200" rx="20" ry="12"/>
+          </g>
+        </svg>
+      </div>
+      <div class="stage">
+        <div class="stage-in">
+          <p class="kicker act-hot">水下 · SUBSEA</p>
+          <h2 class="scene-title hot">這艘船正悄悄<b>多燒油</b>——我們看得見</h2>
+          <div class="callout" role="group" aria-label="S11 速度損失警示：Speed Loss 21.8%，已超門檻">
+            <div class="co-cell"><span class="co-k">船舶</span><span class="co-v">S11</span></div>
+            <div class="co-sep" aria-hidden="true"></div>
+            <div class="co-cell"><span class="co-k">Speed Loss</span><span class="co-v hot">21.8%</span></div>
+            <div class="co-sep" aria-hidden="true"></div>
+            <div class="co-cell"><span class="co-k">狀態</span><span class="co-badge">已超門檻</span></div>
+          </div>
+          <p class="scene-lead sub">船體污損讓 S11 的速度損失達 <b>21.8%</b>，越過行動門檻。系統把這串冷冰冰的數字，翻成一句人看得懂的養護建議。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ACT 4 · 浮出水面 / 艦隊與入口 -->
+  <section class="dock" id="menu" aria-label="浮出水面，功能入口">
     <div class="wrap">
-      <div class="menu-head">
-        <p class="k">Demo 入口</p>
-        <h2>四個入口，一套決策系統</h2>
+      <div class="dock-head reveal">
+        <p class="kicker">艦隊 · FLEET</p>
+        <h2>浮出水面，換你決策</h2>
+        <div class="fleet-stat" aria-label="艦隊狀態：15 艘，12 正常、2 注意、1 行動">
+          <span class="fs total"><b>15</b>&nbsp;艘</span>
+          <span class="fs"><i class="dot n" aria-hidden="true"></i><b>12</b>&nbsp;正常</span>
+          <span class="fs"><i class="dot w" aria-hidden="true"></i><b>2</b>&nbsp;注意</span>
+          <span class="fs"><i class="dot a" aria-hidden="true"></i><b>1</b>&nbsp;行動</span>
+        </div>
       </div>
-      <main class="menu" aria-label="功能入口">
-        <a class="card" href="/dashboard.html">
+
+      <div class="menu" role="navigation" aria-label="功能入口">
+        <a class="card reveal d1" href="/dashboard.html">
           <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 13h4l2 5 4-12 2 7h6" stroke="#052029" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <h3>決策看板 <span class="badge live">LIVE</span></h3>
           <p>15 艘船即時狀態燈（🟢🟡🔴）、可調告警門檻、預估跨越天數與分級養護建議（UWILD／船體清洗），含 AI 決策簡報。</p>
           <span class="go">進入決策看板 →</span>
         </a>
 
-        <a class="card" href="/voyage.html">
+        <a class="card reveal d2" href="/voyage.html">
           <span class="ic b3" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 17c2 1.4 3.5 1.4 5.5 0s3.5-1.4 5.5 0 3.5 1.4 5 0" stroke="#052029" stroke-width="1.8" stroke-linecap="round"/><path d="M12 3l5 9H7z" fill="#052029"/></svg></span>
           <h3>航程沈浸 Demo <span class="badge new">NEW</span></h3>
           <p>一艘船從入港、靠泊、水下事件、清洗前後對照、離港、航行遙測、衰退撞門檻到決策建議——全程真實數據驅動的 scroll 敘事。</p>
           <span class="go">開始航程 →</span>
         </a>
 
-        <a class="card" href="/architecture.html">
+        <a class="card reveal d3" href="/architecture.html">
           <span class="ic b2" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="7" height="7" rx="1.5" stroke="#eaf6fb" stroke-width="1.8"/><rect x="14" y="4" width="7" height="7" rx="1.5" stroke="#eaf6fb" stroke-width="1.8"/><rect x="8.5" y="14" width="7" height="7" rx="1.5" stroke="#eaf6fb" stroke-width="1.8"/><path d="M6.5 11v1.5M17.5 11v1.5M12 12.5V14" stroke="#eaf6fb" stroke-width="1.6"/></svg></span>
           <h3>AWS 架構藍圖 <span class="badge live">LIVE</span></h3>
           <p>現行已上線的 ECS Fargate + ALB + Bedrock + SNS 架構，加上 Serverless／App Runner／EC2／完整資料管線五種方案的圖解與取捨比較。</p>
           <span class="go">看架構圖 →</span>
         </a>
 
-        <a class="card" href="/admin.html">
+        <a class="card reveal d4" href="/admin.html">
           <span class="ic b4" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#052029" stroke-width="1.8"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke="#052029" stroke-width="1.6" stroke-linecap="round"/></svg></span>
           <h3>後台設定 <span class="badge new">NEW</span></h3>
           <p>門檻與決策參數、告警通道與收件人（Email／SNS／SES／Webhook）、燃料類型對應、資料來源與系統介接、正午報表上傳。</p>
           <span class="go">開啟後台 →</span>
         </a>
-      </main>
+      </div>
 
       <footer>
         <span>FleetMind · 陽明海運 AI 船舶效能節能決策支援系統</span>
@@ -223,6 +339,440 @@
         <span style="margin-left:auto;font-family:var(--mono)">ISO 19030 · us-east-1</span>
       </footer>
     </div>
-  </div>
+  </section>
+
+  <script>
+  (function(){
+    "use strict";
+    var reduceMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches:false};
+    var reveals = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+
+    function revealAll(){ for(var i=0;i<reveals.length;i++){ reveals[i].classList.add('in'); } }
+
+    // --- reveal-on-scroll for dock items (cheap, always on) ---
+    if('IntersectionObserver' in window){
+      var io = new IntersectionObserver(function(entries){
+        for(var i=0;i<entries.length;i++){
+          if(entries[i].isIntersecting){ entries[i].target.classList.add('in'); io.unobserve(entries[i].target); }
+        }
+      }, {threshold:0.2, rootMargin:'0px 0px -8% 0px'});
+      for(var r=0;r<reveals.length;r++){ io.observe(reveals[r]); }
+    } else {
+      revealAll();
+    }
+
+    // Reduced motion OR no canvas support -> static elegant composition, no film engine.
+    var canvas = document.getElementById('cine');
+    var ctx = (canvas && canvas.getContext) ? canvas.getContext('2d') : null;
+    if(reduceMQ.matches || !ctx){ revealAll(); return; }
+
+    try { runFilm(canvas, ctx); }
+    catch(err){
+      // Any failure -> degrade gracefully: hide canvas, show all content.
+      try { document.body.classList.remove('has-canvas'); } catch(e){}
+      revealAll();
+    }
+
+    // ---------------------------------------------------------------
+    function runFilm(canvas, ctx){
+      document.body.classList.add('has-canvas');
+
+      var rail = document.querySelector('.rail-fill');
+      var film = document.getElementById('film');
+      var dock = document.getElementById('menu');
+      var acts = Array.prototype.slice.call(document.querySelectorAll('.act'));
+      var actIn = acts.map(function(a){ return a.querySelector('.stage-in'); });
+
+      var W=0, H=0, DPR=1, sized=false;
+      var stars=[], bubbles=[], fouls=[];
+      var y0=0, y1=1, actBox=[];
+      var running=true, needMeasure=true, started=false;
+      var t0=0, last=0;
+
+      // ---- math helpers ----
+      function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+      function clamp01(v){ return v<0?0:(v>1?1:v); }
+      function smooth(x){ x=clamp01(x); return x*x*(3-2*x); }
+      function lerp(a,b,t){ return a+(b-a)*t; }
+      function mix(c1,c2,t,a){
+        var r=Math.round(lerp(c1[0],c2[0],t)), g=Math.round(lerp(c1[1],c2[1],t)), b=Math.round(lerp(c1[2],c2[2],t));
+        return 'rgba('+r+','+g+','+b+','+(a==null?1:a)+')';
+      }
+
+      // ---- sizing + particles ----
+      function size(){
+        DPR = Math.min(window.devicePixelRatio||1, 2);
+        W = window.innerWidth || document.documentElement.clientWidth || 360;
+        H = window.innerHeight || document.documentElement.clientHeight || 640;
+        canvas.width = Math.max(1, Math.round(W*DPR));
+        canvas.height = Math.max(1, Math.round(H*DPR));
+        canvas.style.width = W+'px';
+        canvas.style.height = H+'px';
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+        buildParticles();
+        sized = true;
+      }
+      function buildParticles(){
+        stars = [];
+        var n = Math.round(clamp(W/9, 42, 150));
+        for(var i=0;i<n;i++){
+          stars.push({ x:Math.random()*W, y:Math.random()*H*0.52,
+            r:Math.random()*1.3+0.35, tw:Math.random()*6.283, sp:Math.random()*1.4+0.4 });
+        }
+        bubbles = [];
+        var m = Math.round(clamp(W/16, 22, 80));
+        for(var j=0;j<m;j++){
+          bubbles.push({ x:Math.random()*W, y:Math.random()*H, r:Math.random()*2.4+0.7,
+            sp:Math.random()*46+18, ph:Math.random()*6.283, drift:Math.random()*0.6+0.2 });
+        }
+        if(!fouls.length){
+          for(var k=0;k<130;k++){
+            fouls.push({ x:Math.random()*2-1, y:Math.random(), r:Math.random()*0.55+0.25, c:Math.random() });
+          }
+        }
+      }
+
+      // ---- cache scroll offsets (no layout reads inside the loop) ----
+      function measure(){
+        var sc = window.scrollY || window.pageYOffset || 0;
+        y0 = film.getBoundingClientRect().top + sc;
+        y1 = dock.getBoundingClientRect().top + sc;
+        if(y1 - y0 < 1) y1 = y0 + 1;
+        actBox = acts.map(function(a){ var rr=a.getBoundingClientRect(); return { top:rr.top+sc, h:rr.height }; });
+      }
+
+      // =================== render one frame ===================
+      function render(p, t, dt){
+        ctx.clearRect(0,0,W,H);
+
+        var bright = smooth(clamp01(p/0.16));
+        var starA  = clamp01(1 - p/0.30);
+        var shipIn = smooth(clamp01((p-0.22)/0.18));
+        var sonar  = clamp01((p-0.30)/0.06) * (1 - clamp01((p-0.46)/0.06));
+        var dive   = smooth(clamp01((p-0.58)/0.24));
+        var rise   = smooth(clamp01((p-0.86)/0.14));
+        var depth  = dive * (1 - rise);
+        var foul   = smooth(clamp01((p-0.60)/0.18));
+
+        var surfaceRest = H*0.60;
+        var surfaceY = surfaceRest - depth*H*0.72;
+
+        // ship anchor (waterline) — stays on-screen across aspect ratios
+        var bob = Math.sin(t*0.9) * 6 * (1-depth);
+        var enterX = (1-shipIn) * W*0.72;
+        var cx = W*0.5 + enterX;
+        var shipY = lerp(surfaceRest, H*0.24, depth) + bob;
+        var s0 = clamp(W/780, 0.58, 1.12);
+        var s1 = (W/(2*210)) * 1.2;
+        var scale = lerp(s0, Math.max(s1, 1.7), depth);
+
+        drawBackdrop(depth);
+        if(starA > 0.01) drawStars(t, starA*(1-depth));
+        if((1-depth)*bright > 0.01) drawSun(surfaceY, (1-depth)*bright);
+        if(depth > 0.01) drawRays(t, depth, surfaceY);
+        drawSea(t, surfaceY, depth);
+        drawShip(cx, shipY, scale, shipIn, depth, foul);
+        if(sonar > 0.01) drawSonar(cx, shipY, scale, t, sonar);
+        if(depth > 0.01) drawBubbles(t, dt, depth);
+        drawVignette(depth);
+      }
+
+      function drawBackdrop(depth){
+        var g = ctx.createLinearGradient(0,0,0,H);
+        g.addColorStop(0,   mix([10,32,54],[3,18,32], depth));
+        g.addColorStop(0.5, mix([13,52,86],[4,24,40], depth));
+        g.addColorStop(1,   mix([7,30,50], [2,13,23], depth));
+        ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+      }
+
+      function drawStars(t, a){
+        ctx.save();
+        ctx.fillStyle = '#dff2ff';
+        for(var i=0;i<stars.length;i++){
+          var s = stars[i];
+          var al = a * (0.32 + 0.68 * (0.5 + 0.5*Math.sin(t*s.sp + s.tw)));
+          if(al <= 0.01) continue;
+          ctx.globalAlpha = al;
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.2832); ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawSun(surfaceY, a){
+        var sx = W*0.72, sy = surfaceY - H*0.15;
+        var rad = Math.max(70, H*0.44);
+        var g = ctx.createRadialGradient(sx, sy, 0, sx, sy, rad);
+        g.addColorStop(0,    'rgba(255,222,168,'+(0.85*a)+')');
+        g.addColorStop(0.28, 'rgba(246,178,90,'+(0.42*a)+')');
+        g.addColorStop(1,    'rgba(246,178,90,0)');
+        ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+        ctx.beginPath();
+        ctx.arc(sx, sy, Math.max(14, H*0.032), 0, 6.2832);
+        ctx.fillStyle = 'rgba(255,230,186,'+(0.82*a)+')'; ctx.fill();
+        // warm reflection down onto the water
+        if(surfaceY < H && surfaceY > -40){
+          var rg = ctx.createLinearGradient(0, surfaceY, 0, Math.min(H, surfaceY + H*0.4));
+          rg.addColorStop(0, 'rgba(255,196,120,'+(0.16*a)+')');
+          rg.addColorStop(1, 'rgba(255,196,120,0)');
+          ctx.fillStyle = rg;
+          ctx.fillRect(sx - W*0.14, surfaceY, W*0.28, H*0.4);
+        }
+      }
+
+      function drawRays(t, depth, surfaceY){
+        // depth darkening veil
+        ctx.fillStyle = 'rgba(3,24,40,'+(0.42*depth)+')';
+        ctx.fillRect(0,0,W,H);
+        // god rays from the surface (above)
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        var top = Math.max(surfaceY, -60);
+        for(var i=0;i<5;i++){
+          var bx = ((i/4)*1.2 - 0.1)*W + Math.sin(t*0.2 + i)*32;
+          var w = 34 + i*10;
+          ctx.beginPath();
+          ctx.moveTo(bx - w*0.25, top);
+          ctx.lineTo(bx + w*0.25, top);
+          ctx.lineTo(bx + w*1.7, H);
+          ctx.lineTo(bx - w*1.7, H);
+          ctx.closePath();
+          var gg = ctx.createLinearGradient(0, Math.max(surfaceY,0), 0, H);
+          gg.addColorStop(0, 'rgba(120,224,210,'+(0.08*depth)+')');
+          gg.addColorStop(1, 'rgba(120,224,210,0)');
+          ctx.fillStyle = gg; ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawSea(t, surfaceY, depth){
+        if(surfaceY > H) return;
+        var amp = 6*(1-depth) + 2;
+        var g = ctx.createLinearGradient(0, surfaceY, 0, H);
+        g.addColorStop(0, mix([8,42,66],[3,20,34], depth));
+        g.addColorStop(1, mix([4,22,38],[1,11,21], depth));
+        ctx.beginPath();
+        ctx.moveTo(0, surfaceY);
+        for(var x=0;x<=W;x+=14){
+          var yy = surfaceY + Math.sin(x*0.02 + t*1.2)*amp*0.5 + Math.sin(x*0.006 - t*0.7)*amp;
+          ctx.lineTo(x, yy);
+        }
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+        ctx.fillStyle = g; ctx.fill();
+        // surface glint
+        if(surfaceY > -20 && surfaceY < H){
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = 'rgba(150,230,220,'+(0.22*(1-depth*0.6))+')';
+          ctx.lineWidth = 2; ctx.beginPath();
+          for(var x2=0;x2<=W;x2+=14){
+            var yy2 = surfaceY + Math.sin(x2*0.02 + t*1.2)*amp*0.5;
+            if(x2===0) ctx.moveTo(x2, yy2); else ctx.lineTo(x2, yy2);
+          }
+          ctx.stroke(); ctx.restore();
+        }
+      }
+
+      function drawShip(cx, cy, scale, shipIn, depth, foul){
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(scale, scale);
+        drawHullBelly(foul);
+        var topA = clamp01(1 - depth*1.2);
+        if(topA > 0.01){
+          ctx.globalAlpha = topA;
+          drawTopside();
+          ctx.globalAlpha = 1;
+        }
+        ctx.restore();
+        // foam at the waterline (screen space)
+        if(depth < 0.5){
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = (1-depth*2) * (0.35 + 0.25*shipIn);
+          var fw = 150*scale;
+          var fg = ctx.createLinearGradient(cx-fw, 0, cx+fw, 0);
+          fg.addColorStop(0,'rgba(150,230,220,0)');
+          fg.addColorStop(0.5,'rgba(190,240,232,0.5)');
+          fg.addColorStop(1,'rgba(150,230,220,0)');
+          ctx.fillStyle = fg;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, fw, 8*scale, 0, 0, 6.2832);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function drawHullBelly(foul){
+        var L = 210, hullH = 560;
+        ctx.beginPath();
+        ctx.moveTo(-L, 0);
+        ctx.lineTo(L, 0);
+        ctx.quadraticCurveTo(L+18, hullH*0.5, 0, hullH);
+        ctx.quadraticCurveTo(-L-18, hullH*0.5, -L, 0);
+        ctx.closePath();
+        var g = ctx.createLinearGradient(0, 0, 0, hullH);
+        g.addColorStop(0, '#0b2536'); g.addColorStop(0.5, '#08202f'); g.addColorStop(1, '#05161f');
+        ctx.fillStyle = g; ctx.fill();
+
+        ctx.save();
+        ctx.clip();
+        // red anti-fouling boot-top just under the waterline
+        ctx.fillStyle = '#7d2a26'; ctx.fillRect(-L-20, 0, 2*L+40, 16);
+        ctx.fillStyle = 'rgba(210,120,90,0.5)'; ctx.fillRect(-L-20, 14, 2*L+40, 3);
+        // hull plating lines
+        ctx.strokeStyle = 'rgba(120,170,200,0.06)'; ctx.lineWidth = 1;
+        for(var y=44;y<hullH;y+=46){ ctx.beginPath(); ctx.moveTo(-L-20, y); ctx.lineTo(L+20, y); ctx.stroke(); }
+        // biofouling — denser toward the keel
+        if(foul > 0.01){
+          for(var i=0;i<fouls.length;i++){
+            var f = fouls[i];
+            var fy = 18 + f.y*(hullH-18);
+            var fx = f.x*(L-6);
+            var col = f.c < 0.55 ? [74,102,50] : [104,80,42];
+            var a = (0.16 + f.c*0.5) * foul * (0.35 + f.y*0.9);
+            ctx.fillStyle = 'rgba('+col[0]+','+col[1]+','+col[2]+','+a.toFixed(3)+')';
+            ctx.beginPath();
+            ctx.ellipse(fx, fy, f.r*13, f.r*9, 0, 0, 6.2832);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+        // rim light along the waterline
+        ctx.strokeStyle = 'rgba(150,230,220,0.12)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(L, 0); ctx.stroke();
+      }
+
+      function drawTopside(){
+        // above-water hull (freeboard)
+        ctx.beginPath();
+        ctx.moveTo(-200, 0); ctx.lineTo(232, 0); ctx.lineTo(248, -30); ctx.lineTo(-176, -30); ctx.closePath();
+        var hg = ctx.createLinearGradient(0, -30, 0, 0);
+        hg.addColorStop(0, '#123a52'); hg.addColorStop(1, '#0a2436');
+        ctx.fillStyle = hg; ctx.fill();
+        ctx.lineWidth = 1.4; ctx.strokeStyle = '#1c5680'; ctx.stroke();
+        // deck strip
+        ctx.fillStyle = '#0e3330'; ctx.fillRect(-176, -34, 424, 6);
+        // container rows
+        var cols = [[-150,'#2E8DB0'],[-104,'#37C0A6'],[-58,'#F4A72B'],[-12,'#3BA0C4'],[34,'#2f9e86'],[80,'#EC7358'],[126,'#2E8DB0'],[172,'#37C0A6']];
+        for(var i=0;i<cols.length;i++){ ctx.fillStyle = cols[i][1]; ctx.fillRect(cols[i][0], -70, 42, 36); }
+        var c2 = [[-104,'#1C7293'],[-12,'#F4A72B'],[80,'#EC7358'],[126,'#37C0A6']];
+        for(var j=0;j<c2.length;j++){ ctx.fillStyle = c2[j][1]; ctx.fillRect(c2[j][0], -94, 42, 24); }
+        // bridge (aft) + windows + mast
+        ctx.fillStyle = '#0E2B49'; ctx.fillRect(-176, -96, 54, 62);
+        ctx.strokeStyle = '#2E8DB0'; ctx.lineWidth = 1.2; ctx.strokeRect(-176, -96, 54, 62);
+        ctx.fillStyle = '#9fc0d8';
+        ctx.fillRect(-168, -88, 9, 8); ctx.fillRect(-155, -88, 9, 8); ctx.fillRect(-142, -88, 9, 8);
+        ctx.fillStyle = '#16466F'; ctx.fillRect(-150, -120, 5, 26);
+      }
+
+      function drawSonar(cx, cy, scale, t, a){
+        var ox = cx - 150*scale, oy = cy - 60*scale;
+        var maxR = Math.max(W, H) * 0.5;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for(var i=0;i<3;i++){
+          var pr = ((t*0.35 + i/3) % 1);
+          ctx.beginPath();
+          ctx.arc(ox, oy, pr*maxR, 0, 6.2832);
+          ctx.strokeStyle = 'rgba(63,224,197,'+(a*(1-pr)*0.5).toFixed(3)+')';
+          ctx.lineWidth = 2; ctx.stroke();
+        }
+        var ang = (t*0.9) % 6.2832;
+        var gr = ctx.createRadialGradient(ox, oy, 0, ox, oy, maxR*0.8);
+        gr.addColorStop(0, 'rgba(63,224,197,'+(a*0.1)+')');
+        gr.addColorStop(1, 'rgba(63,224,197,0)');
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.arc(ox, oy, maxR*0.8, ang, ang+0.5);
+        ctx.closePath();
+        ctx.fillStyle = gr; ctx.fill();
+        ctx.restore();
+      }
+
+      function drawBubbles(t, dt, depth){
+        ctx.save();
+        for(var i=0;i<bubbles.length;i++){
+          var b = bubbles[i];
+          b.y -= b.sp * dt;
+          if(b.y < -12){ b.y = H + Math.random()*40; b.x = Math.random()*W; }
+          var bx = b.x + Math.sin(t*0.6 + b.ph) * (6*b.drift);
+          var al = depth * 0.55 * clamp01(b.y/H + 0.15);
+          if(al <= 0.01) continue;
+          ctx.globalAlpha = al;
+          var rg = ctx.createRadialGradient(bx - b.r*0.3, b.y - b.r*0.3, 0, bx, b.y, b.r);
+          rg.addColorStop(0, 'rgba(200,246,238,0.9)');
+          rg.addColorStop(1, 'rgba(63,224,197,0.08)');
+          ctx.fillStyle = rg;
+          ctx.beginPath(); ctx.arc(bx, b.y, b.r, 0, 6.2832); ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawVignette(depth){
+        var g = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.3, W/2, H/2, Math.max(W,H)*0.75);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, 'rgba(2,10,18,'+(0.32 + 0.3*depth)+')');
+        ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+      }
+
+      // =================== main loop ===================
+      function frame(now){
+        if(!running) return;
+        if(needMeasure){ if(!sized) size(); measure(); needMeasure=false; }
+        if(!t0){ t0 = now; last = now; }
+        var t = (now - t0)/1000;
+        var dt = Math.min(0.05, Math.max(0, (now - last)/1000));
+        last = now;
+
+        var sc = window.scrollY || window.pageYOffset || 0;
+        var p = clamp01((sc - y0) / (y1 - y0));
+        if(rail) rail.style.width = (p*100).toFixed(2) + '%';
+
+        // scroll-driven fade for each pinned act (transform/opacity only)
+        for(var i=0;i<acts.length;i++){
+          var box = actBox[i]; var si = actIn[i];
+          if(!box || !si) continue;
+          var local = (sc - box.top) / Math.max(1, (box.h - H));
+          var o, ty=0;
+          if(local < 0){ o = clamp01(1 + local*2.6); ty = (-local)*40; }
+          else if(local > 0.74){ var fdt = clamp01((local-0.74)/0.26); o = 1 - fdt; ty = -fdt*54; }
+          else { o = 1; }
+          si.style.opacity = o.toFixed(3);
+          si.style.transform = 'translate3d(0,' + ty.toFixed(1) + 'px,0)';
+        }
+
+        render(p, t, dt);
+        requestAnimationFrame(frame);
+      }
+
+      function start(){
+        if(started) return;
+        started = true;
+        running = true;
+        needMeasure = true;
+        t0 = 0;
+        requestAnimationFrame(frame);
+      }
+
+      // events
+      window.addEventListener('resize', function(){ sized=false; needMeasure=true; }, {passive:true});
+      window.addEventListener('orientationchange', function(){ sized=false; needMeasure=true; }, {passive:true});
+      document.addEventListener('visibilitychange', function(){
+        if(document.hidden){ running = false; }
+        else { running = true; last = 0; t0 = t0 || 0; requestAnimationFrame(frame); }
+      });
+      // if the user flips reduced-motion on at runtime, freeze into static composition
+      if(reduceMQ.addEventListener){
+        reduceMQ.addEventListener('change', function(e){
+          if(e.matches){ running=false; document.body.classList.remove('has-canvas'); revealAll(); }
+        });
+      }
+
+      size();
+      measure();
+      start();
+    }
+  })();
+  </script>
 </body>
 </html>
