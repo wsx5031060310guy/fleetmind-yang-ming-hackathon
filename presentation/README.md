@@ -1,31 +1,39 @@
 # FleetMind Proposal Deck
 
-This folder contains the generated proposal deck skeleton for the Yang Ming AWS AI Hackathon presentation.
+This folder contains the proposal deck for the Yang Ming AWS AI Hackathon presentation.
 
 Tracked deliverables:
 
-- `fleetmind-proposal-deck.pptx` — editable PowerPoint deck, 9 main slides + 15 Q&A backup slides.
-- `fleetmind-proposal-deck-preview.webp` — visual montage for quick review in GitHub.
-- `build-fleetmind-deck.mjs` — source used to regenerate the deck from the current plan.
+- `fleetmind-proposal-deck.pptx` — the deck (11 main slides + 2 Q&A backup slides), real-data numbers, zh-TW.
+- `build-fleetmind-deck-v2.mjs` — **current** generator. Offline, pure `pptxgenjs` (no private deps), runs anywhere.
+- `build-fleetmind-deck.mjs` — legacy generator (needs the private `@oai/artifact-tool`; does **not** run on the rental Mac). Superseded by v2; kept for reference only.
+- `fleetmind-proposal-deck-preview.webp` — visual montage (from the legacy deck).
 
-Content sources:
+Content sources (kept in sync):
 
-- Main flow: `docs/10-presentation-plan.md`
-- Scenario assumptions, cold open, backup list: `docs/15-presentation-readiness-pack.md`
-- Architecture and method: `docs/09-architecture-and-execution-plan.md`
-- Q&A backup answers: `docs/07-judge-qna.md`
-- Day1 ops/deployment/data cleanup: `docs/16-day1-ops-runbook.md`
+- Enterprise data & data application chapter: `docs/17-enterprise-data-application.md`
+- Technical architecture & algorithms chapter: `docs/19-technical-architecture-submission.md`
+- Judge Q&A backup answers: `docs/07-judge-qna.md`
+- Fuel-prediction plan / real numbers: `docs/23-fuel-prediction-plan.md`
+- Day1 ops/deployment: `docs/16-day1-ops-runbook.md`, `docs/25-day1-onsite-execution.md`
 
-Regenerate in a Codex runtime that has `@oai/artifact-tool` installed:
+## Regenerate (offline, any machine)
 
 ```bash
-NODE_PATH=/path/to/codex-primary-runtime/dependencies/node/node_modules \
-  node presentation/build-fleetmind-deck.mjs
+npm install -g pptxgenjs
+NODE_PATH="$(npm root -g)" node presentation/build-fleetmind-deck-v2.mjs
+# → writes presentation/fleetmind-proposal-deck.pptx
 ```
 
-Day2/Day3 replacement points:
+Export a PDF for the projection machine (the presentation runs on the organizer's computer;
+ship PPTX **and** PDF with fonts embedded / outlined):
 
-- Replace demo scenario numbers on slides 1 and 6 with frozen real values from `/api/vessels/{id}/before-after`.
-- Replace assumption text if Yang Ming or suppliers provide real fuel, carbon, or cleaning-cost values.
-- Add final dashboard screenshots only after Day3 data freeze; keep screenshots out of git if they include enterprise raw data.
-- Rehearse with slides 1-9 only; slides B1-B15 are Q&A backup.
+```bash
+soffice --headless --convert-to pdf presentation/fleetmind-proposal-deck.pptx
+```
+
+## Day2/Day3 update points
+
+- The numbers in `build-fleetmind-deck-v2.mjs` come from the real run (fleet Speed Loss, prediction RMSE/MAPE, bounded counterfactual ROI). Refresh them from the frozen Day3 metrics before recording.
+- Slides 1–11 are the 8-minute flow; the last two are Q&A backup.
+- Do not commit dashboard screenshots that contain enterprise raw data; QA render artifacts (`slide-*.jpg`, `*.pdf`) are gitignored.

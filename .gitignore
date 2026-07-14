@@ -24,3 +24,7 @@ __pycache__/
 predict/.venv/
 
 data/
+
+# deck QA render artifacts (regenerable)
+presentation/slide-*.jpg
+presentation/*.pdf
