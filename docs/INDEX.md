@@ -52,6 +52,7 @@
 | 19 technical-architecture-submission | 官方「Technical architecture」短版提交稿 | ✅ 骨架完成 |
 | 20 day1-schema-inventory | Day1 真資料 schema 掃描與欄位 mapping 流程 | ✅ 賽前可用 |
 | 21 day2-stretch-gate | Day2 18:00 stretch 決策與 stop rules | ✅ 賽前可用 |
+| 22 official-workshop-rules | 官方 workshop 命題/規則團隊摘要（⚠ §7 列數項與 09–21 落差，待 7/14 確認） | ⚠ 需回寫 |
 | presentation/ | 可編輯提案 deck、preview、可重生 source | ✅ 骨架完成 |
 
 ## 4. 角色閱讀路徑
