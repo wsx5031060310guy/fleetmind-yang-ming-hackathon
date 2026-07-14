@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FleetMind · AWS 架構簡報</title>
-  <meta name="description" content="FleetMind AWS 架構簡報 15 頁網頁版：現行部署、五種上雲方案、資安與多區域 Active-Active 的圖解，可鍵盤/縮圖/自動播放/全螢幕，下載 PPTX。">
+  <meta name="description" content="FleetMind AWS 架構簡報 15 頁網頁版，含逐頁導讀與章節導覽：現行部署、五種上雲方案、資安與多區域 Active-Active。可鍵盤/縮圖/自動播放/全螢幕，下載 PPTX。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232FB09A'/%3E%3Cpath d='M6 20c3 2 5 2 8 0s5-2 8 0 5 2 6 1' fill='none' stroke='%23052029' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 6l5 9H11z' fill='%23052029'/%3E%3C/svg%3E">
   <style>
     :root{
@@ -18,7 +18,6 @@
     body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);min-height:100dvh;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;position:relative}
     a{color:inherit}
     .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-    /* cinematic ambient backdrop */
     body::before{content:"";position:fixed;inset:0;z-index:-2;
       background:linear-gradient(180deg,rgba(5,15,28,.86),rgba(5,15,28,.94)),url("/img/globe-network.jpg") center/cover no-repeat fixed;
       filter:blur(3px) saturate(.9);transform:scale(1.06)}
@@ -35,7 +34,7 @@
     .fm-topnav .fm-links a:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
     @media(max-width:640px){.fm-topnav .fm-links{margin-left:0;width:100%}}
 
-    .stage-wrap{flex:1;max-width:1220px;width:100%;margin:0 auto;padding:clamp(16px,3vw,30px) clamp(12px,4vw,40px) clamp(20px,3vw,34px);display:flex;flex-direction:column;gap:16px}
+    .stage-wrap{flex:1;max-width:1280px;width:100%;margin:0 auto;padding:clamp(16px,3vw,30px) clamp(12px,4vw,40px) clamp(20px,3vw,34px);display:flex;flex-direction:column;gap:14px}
     .head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
     .head .k{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--seafoam);margin:0}
     .head h1{margin:4px 0 0;font-size:clamp(19px,2.6vw,26px);font-weight:800;letter-spacing:-.02em}
@@ -43,11 +42,21 @@
     .dl:hover{background:rgba(47,176,154,.16);border-color:rgba(47,176,154,.45);color:var(--ink)}
     .dl:active{transform:translateY(1px)}
 
-    /* stage */
+    .chapters{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:thin}
+    .chapters button{flex:none;appearance:none;border:1px solid var(--line);background:rgba(6,17,30,.42);color:var(--muted);cursor:pointer;
+      font:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:999px;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}
+    .chapters button:hover{background:rgba(47,176,154,.14);color:var(--ink)}
+    .chapters button[aria-current="true"]{background:rgba(47,176,154,.2);color:var(--seafoam);border-color:rgba(55,192,166,.5)}
+    .chapters button:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
+
+    .maingrid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+    @media(max-width:900px){.maingrid{grid-template-columns:1fr}}
+
+    .perspective{perspective:1600px}
     .stage{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:16/9;
-      border:1px solid rgba(148,183,214,.22);
-      background:#08182a;
-      box-shadow:0 40px 90px -40px rgba(0,0,0,.9), 0 0 0 1px rgba(55,192,166,.06), inset 0 1px 0 rgba(255,255,255,.05)}
+      border:1px solid rgba(148,183,214,.22);background:#08182a;transform-style:preserve-3d;
+      box-shadow:0 40px 90px -40px rgba(0,0,0,.9), 0 0 0 1px rgba(55,192,166,.06), inset 0 1px 0 rgba(255,255,255,.05);
+      transition:transform .18s ease}
     .layer{position:absolute;inset:0;opacity:0;transition:opacity .55s ease, transform .7s cubic-bezier(.22,.61,.36,1);transform:scale(1.015)}
     .layer.show{opacity:1;transform:scale(1)}
     .layer img{width:100%;height:100%;object-fit:contain;display:block}
@@ -63,7 +72,15 @@
     .nav-btn.prev{left:16px}.nav-btn.next{right:16px}
     .nav-btn svg{width:24px;height:24px}
 
-    /* control bar */
+    .notepane{border:1px solid var(--line);border-radius:16px;background:rgba(8,22,40,.62);backdrop-filter:blur(10px);
+      padding:20px 20px 22px;display:flex;flex-direction:column;gap:12px;min-height:100%}
+    .notepane .np-k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--seafoam);margin:0}
+    .notepane .np-num{font-family:var(--mono);font-size:12px;color:var(--muted)}
+    .notepane .np-title{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em;line-height:1.35;transition:opacity .3s}
+    .notepane .np-body{margin:0;font-size:14px;line-height:1.75;color:var(--ink-dim);text-wrap:pretty;transition:opacity .3s}
+    .notepane .np-chapter{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);font-family:var(--mono)}
+    .fade{opacity:0}
+
     .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;
       padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(6,17,30,.42);backdrop-filter:blur(8px)}
     .ctrl{appearance:none;border:1px solid var(--line);background:rgba(6,17,30,.5);color:var(--ink-dim);cursor:pointer;
@@ -74,13 +91,12 @@
     .ctrl svg{width:18px;height:18px}
     .counter{font-family:var(--mono);font-size:13px;color:var(--ink-dim);min-width:64px;text-align:center}
     .counter b{color:var(--seafoam)}
-    .dotbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:min(52vw,420px)}
+    .dotbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:min(46vw,380px)}
     .dot{width:8px;height:8px;border-radius:50%;background:rgba(148,183,214,.28);border:0;padding:0;cursor:pointer;transition:background .2s,transform .2s}
     .dot:hover{background:rgba(148,183,214,.6)}
     .dot[aria-current="true"]{background:var(--seafoam);transform:scale(1.35);box-shadow:0 0 8px rgba(55,192,166,.7)}
     .dot:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
 
-    /* thumbnails filmstrip */
     .thumbs{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 10px;scrollbar-width:thin}
     .thumbs button{flex:none;width:118px;aspect-ratio:16/9;border-radius:9px;overflow:hidden;border:2px solid transparent;background:#08182a;cursor:pointer;padding:0;opacity:.5;transition:opacity .2s,border-color .2s,transform .2s}
     .thumbs button img{width:100%;height:100%;object-fit:cover;display:block}
@@ -90,12 +106,12 @@
 
     .hint{font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono)}
     :fullscreen .stage{border-radius:0;height:100vh;aspect-ratio:auto}
-    @media(prefers-reduced-motion:reduce){*{transition:none!important}.layer{transform:none}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}.layer{transform:none}.stage{transform:none!important}}
     @media(max-width:640px){.nav-btn{width:42px;height:42px}.thumbs button{width:92px}.dotbar{display:none}}
   </style>
 </head>
 <body>
-  <p class="sr-only">FleetMind AWS 架構簡報，15 頁，可用左右鍵、縮圖、圓點或自動播放切換，支援全螢幕。</p>
+  <p class="sr-only">FleetMind AWS 架構簡報，15 頁，含逐頁導讀與章節導覽，可用左右鍵、縮圖、圓點或自動播放切換，支援全螢幕。</p>
 
   <nav class="fm-topnav" aria-label="主選單">
     <a class="fm-brand" href="/"><svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
@@ -113,7 +129,7 @@
   <div class="stage-wrap">
     <div class="head">
       <div>
-        <p class="k">AWS Architecture · 15 slides</p>
+        <p class="k">AWS Architecture · 15 slides · 逐頁導讀</p>
         <h1>FleetMind AWS 架構簡報</h1>
       </div>
       <a class="dl" href="/deck/fleetmind-aws-architecture.pptx" download>
@@ -122,13 +138,28 @@
       </a>
     </div>
 
-    <div class="stage" id="stage">
-      <div class="progress"><i id="prog"></i></div>
-      <div class="layer show" id="layerA"><img id="imgA" src="/deck/slide-01.jpg" alt="投影片 1"></div>
-      <div class="layer" id="layerB"><img id="imgB" src="" alt=""></div>
-      <div class="sheen" aria-hidden="true"></div>
-      <button class="nav-btn prev" id="prev" type="button" aria-label="上一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <button class="nav-btn next" id="next" type="button" aria-label="下一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="chapters" id="chapters" role="tablist" aria-label="章節"></div>
+
+    <div class="maingrid">
+      <div class="perspective">
+        <div class="stage" id="stage">
+          <div class="progress"><i id="prog"></i></div>
+          <div class="layer show" id="layerA"><img id="imgA" src="/deck/slide-01.jpg" alt="投影片 1"></div>
+          <div class="layer" id="layerB"><img id="imgB" src="" alt=""></div>
+          <div class="sheen" aria-hidden="true"></div>
+          <button class="nav-btn prev" id="prev" type="button" aria-label="上一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="nav-btn next" id="next" type="button" aria-label="下一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+      <aside class="notepane" aria-live="polite">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <p class="np-k">導讀 · Narration</p>
+          <span class="np-num" id="npNum">01 / 15</span>
+        </div>
+        <h2 class="np-title" id="npTitle"></h2>
+        <p class="np-body" id="npBody"></p>
+        <p class="np-chapter" id="npChapter"></p>
+      </aside>
     </div>
 
     <div class="controls">
@@ -139,68 +170,107 @@
     </div>
 
     <div class="thumbs" id="thumbs" role="tablist" aria-label="投影片縮圖"></div>
-    <p class="hint">← → 或空白鍵切換 · 點縮圖/圓點跳頁 · ▶ 自動播放 · ⛶ 全螢幕</p>
+    <p class="hint">← → 或空白鍵切換 · 點章節/縮圖/圓點跳頁 · ▶ 自動播放 · ⛶ 全螢幕 · 滑過投影片有立體視差</p>
   </div>
 
   <script>
     (function () {
       var TOTAL = 15, i = 0, showA = true, playing = false, timer = null;
-      var layerA = document.getElementById('layerA'), layerB = document.getElementById('layerB');
-      var imgA = document.getElementById('imgA'), imgB = document.getElementById('imgB');
-      var prog = document.getElementById('prog'), cur = document.getElementById('cur');
-      var thumbs = document.getElementById('thumbs'), dots = document.getElementById('dots');
-      var playBtn = document.getElementById('play'), playIcon = document.getElementById('playicon');
-      function pad(n){ return (n < 10 ? '0' : '') + n; }
-      function src(n){ return '/deck/slide-' + pad(n) + '.jpg'; }
-      // preload
-      for (var p = 1; p <= TOTAL; p++){ var pi = new Image(); pi.src = src(p); }
-      // thumbnails + dots
-      var thumbBtns = [], dotBtns = [];
-      for (var n = 1; n <= TOTAL; n++){
-        (function (n){
-          var b = document.createElement('button');
-          b.type = 'button'; b.setAttribute('role','tab'); b.setAttribute('aria-label','投影片 ' + n);
-          var im = document.createElement('img'); im.src = src(n); im.alt = '投影片 ' + n + ' 縮圖'; im.loading = 'lazy';
-          b.appendChild(im); b.addEventListener('click', function(){ go(n - 1, true); });
-          thumbs.appendChild(b); thumbBtns.push(b);
-          var d = document.createElement('button'); d.className = 'dot'; d.type = 'button';
-          d.setAttribute('role','tab'); d.setAttribute('aria-label','投影片 ' + n);
-          d.addEventListener('click', function(){ go(n - 1, true); });
-          dots.appendChild(d); dotBtns.push(d);
+      var NOTES = [
+        {t:"封面 · AWS 架構藍圖與五種上雲路徑", n:"同一套「Speed Loss 節能決策系統」，可以落在很不同的 AWS 形狀上。這份簡報先講已上線的架構，再攤開五種替代方案的取捨。信念：數字來自計算，語言來自 AI，決策留給人。"},
+        {t:"一頁看懂：一個命題、一套現行架構、五種方案", n:"命題是從 15 艘船 × 5 年正午報表偵測船體污損造成的 Speed Loss。一套現行架構已上線，五種方案各有適用情境——這頁先給全貌。"},
+        {t:"現行架構：ECS Fargate + ALB 單服務容器", n:"單一 Spring Boot 服務同時吐 dashboard 與 REST API，掛在 ALB 拿到永不變的網址；指標離線由 core-calc 算好烤進映像，AI 走 Bedrock，門檻告警走 SNS。三天賽程最省心、風險最低。"},
+        {t:"方案 A · 現行強化（Fargate + ALB + Bedrock + SNS）", n:"維持現行架構但收斂為正式的 ECS Service + ALB，健康檢查失敗自動重拉。可交付性最高、demo 最穩，是出賽基準線。"},
+        {t:"方案 B · 全 Serverless", n:"API Gateway + Lambda + DynamoDB + S3 + EventBridge 排程重算。閒置零成本、天生資料驅動；代價是 Java 冷啟動與元件變多、除錯較分散。"},
+        {t:"方案 C · App Runner（最省管理）", n:"用同一顆容器映像零 infra 托管，內建 HTTPS 與自動伸縮。但本 workshop 帳號對 App Runner 回 AccessDenied，故列為對照方案。"},
+        {t:"方案 D · EC2 + Docker（最省最可控）", n:"一台 EC2 跑 Docker、綁 Elastic IP。穩定負載下單位成本最低，是托管服務受阻時一定跑得起來的保底路線；代價是自管 OS 與單點風險。"},
+        {t:"方案 E · 完整資料分析管線（未來式）", n:"S3 資料湖 → Glue/Lambda ETL → Athena/Timestream → App + QuickSight BI + 預測 + IoT 即時遙測。企業級終局，對三天賽程過度設計，但畫出成長路線。"},
+        {t:"資安：VPC 隔離 + GuardDuty 縱深防禦", n:"VPC 私有子網隔離（ECS 無公網 IP）、邊緣 Shield/WAF、帳號級 GuardDuty 威脅偵測、Secrets Manager/KMS 加密、CloudTrail 稽核、IAM 最小權限。船務資料敏感，安全是底線不是加分。"},
+        {t:"多區域 Active-Active + 即時告警與災備", n:"船隊分佈不同國家，Route 53 依地理/延遲路由到最近區域；亞洲與歐美兩區雙活，DynamoDB Global Tables 雙向複製、跨區 EventBridge 即時告警、S3 CRR 備份；一區故障自動切換，RPO≈0、資料不丟、服務不中斷。"},
+        {t:"五案比較：現行 A 為出賽基準線", n:"運算／入口／閒置成本／維運／冷啟／黑客松適配一表看懂。現行 ECS Fargate 在三天賽程的可交付性與 demo 穩定度綜合最優；EC2 保底、Serverless 與資料管線是願景。"},
+        {t:"未來路線圖 · Phase 0–3", n:"從 15 艘 demo 到全艦隊營運平台：先穩上線，再走資料驅動、多區域韌性、BI/預測與系統介接。落地三扇門：系統介接、檔案上傳、後台設定。"},
+        {t:"決策級聯：正常 → 注意 → 行動", n:"系統不只給數字，而是狀態＋建議：正常持續觀察 → 注意排 UWILD 檢查 → 行動先檢查再規劃清洗。把 ISO 19030 的速度損失變成可執行的下一步。"},
+        {t:"Live Demo 導覽：一個穩定 URL、多個入口", n:"首頁沈浸開場、決策看板、航程 Demo、AWS 架構——同一個 ALB 靜態網址，現場就能點著走。"},
+        {t:"結尾 · 穩穩 demo，也留得住未來", n:"現行架構已上線可交付，資安與多區域畫出正式營運的韌性路線。數字來自計算，語言來自 AI，決策留給人。"}
+      ];
+      var CHAPTERS = [
+        {label:"概覽", s:0}, {label:"現行架構", s:2}, {label:"替代方案", s:4},
+        {label:"資安與韌性", s:8}, {label:"比較與路線", s:10}, {label:"決策與 Demo", s:12}, {label:"結尾", s:14}
+      ];
+      var layerA=document.getElementById('layerA'), layerB=document.getElementById('layerB');
+      var imgA=document.getElementById('imgA'), imgB=document.getElementById('imgB');
+      var prog=document.getElementById('prog'), cur=document.getElementById('cur');
+      var thumbs=document.getElementById('thumbs'), dots=document.getElementById('dots'), chaptersEl=document.getElementById('chapters');
+      var npTitle=document.getElementById('npTitle'), npBody=document.getElementById('npBody'), npNum=document.getElementById('npNum'), npChapter=document.getElementById('npChapter');
+      var playBtn=document.getElementById('play'), playIcon=document.getElementById('playicon');
+      function pad(n){ return (n<10?'0':'')+n; }
+      function src(n){ return '/deck/slide-'+pad(n)+'.jpg'; }
+      for (var p=1;p<=TOTAL;p++){ var pi=new Image(); pi.src=src(p); }
+      var thumbBtns=[], dotBtns=[], chapBtns=[];
+      for (var n=1;n<=TOTAL;n++){
+        (function(n){
+          var b=document.createElement('button'); b.type='button'; b.setAttribute('role','tab'); b.setAttribute('aria-label','投影片 '+n);
+          var im=document.createElement('img'); im.src=src(n); im.alt='投影片 '+n+' 縮圖'; im.loading='lazy'; b.appendChild(im);
+          b.addEventListener('click', function(){ go(n-1,true); }); thumbs.appendChild(b); thumbBtns.push(b);
+          var d=document.createElement('button'); d.className='dot'; d.type='button'; d.setAttribute('role','tab'); d.setAttribute('aria-label','投影片 '+n);
+          d.addEventListener('click', function(){ go(n-1,true); }); dots.appendChild(d); dotBtns.push(d);
         })(n);
       }
+      CHAPTERS.forEach(function(c){
+        var b=document.createElement('button'); b.type='button'; b.setAttribute('role','tab'); b.textContent=c.label;
+        b.addEventListener('click', function(){ go(c.s,true); }); chaptersEl.appendChild(b); chapBtns.push(b);
+      });
+      function chapterOf(idx){ var ci=0; for (var k=0;k<CHAPTERS.length;k++){ if (idx>=CHAPTERS[k].s) ci=k; } return ci; }
       function render(){
-        var incoming = showA ? layerB : layerA;
-        var incomingImg = showA ? imgB : imgA;
-        var outgoing = showA ? layerA : layerB;
-        incomingImg.src = src(i + 1); incomingImg.alt = '投影片 ' + (i + 1);
-        incoming.classList.add('show'); outgoing.classList.remove('show');
-        showA = !showA;
-        prog.style.width = ((i + 1) / TOTAL * 100) + '%';
-        cur.textContent = (i + 1);
-        thumbBtns.forEach(function(b, idx){ b.setAttribute('aria-current', idx === i ? 'true' : 'false'); });
-        dotBtns.forEach(function(d, idx){ d.setAttribute('aria-current', idx === i ? 'true' : 'false'); });
-        var t = thumbBtns[i]; if (t && t.scrollIntoView) t.scrollIntoView({ inline:'center', block:'nearest', behavior:'smooth' });
+        var incoming = showA?layerB:layerA, incomingImg = showA?imgB:imgA, outgoing = showA?layerA:layerB;
+        incomingImg.src=src(i+1); incomingImg.alt='投影片 '+(i+1);
+        incoming.classList.add('show'); outgoing.classList.remove('show'); showA=!showA;
+        prog.style.width=((i+1)/TOTAL*100)+'%'; cur.textContent=(i+1);
+        var note=NOTES[i]||{t:'',n:''};
+        npTitle.classList.add('fade'); npBody.classList.add('fade');
+        setTimeout(function(){ npTitle.textContent=note.t; npBody.textContent=note.n; npNum.textContent=pad(i+1)+' / '+TOTAL;
+          npTitle.classList.remove('fade'); npBody.classList.remove('fade'); }, 160);
+        var ci=chapterOf(i);
+        npChapter.textContent='章節 '+(ci+1)+'／'+CHAPTERS.length+' · '+CHAPTERS[ci].label;
+        thumbBtns.forEach(function(b,idx){ b.setAttribute('aria-current', idx===i?'true':'false'); });
+        dotBtns.forEach(function(d,idx){ d.setAttribute('aria-current', idx===i?'true':'false'); });
+        chapBtns.forEach(function(b,idx){ b.setAttribute('aria-current', idx===ci?'true':'false'); });
+        var t=thumbBtns[i]; if (t&&t.scrollIntoView) t.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
       }
-      function go(n, stop){ if (stop) pause(); i = (n + TOTAL) % TOTAL; render(); }
-      function play(){ playing = true; playIcon.innerHTML = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'; playBtn.setAttribute('aria-label','暫停'); clearInterval(timer); timer = setInterval(function(){ i = (i + 1) % TOTAL; render(); }, 4500); }
-      function pause(){ playing = false; playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; playBtn.setAttribute('aria-label','自動播放'); clearInterval(timer); }
-      playBtn.addEventListener('click', function(){ playing ? pause() : play(); });
-      document.getElementById('prev').addEventListener('click', function(){ go(i - 1, true); });
-      document.getElementById('next').addEventListener('click', function(){ go(i + 1, true); });
-      layerA.addEventListener('click', function(){ go(i + 1, true); });
-      layerB.addEventListener('click', function(){ go(i + 1, true); });
+      function go(n,stop){ if (stop) pause(); i=(n+TOTAL)%TOTAL; render(); }
+      function play(){ playing=true; playIcon.innerHTML='<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'; playBtn.setAttribute('aria-label','暫停'); clearInterval(timer); timer=setInterval(function(){ i=(i+1)%TOTAL; render(); }, 6500); }
+      function pause(){ playing=false; playIcon.innerHTML='<path d="M8 5v14l11-7z"/>'; playBtn.setAttribute('aria-label','自動播放'); clearInterval(timer); }
+      playBtn.addEventListener('click', function(){ playing?pause():play(); });
+      document.getElementById('prev').addEventListener('click', function(){ go(i-1,true); });
+      document.getElementById('next').addEventListener('click', function(){ go(i+1,true); });
+      layerA.addEventListener('click', function(){ go(i+1,true); });
+      layerB.addEventListener('click', function(){ go(i+1,true); });
       document.getElementById('fs').addEventListener('click', function(){
-        var s = document.getElementById('stage');
-        if (document.fullscreenElement) { document.exitFullscreen(); }
-        else if (s.requestFullscreen) { s.requestFullscreen(); }
+        var s=document.getElementById('stage');
+        if (document.fullscreenElement) document.exitFullscreen();
+        else if (s.requestFullscreen) s.requestFullscreen();
       });
       document.addEventListener('keydown', function(e){
-        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(i + 1, true); }
-        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1, true); }
-        else if (e.key === 'Home') { go(0, true); } else if (e.key === 'End') { go(TOTAL - 1, true); }
-        else if (e.key.toLowerCase() === 'f') { document.getElementById('fs').click(); }
+        if (e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); go(i+1,true); }
+        else if (e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); go(i-1,true); }
+        else if (e.key==='Home'){ go(0,true); } else if (e.key==='End'){ go(TOTAL-1,true); }
+        else if (e.key.toLowerCase()==='f'){ document.getElementById('fs').click(); }
       });
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var stage=document.getElementById('stage');
+      if (!reduce && window.matchMedia('(hover: hover)').matches){
+        var frame=null;
+        stage.parentElement.addEventListener('mousemove', function(e){
+          if (frame) return;
+          frame=requestAnimationFrame(function(){
+            frame=null;
+            var r=stage.getBoundingClientRect();
+            var px=(e.clientX-r.left)/r.width-0.5, py=(e.clientY-r.top)/r.height-0.5;
+            stage.style.transform='rotateY('+(px*5).toFixed(2)+'deg) rotateX('+(-py*5).toFixed(2)+'deg)';
+          });
+        });
+        stage.parentElement.addEventListener('mouseleave', function(){ stage.style.transform='rotateY(0) rotateX(0)'; });
+      }
       render();
     })();
   </script>
