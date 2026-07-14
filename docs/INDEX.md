@@ -54,6 +54,7 @@
 | 21 day2-stretch-gate | Day2 18:00 stretch 決策與 stop rules | ✅ 賽前可用 |
 | 22 official-workshop-rules | 官方 workshop 命題/規則團隊摘要（§7 落差已於 7/14 回寫，見各檔更新註記） | ✅ 已回寫 |
 | 23 fuel-prediction-plan | 25% 油耗預測任務計畫（102 PREDICT 格、錨點解謎、`predict/` pipeline、提交格式） | 🔴 Day1 主線 |
+| 24 yang-ming-questions | Day1 現場/線上要問陽明與主辦方的問題清單（讀真資料後產出，含 top-5） | 🔴 Day1 必用 |
 | presentation/ | 可編輯提案 deck、preview、可重生 source | ✅ 骨架完成 |
 
 ## 4. 角色閱讀路徑
