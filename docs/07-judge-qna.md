@@ -1,69 +1,100 @@
-# Judge Q&A Prep
+# Judge Q&A Prep（評審問答備稿）
 
-## Why not route optimization?
+> 展示格式：**8 分鐘簡報 + 4 分鐘評審問答，統問統答**。評審含陽明海運海事／輪機專家。
+> 本備稿一律以**實際交付物與真資料**為根據，寧可主動揭露限制，不誇大。答題收尾統一句型：「正午報表粒度下這是最誠實的做法；給我們軸功率／對水速度計資料，框架直接升級 ISO 19030 全合規。」
+> 兩項產出：①**油耗預測模型**（25%，程式自動評分，預測 102 個遮蔽 `PREDICT` 格）；②**Speed Loss Dashboard**（30%，專家品評）。
 
-Because the Yang Ming briefing focused on hull efficiency, speed loss, fuel consumption, and underwater cleaning / propeller polishing. Route optimization would be broader, harder to validate, and less aligned with the explicit scoring around Speed Loss dashboard and `FUEL_CONSUMP` correctness.
+---
 
-## Is the AI making maintenance decisions?
+## 一、資料與方法
 
-No. The system is decision support. It prioritizes vessels, explains evidence, and generates an operations brief. Human maritime experts remain responsible for final decisions.
+**Q1. 你們拿到的資料是什麼？怎麼跟養護事件對上？**
+15 艘匿名船 × 5 年航行日報，`vt_fd.csv` 21,282 列（僅排除純靠港／錨泊日以保連續日程），`maintenance.csv` 77 筆養護事件。訓練船 S1–S12 全可見，預測船 S21–S23 於養護後區間被遮蔽。事件對齊很直接：官方資料 v2 把 `maintenance.csv` 改用 `event_day`（相對天數，與日報 `NOON_UTC` 同軸），我們直接以 `(ship_id, event_day)` join 日報，**不需再猜日曆錨點**。
 
-## How do you prevent the LLM from hallucinating numbers?
+**Q2. 為什麼能跨船學習？只有 3 艘要預測，樣本夠嗎？**
+船型分兩類——W1（S1–S8＋預測船 S21）、W2（S9–S12＋預測船 S22–S23）——同設計姊妹船、不同航線。預測船在同型訓練船上有大量可見歷史，讓模型把「效能如何隨時間衰退、養護後如何恢復」的規律遷移過去。這正是官方命題要的能力，不是我們硬湊。
 
-All numeric values come from deterministic data processing:
+**Q3. STW 還是 SOG？黑潮這種洋流怎麼處理？**
+兩欄都 100% 填充，但因洋流可有明顯差異。**阻力物理一律用 STW（對水速度）**，距離／營運才用 SOG。Speed Loss 的 k 值也建在 STW 上，避免把洋流順逆流誤記成效能變化。真資料若含對水速度計或滑差欄位，我們拿來交叉驗證；殘差顯性標成「未解釋」，不塞進污損。
 
-- Weather/full-speed filtering.
-- VLSFO normalization.
-- Daily FOC calculation.
-- Before-after comparison.
+---
 
-Bedrock only explains processed metrics and generates readable briefs.
+## 二、預測模型（指標與驗證）
 
-## What happens if data quality is poor?
+**Q4. 預測的到底是什麼值？怎麼定義目標？**
+102 個 `PREDICT` 格的**當日全速時段主機油耗總量（MT）**——原欄位語義，**不是**正規化到 24h 的值。模型內部以「每全速小時油耗率 × `HOURS_FULL_SPEED`」建模較穩定，提交時務必還原成原始總量。這個「rate × hours」等於全速期總量的關係，我們在可見資料上實測確認過。分布：HSHFO 91 格、VLSFO 11 格；S21=43、S22=24、S23=35。
 
-The system marks rejected rows with reasons, shows data quality indicators, and avoids producing high-confidence recommendations when there are not enough comparable samples.
+**Q5. 用什麼模型？效果多少？**
+sklearn pipeline。特徵含 STW／STW³／RPM／滑差、吃水載況、風浪湧與水溫、**污損時鐘**（距上次船殼介入天數、距上次螺旋槳介入天數、水溫×天數的積溫＝生物污損壓力 proxy）、船別船型 W1/W2、燃料類型＋熱值 LCV、`HOURS_FULL_SPEED`。模型階梯是物理 baseline（k·STW³）→ HistGradientBoosting → 擇優。**誠實講**：最佳成績來自相對樸素的 GBM baseline，約 **RMSE 3–4 MT／MAPE 5–6%**；我們試過更複雜的堆疊，**並沒有贏過 baseline**，所以就不上。這是刻意的簡單，不是能力上限。
 
-## Why is this commercially useful?
+**Q6. 驗證怎麼做的？怎麼確定沒偷看答案？**
+我們**不用隨機 K-fold**（時序＋事件結構會漏訊息）。做法是在訓練船 S1–S12 上**模擬真實遮蔽模式**：挑真養護事件後的合格日窗把答案藏起來，再用只可見的特徵去預測、逐窗評 RMSE／MAPE。等於把「預測船會遇到的難處」在有答案的船上重演一次。另外跑 GroupKFold(by ship) 確認跨船遷移不是靠記住單船。
 
-Hull and propeller degradation can cause major fuel inefficiency. Earlier detection helps operations teams prioritize cleaning/polishing reviews, reduce fuel waste, and support sustainability reporting.
+**Q7. RPM／SFOC 這種欄位不是幾乎能反推油耗？算不算洩漏？**
+好問題，我們有分級處理。H 類主機性能欄位（SFOC、馬力、推力…）在預測窗本來就被 HIDDEN，我們不會、也不能用。`ME_AVG_RPM` 屬 A 類、預測窗可見，是我們最強特徵之一——它是該日真實觀測的運轉條件，不是油耗的代理答案。這一點我們也想跟貴司確認期望的使用邊界（列在給主辦的問題清單）。
 
-## What is creative about this?
+---
 
-The AI is not a generic chatbot. It is attached to a concrete fleet-efficiency workflow: filtered operational data, speed loss dashboard, underwater event evidence, and human-review action briefs.
+## 三、Speed Loss / ISO 19030
 
-## Can it scale beyond 15 vessels?
+**Q8. 你們的 Speed Loss 對齊到 ISO 19030 的哪個層級？**
+noon-report 粒度的務實改編，不宣稱完整 ISO 19030-2 全修正（正午報表拿不到軸功率、對水速度計等 ISO 要的高頻量測）。核心用性能指標 k = FOC／STW³ 當 performance value 代理，方法骨架照 ISO 19030：定參考基準期、控速度帶、看 performance value 隨時間偏移。偏離 ISO 的四點（SOG vs STW、正午粒度、無軸功率、天候修正）我們有一張明列的偏離表，主動講。
 
-Yes. The pipeline is built around repeatable ingestion, transformation versions, and vessel-level metrics. More vessels increase data volume, but the architecture remains the same.
+**Q9. 整個船隊 2021→2025 都降速了，你怎麼把商業減速跟污損分開？**
+我們**從不比原始 FOC 或原始航速**。k = FOC／STW³ 先把速度正規化，而且只在**同速度帶（參考窗 ±1 kn）**內比 k；速度偏離會自動降低信心等級。基準期取每次事件後**首 10–15 個合格日、上限 60 個日曆天**，避免再生長把基準灌水。減速改變的是 V，在這些控制下不改變 k。
 
-## How did you define the baseline? Did you know this vessel dry-docked in 2023?
+**Q10. 趨勢用什麼算？Speed Loss % 這數字可信嗎？**
+段內對 k 做 **Theil-Sen 穩健迴歸**（抗離群），趨勢成分（斜率×經過天數）歸為污損累積（生物污損隨時間單調生長），殘差標為未歸因。UI 上主 KPI 顯示成「3.5%（±0.8）· 中信心 · n=12」而非假精確的 3.47%，**未解釋殘差一定顯示、不藏**。量級合理（正常約 2–10%）；畫得出 40% 的隊，數字就是壞的。
 
-We segment each vessel's timeline at every underwater cleaning/polishing event, and additionally run breakpoint detection on the k-value series (sudden sustained drops) to catch efficiency resets the underwater reports do not record — dry-docking with antifouling repaint being the classic case. Those segments are marked "unknown breakpoint" and shown on the trend chart. Reference window = first 10–15 qualifying days after each event, capped at 60 calendar days, so regrowth does not inflate the baseline. (Details: docs/09 §4.1.)
+---
 
-## The whole fleet slowed down from 2021 to 2025. How do you separate commercial slow steaming from fouling?
+## 四、船殼 vs 螺旋槳歸因
 
-We never compare raw FOC or raw speed across years. k = FOC/V³ normalizes speed; we compare k only within the same speed band (±1 kn of the reference window), and speed deviation lowers the confidence grade. Where data allows, we fit each vessel's actual resistance exponent n by log-log regression instead of hard-coding 3. Slow steaming changes V; it does not change k under these controls.
+**Q11. 命題要求分船殼跟螺旋槳，你們怎麼拆？**
+用**隔離區段的漂移率**：只影響螺旋槳的事件（PP）之後與只影響船殼的窗口，各自量測 k 的漂移速率，據此把總 penalty 拆給兩個來源。**誠實講**：當某船的隔離區段太稀疏、拆不出穩健斜率時，我們**退回一個標記過的 50/50 啟發式**，並在卡片上明確標「因區段不足，暫用預設分攤」，不假裝算得很準。這是資料限制，不是方法漏洞——有貴司的 UWC/PP 恢復幅度紀錄當 ground truth，就能校準。
 
-## Speed loss is 3.2%. Should I spend USD 40k on cleaning? What is the uncertainty?
+---
 
-First the confidence grade and sample count, then a tiered recommendation: low confidence → underwater inspection first (a few thousand USD — the cheapest information purchase); high confidence with payback under ~45 days → schedule cleaning; otherwise keep observing. We show payback days = cleaning cost ÷ daily extra fuel cost on the before-after card. We never answer "the model says clean."
+## 五、UWI／養護事件判讀（誠實區分）
 
-## Your speed is speed-over-ground, right? What about currents like the Kuroshio?
+**Q12. 官方明示「純檢查事件（UWI）不該帶來效能改善」。你們怎麼體現？**
+關鍵先講清楚**兩個地方，兩種角色**：
 
-Correct — noon reports give SOG, not the speed-through-water ISO 19030 requires. On fixed routes, currents are a systematic bias, not random noise. Mitigations: same-route pairing of legs, long-window medians, and the residual is explicitly shown as "unexplained" rather than attributed to fouling. If log speed / slip fields exist in the real data, we cross-validate. (Full deviation table: docs/09 §4.4.)
+- **預測模型裡**——這是 UWI 洞見正確的家。模型的污損時鐘在 UWI（純檢查、不清不拋）事件**不重置**。所以模型不會在一次純檢查後**幻覺出一段恢復**，這正是官方要的「別把養護後一律當變好」。
+- **Dashboard 的事件比對裡**——我們呈現的是**實測 k 變化＋信心旗標**，**不宣稱「UWI = 零變化」**。
 
-## Fouling attribution 68% — where does that number come from?
+**Q13.（預期追問）那為什麼你們的圖表在某些 UWI 事件上還是有變化？不是自相矛盾嗎？**
+不矛盾，這正是我們要誠實面對的點。就算事件日期對得精準，真資料上**多數 UWI 事件量到的 k 變化仍超過噪音門檻**——可能是季節、載況、洋流、或該次檢查其實伴隨了未記錄的小動作。所以 dashboard 老實呈現「量到的 delta＋信心」，讓專家自己判讀，**不會硬把它壓成零**。而「純檢查在物理上不該恢復效能」這個先驗，我們放在**該放的地方——預測模型的時鐘不重置**。把統計實測（可能有雜訊）和物理先驗（乾淨）分開處理，是刻意的設計，不是打架。
 
-It is an operational definition, computed and reproducible: within each segment we run a Theil-Sen robust regression of k over time; the trend component (slope × elapsed days) is attributed to fouling because biological growth is monotonic in time; the residual is labeled unattributed. We state the assumptions openly and show the unexplained share in the UI instead of hiding it. If sea-surface temperature fields exist, we verify seasonal effects sit in the residual, not the trend.
+---
 
-## Why not train an ML model on SageMaker?
+## 六、商務決策價值 / ROI
 
-Three reasons. ISO 19030 itself is a deterministic method; after good-weather and full-speed filtering, per-vessel qualifying samples are too few to train without overfitting; and the 25% auto-scored output requires the exact prescribed formula, not a prediction. Fouling is a monotonic physical process — a robust regression slope tells the story a black-box model cannot defend in front of marine engineers.
+**Q14. 這系統怎麼幫我們省錢？講具體數字。**
+同一個預測模型做**反事實**：拿某船當日特徵，把船殼／螺旋槳的污損時鐘歸零重新預測，得到「現在做 UWC／螺旋槳拋光，每天省 X MT ≈ Y%／年」，以 **USD 650/MT** 換成年省金額，再算清潔成本的回本天數，做成 Before-After ROI 卡。話術是「這艘船每天在多付油錢給海洋生物當房租」——但每個數字可回溯到計算，假設值（油價、清潔成本）都標明。
 
-## Is FOC really proportional to V-cubed?
+**Q15. 那 AI 會自己下單排清潔嗎？3.2% 的 speed loss 你叫我花四萬美金？**
+**不會，這是決策支援，人保留最終決定**。系統給的是分級建議：低信心→先做幾千美金的水下檢查（最便宜的資訊採購）；高信心且回本 < ~45 天→建議排清潔；否則持續觀察。我們永遠不會說「模型叫你清」，而是把證據、信心、回本天數攤在你面前，由輪機主管拍板。反事實是**檢視用的證據，不是自動指令**。
 
-The cube law is an approximation; container ships in service-speed range often show exponents of 3.5–4.5. That is exactly why we compare only within the same speed band, and fit per-vessel exponents from reference-window data when samples allow. Small speed-band violations lower the confidence grade automatically.
+---
 
-## What does this cost to run on AWS?
+## 七、AI 與 AWS 運用
 
-For 15 vessels: a single small App Runner instance (~USD 50/month), DynamoDB on-demand and S3 in cents, Bedrock billed per brief generation — under USD 70/month total, and effectively the same at 97 vessels because the full recalculation takes under a minute. One avoided month of a 5% fuel penalty on one vessel pays for decades of this system.
+**Q16. AI 具體扮演什麼角色？怎麼防它亂編數字？**
+定位一句話：**「數字來自計算，語言來自 AI，決策留給人。」** 所有數值來自確定性資料處理（篩選、熱值正規化、k 計算、before-after、反事實）。Bedrock 上的 Claude 只**解讀已算好的指標、生成決策簡報**，且有 guardrail——prompt 只准引用給定的 JSON 與事件關聯段，事後再做數值比對，**它無法發明數字**。簡報裡每個數字可點回 dashboard 的來源。開發階段用 **Kiro** 當 AI 開發工具。
 
+**Q17. 架構長怎樣？成本多少？為什麼不上 SageMaker？**
+刻意極簡：**單一 Spring Boot 服務跑在 App Runner + S3（資料，全關公開存取）+ DynamoDB + Bedrock（決策簡報）+ CloudWatch**，region 固定 us-east-1。15 艘全系統約 **< USD 70/月**，因全量重算不到一分鐘，擴到近百艘成本幾乎不變。不上 SageMaker 的原因誠實講：ISO 19030 本身是確定性方法；篩後每船合格樣本太少，硬煉大模型會過擬合；而且如前面所說，我們**真的試過更複雜的模型，沒贏過樸素 baseline**。簡單是裁決過的，不是不會做。
+
+---
+
+## 八、限制與未來工作
+
+**Q18. 你們最大的限制是什麼？（主動揭露）**
+四點，先講在被問之前：①正午報表是 SOG、非 ISO 要的對水速度，洋流是系統性偏差；②無軸功率，k 是 FOC/STW³ 的代理；③船殼/螺旋槳歸因在區段稀疏時退回標記過的 50/50；④UWI 事件在真資料上仍有超噪音的量測變化，我們呈現而非壓平。這些都在 UI 或偏離表明示，不藏。
+
+**Q19. 給你們更多資料／時間，會怎麼強化？**
+想要的資料（也是命題要我們列的）：軸功率計與對水速度計（直接升級到 ISO 19030 全合規）、進塢後海試曲線（更準的參考基準）、antifouling 塗層年限、吃水俯仰 trim、航線與港口。以及貴司自己的 UWC/PP 效能恢復幅度紀錄——那能把我們的歸因與反事實從「合理估計」校準成「有 ground truth 背書」。方法框架不用改，餵進更好的量測就直接升級。
+
+**Q20. 資料品質差的日子怎麼辦？會不會硬給高信心建議？**
+被拒的列會標記原因、顯示資料品質分數；可比樣本不足時**不出高信心建議**，改建議先做水下檢查。信心等級與 n 數永遠跟著數字一起顯示——寧可說「這裡我們不確定」，也不假裝精確。
