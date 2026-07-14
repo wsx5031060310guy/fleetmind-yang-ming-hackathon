@@ -220,14 +220,20 @@ public final class MetricsExportCli {
         double medianFoc = medianQualifiedFoc(points);
         double penaltyPct = Math.max(0.0,
                 finiteOrZero(SpeedLoss.fuelPenaltyPct(attribution.kNow(), attribution.kClean())));
+        // Physically bounded savings: returning k from kNow to kClean recovers the fraction
+        // (kNow-kClean)/kNow = penalty/(1+penalty) of the CURRENT full-speed FOC, not penalty
+        // of the clean FOC. This keeps the saved share and % in [0,100), so a heavily fouled
+        // vessel can never "save" more fuel than it currently burns.
+        double savedFraction = penaltyPct / (100.0 + penaltyPct); // 0..1
         double totalSavingsMtDay = Double.isFinite(medianFoc)
-                ? medianFoc * penaltyPct / 100.0 : Double.NaN;
+                ? medianFoc * savedFraction : Double.NaN;
+        double savingsPct = savedFraction * 100.0; // 0..100, reported to the UI/deck
         double uwcSavings = totalSavingsMtDay * attribution.hullShare();
         double ppSavings = totalSavingsMtDay * attribution.propellerShare();
         Map<String, Object> counterfactual = new LinkedHashMap<>();
         counterfactual.put("uwcSavingsMtDay", finiteOrNull(uwcSavings));
         counterfactual.put("ppSavingsMtDay", finiteOrNull(ppSavings));
-        counterfactual.put("pct", finiteOrNull(penaltyPct));
+        counterfactual.put("pct", finiteOrNull(savingsPct));
         counterfactual.put("annualSavingsUsd", finiteOrNull(totalSavingsMtDay * 365.0
                 * FUEL_PRICE_USD_PER_MT));
         counterfactual.put("fuelPriceUsdPerMt", FUEL_PRICE_USD_PER_MT);
