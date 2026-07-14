@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FleetMind · AWS 架構簡報</title>
+  <meta name="description" content="FleetMind AWS 架構簡報 13 頁網頁版：現行部署與五種上雲方案的圖解比較，可鍵盤/縮圖導覽、下載 PPTX。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232FB09A'/%3E%3Cpath d='M6 20c3 2 5 2 8 0s5-2 8 0 5 2 6 1' fill='none' stroke='%23052029' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 6l5 9H11z' fill='%23052029'/%3E%3C/svg%3E">
+  <style>
+    :root{
+      --bg:#071523;--surface:#0E2B49;--surface2:#12385C;--line:rgba(148,183,214,.15);
+      --ink:#EAF2F9;--ink-dim:#B7CBDD;--muted:#8AA6BF;--seafoam:#37C0A6;--teal:#3BA0C4;--amber:#F4A72B;
+      --mono:ui-monospace,"SFMono-Regular",Menlo,monospace;
+      --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{overflow-x:hidden}
+    body{margin:0;font-family:var(--sans);color:var(--ink);background:
+      radial-gradient(1100px 560px at 82% -12%,rgba(55,192,166,.10),transparent 60%),
+      linear-gradient(178deg,#081E33,#061523 64%);min-height:100dvh;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+    a{color:inherit}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+    .fm-topnav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px clamp(16px,4vw,40px);background:rgba(8,26,44,.7);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:900}
+    .fm-topnav .fm-brand{color:var(--ink);font-weight:800;text-decoration:none;font-size:15.5px;display:flex;align-items:center;gap:8px}
+    .fm-topnav .fm-brand b{color:var(--seafoam)}.fm-topnav .fm-brand svg{width:20px;height:20px}
+    .fm-topnav .fm-links{display:flex;gap:3px;flex-wrap:wrap;margin-left:auto}
+    .fm-topnav .fm-links a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:7px 11px;border-radius:8px;transition:background .2s,color .2s;min-height:38px;display:inline-flex;align-items:center}
+    .fm-topnav .fm-links a:hover{background:rgba(47,176,154,.12);color:var(--ink)}
+    .fm-topnav .fm-links a[aria-current="page"]{background:rgba(47,176,154,.16);color:var(--seafoam)}
+    .fm-topnav .fm-links a:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
+    @media(max-width:640px){.fm-topnav .fm-links{margin-left:0;width:100%}}
+
+    .stage-wrap{flex:1;max-width:1200px;width:100%;margin:0 auto;padding:clamp(14px,3vw,28px) clamp(12px,4vw,40px);display:flex;flex-direction:column;gap:14px}
+    .head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .head .k{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--seafoam);margin:0}
+    .head h1{margin:2px 0 0;font-size:clamp(18px,2.4vw,24px);font-weight:800;letter-spacing:-.02em}
+    .dl{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;border:1px solid var(--line);color:var(--ink-dim);text-decoration:none;font-size:13px;font-weight:600;transition:background .2s,border-color .2s}
+    .dl:hover{background:rgba(47,176,154,.12);border-color:rgba(47,176,154,.4);color:var(--ink)}
+
+    .stage{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#0a2036;box-shadow:0 24px 60px -30px rgba(2,10,20,.9);aspect-ratio:16/9}
+    .stage img{width:100%;height:100%;object-fit:contain;display:block;background:#0a2036}
+    .nav-btn{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid var(--line);
+      background:rgba(6,17,30,.6);backdrop-filter:blur(6px);color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:background .2s,transform .1s;z-index:2}
+    .nav-btn:hover{background:rgba(47,176,154,.25)}.nav-btn:active{transform:translateY(-50%) scale(.94)}
+    .nav-btn:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
+    .nav-btn.prev{left:14px}.nav-btn.next{right:14px}
+    .nav-btn svg{width:22px;height:22px}
+    .counter{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:12px;color:var(--ink-dim);background:rgba(6,17,30,.6);backdrop-filter:blur(6px);padding:5px 12px;border-radius:999px;border:1px solid var(--line)}
+
+    .thumbs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin}
+    .thumbs button{flex:none;width:104px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:2px solid transparent;background:#0a2036;cursor:pointer;padding:0;opacity:.6;transition:opacity .2s,border-color .2s}
+    .thumbs button img{width:100%;height:100%;object-fit:cover;display:block}
+    .thumbs button:hover{opacity:.9}
+    .thumbs button[aria-current="true"]{opacity:1;border-color:var(--seafoam)}
+    .thumbs button:focus-visible{outline:2px solid var(--seafoam);outline-offset:1px}
+
+    .hint{font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono)}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+    @media(max-width:640px){.nav-btn{width:40px;height:40px}.thumbs button{width:84px}}
+  </style>
+</head>
+<body>
+  <p class="sr-only">FleetMind AWS 架構簡報，13 頁，可用左右鍵或縮圖切換。</p>
+
+  <nav class="fm-topnav" aria-label="主選單">
+    <a class="fm-brand" href="/"><svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
+    <div class="fm-links">
+      <a href="/">首頁</a>
+      <a href="/dashboard.html">決策看板</a>
+      <a href="/voyage.html">航程 Demo</a>
+      <a href="/map.html">地圖</a>
+      <a href="/architecture.html">AWS 架構</a>
+      <a href="/deck.html" aria-current="page">簡報</a>
+      <a href="/admin.html">後台</a>
+    </div>
+  </nav>
+
+  <div class="stage-wrap">
+    <div class="head">
+      <div>
+        <p class="k">AWS Architecture · 13 slides</p>
+        <h1>FleetMind AWS 架構簡報（網頁版）</h1>
+      </div>
+      <a class="dl" href="/deck/fleetmind-aws-architecture.pptx" download>
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        下載 PPTX
+      </a>
+    </div>
+
+    <div class="stage">
+      <img id="slide" src="/deck/slide-01.jpg" alt="投影片 1">
+      <button class="nav-btn prev" id="prev" type="button" aria-label="上一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="nav-btn next" id="next" type="button" aria-label="下一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <span class="counter" id="counter">1 / 13</span>
+    </div>
+
+    <div class="thumbs" id="thumbs" role="tablist" aria-label="投影片縮圖"></div>
+    <p class="hint">← → 或空白鍵切換 · 點縮圖跳頁 · 點投影片下一頁</p>
+  </div>
+
+  <script>
+    (function () {
+      var TOTAL = 13;
+      var i = 0;
+      var slide = document.getElementById('slide');
+      var counter = document.getElementById('counter');
+      var thumbs = document.getElementById('thumbs');
+      function pad(n){ return (n < 10 ? '0' : '') + n; }
+      // build thumbnails
+      for (var n = 1; n <= TOTAL; n++) {
+        (function (n) {
+          var b = document.createElement('button');
+          b.type = 'button'; b.setAttribute('role', 'tab');
+          b.setAttribute('aria-label', '投影片 ' + n);
+          var im = document.createElement('img');
+          im.src = '/deck/slide-' + pad(n) + '.jpg'; im.alt = '投影片 ' + n + ' 縮圖'; im.loading = 'lazy';
+          b.appendChild(im);
+          b.addEventListener('click', function () { go(n - 1); });
+          thumbs.appendChild(b);
+        })(n);
+      }
+      var thumbBtns = thumbs.querySelectorAll('button');
+      function render() {
+        slide.src = '/deck/slide-' + pad(i + 1) + '.jpg';
+        slide.alt = '投影片 ' + (i + 1);
+        counter.textContent = (i + 1) + ' / ' + TOTAL;
+        thumbBtns.forEach(function (b, idx) { b.setAttribute('aria-current', idx === i ? 'true' : 'false'); });
+        var cur = thumbBtns[i];
+        if (cur && cur.scrollIntoView) cur.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+      }
+      function go(n) { i = (n + TOTAL) % TOTAL; render(); }
+      document.getElementById('prev').addEventListener('click', function () { go(i - 1); });
+      document.getElementById('next').addEventListener('click', function () { go(i + 1); });
+      slide.addEventListener('click', function () { go(i + 1); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(i + 1); }
+        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1); }
+        else if (e.key === 'Home') { go(0); } else if (e.key === 'End') { go(TOTAL - 1); }
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
