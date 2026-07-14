@@ -3,20 +3,30 @@
 > Owner：P5。目的：避免 2026-07-16 14:30 前官方提交物漏交。  
 > 原則：12:00 開始上傳，14:00 前完成，不等 14:30 死線。  
 > 狀態：可直接列印/貼到提交工作台；Day1 補平台欄位名稱與檔案限制。  
-> **2026-07-14 更新**：官方 workshop 頁（docs/22 §6）確認為**六項**、經**本組專屬 surveycake 表單**（https://www.surveycake.com/s/xyeWy）繳交；「challenge link」非獨立提交物，企業資料應用與技術架構**併入 deck 內章節**。早期「七項」說法作廢；仍以 7/14 09:40 現場公告為最終準。
+> **2026-07-14 更新**：官方 workshop 頁（docs/22 §6）確認為**六項**、經**本組專屬 surveycake 表單**（https://www.surveycake.com/s/xyeWy）繳交；「challenge link」非獨立提交物，企業資料應用與技術架構**併入 deck 內章節**。早期「七項」說法作廢；仍以 7/14 09:40 現場公告為最終準。  
+> **2026-07-11 官方行前信（Ernie Tsai / AWS）確認**：陽明組提交＝**六項共通 + 第 7 項「預測結果檔案」**（＝ `predict/output/submission.csv`，官方明列「陽明海運組需額外提供預測完的結果檔案」）。提交時段議程微調見 §3。上台簡報用**主辦提供的電腦投影**（自備電腦僅供開發）。全員須實體出席 7/14+7/16 方取得完賽證明；另須各自報名 AWS Summit Taipei，先於會場 1F 大會報到再至 4F 競賽報到。
 
-## 1. 六項提交物總表（繳交管道：surveycake 表單）
+## 1. 提交物總表（陽明組＝6 共通 + 預測檔；管道：surveycake 表單）
 
 | # | 官方提交物 | Repo 起手素材 | Day3 最終值 | Owner | 驗證 |
 | --- | --- | --- | --- | --- | --- |
 | 1 | 團隊基本資料 | docs/02-team.md | 表單填寫 | P5 | 隊名/成員與報名一致 |
 | 2 | 提案大綱 | `docs/10`、`docs/13` | 表單文字/檔案 | P5 | 與 deck 故事線一致 |
-| 3 | 完整提案簡報（**含企業數據及資料應用、技術架構章節**） | `presentation/fleetmind-proposal-deck.pptx` + `docs/17`（資料應用章節素材）+ `docs/19`（架構章節素材） | final PPTX/PDF | P5（章節素材 Feng/Sunny/Eddie） | 可開啟；含資料應用+架構兩章節；數字與 demo 一致 |
+| 3 | 完整提案簡報（**含企業數據及資料應用、技術架構章節；並涵蓋官方 5 項必含內容見 §1b**） | `presentation/fleetmind-proposal-deck.pptx` + `docs/17`（資料應用）+ `docs/19`（架構）+ `docs/07`（Q&A 備答） | final PPTX/PDF | P5（章節素材 Feng/Sunny/Eddie） | 可開啟；含 5 項必含內容；數字與 demo/predict 一致 |
 | 4 | GitHub repository link | README、GitHub main branch | repo URL | Sunny + P5 | main 綠燈；無 raw data、無憑證、無未 merge branch |
 | 5 | Live demo link | `docs/16` deployment route | HTTPS/URL | Sunny | `/api/health` OK；評審無登入即可開 |
 | 6 | Demo recording video link | Day3 凍結快照錄影 | video URL | P5 + demo operator | 可播放、長度/格式符合平台限制 |
+| **7** | **預測結果檔案（陽明組限定）** | **`predict/output/submission.csv`**（`java`＋`uv run python -m fleetpredict all` 產） | 102 列 CSV | **Feng** | 恰 102 列、`ship_id,day,fuel_type,predicted_value`、與 PREDICT 格 1:1；`uv run pytest` 綠 |
 
-另有**預測提交檔**（25% 客觀評分）：`predict/output/submission.csv`（102 列，`ship_id,day,fuel_type,predicted_value`，見 `docs/23`）——繳交管道/欄位於 Day1 說明會確認（可能併入 surveycake 或另行收檔）。
+### 1b. 提案簡報官方必含 5 項內容（陽明組，行前信明列）
+
+| # | 官方要求 | 我方對應 |
+| --- | --- | --- |
+| 1 | 以互動化界面展現船舶隨航行的 Speed Loss 檢視 | Speed Loss dashboard（真資料 SVG 趨勢＋切船＋事件標記；`apps/api`） |
+| 2 | 油耗預測模型說明（歸因：船體/螺旋槳/其他因素對油耗影響） | `predict/` 模型說明（特徵/驗證）＋ `core-calc` `Attribution` 船殼vs螺旋槳歸因；備答 `docs/07` |
+| 3 | 未盡之處＋更多資料能強化的決策依據與商務價值 | `docs/07` Q18/Q19、`docs/24`（想要軸功率/對水速度計/海試曲線/UWC恢復幅度） |
+| 4 | 分析架構概述（用什麼算法） | `docs/19`：物理 baseline→GBM 擇優；ISO 19030 k=FOC/STW³；Theil-Sen；歸因隔離區段 |
+| 5 | AI 在此次黑客松扮演的角色 | `docs/19` §1、`docs/07` Q16：數字來自計算、語言來自 AI（Bedrock 決策簡報＋guardrail）；開發用 Kiro |
 
 ## 2. Day1 必問欄位
 
@@ -114,3 +124,13 @@ Rule: 提交完成不代表結束；每個 link/file 都要由另一位隊員用
 若提交平台只能填短文字：
 
 > FleetMind has seven deliverables prepared as one package: editable proposal deck, challenge link, enterprise data application description, technical architecture, GitHub repository, live demo URL, and demo recording URL. P5 owns platform upload, Sunny owns URL health and repo safety, Feng owns FUEL_CONSUMP/data description, Eddie owns API/AI brief checks, and Chen owns calculation correctness. Upload starts at 12:00, target complete by 14:00, with 30 minutes reserved for link verification before the 14:30 hard deadline.
+
+## 6. 行前信重點（非提交，2026-07-11 官方信）
+
+- **場地**：7/14 南山大樓 12F（松仁路 100 號；行前信＝入場邀請函，2F 閘門出示）；7/16 TICC 4F 鳳凰廳（信義路五段 1 號，11:30 前完成報到）。
+- **報到**：入選隊全員須報名 AWS Summit Taipei；先於會場 1F 大會報到，再至 4F 競賽報到。
+- **設備**：自備電腦開發；**上台簡報用主辦提供電腦投影**（deck 需可在他機開啟——PPTX 或 PDF，字型內嵌/轉外框）。
+- **出席**：全員全程實體出席 7/14 + 7/16（含開幕/提交/頒獎）方取得完賽證明；違規可取消資格與獎金。
+- **獎項**：各組（含陽明）取前三，第一 NT$5 萬 / 第二 NT$3 萬 / 第三 NT$1 萬。
+- **稅務/領獎**：隊長代表領獎，預備**身分證影本 + 匯款存摺影本**；獎金 ≥NT$20,000 依法代扣 10%（境內個人）/ 20%（非境內）所得稅；獎金分配隊內自理。
+- **最終規範以 7/14 上午現場公告為準**（主辦保留修改權）。
