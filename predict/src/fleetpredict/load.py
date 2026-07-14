@@ -106,6 +106,7 @@ def load_dataset(data_dir: str | Path = "data") -> Dataset:
         "_is_masked_row",
         "_has_predict",
         "_predict_fuel",
+        "NOON_DATE",
     }
     for column in voyages.columns:
         if column not in protected:

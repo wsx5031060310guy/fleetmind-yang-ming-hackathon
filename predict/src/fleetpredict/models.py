@@ -267,17 +267,25 @@ def choose_blend_weight(
     return float(candidates[int(np.argmin(errors))])
 
 
-def fit_named_model(name: str, rows: pd.DataFrame, blend_weight: float):
+def fit_named_model(
+    name: str,
+    rows: pd.DataFrame,
+    blend_weight: float,
+    feature_columns: tuple[str, ...] = tuple(FEATURE_COLUMNS),
+):
     """Fit the validation-selected candidate on all available training rows."""
 
+    baseline_features = tuple(
+        column for column in feature_columns if column not in FOULING_FEATURES
+    )
     if name == PHYSICS_NAME:
         return PhysicsBaseline().fit(rows)
     if name == GBM_BASELINE_NAME:
-        return GBMModel(feature_columns=BASELINE_FEATURE_COLUMNS).fit(rows)
+        return GBMModel(feature_columns=baseline_features).fit(rows)
     if name == GBM_FOULING_NAME:
-        return GBMModel().fit(rows)
+        return GBMModel(feature_columns=feature_columns).fit(rows)
     if name == BLEND_NAME:
         physics = PhysicsBaseline().fit(rows)
-        gbm = GBMModel().fit(rows)
+        gbm = GBMModel(feature_columns=feature_columns).fit(rows)
         return BlendModel(physics, gbm, blend_weight)
     raise ValueError(f"unknown model candidate: {name}")

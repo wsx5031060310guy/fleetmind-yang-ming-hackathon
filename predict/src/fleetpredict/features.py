@@ -159,7 +159,11 @@ def _state_features(
     return hull_days, prop_days, degree_days
 
 
-def build_features(dataset: Dataset, anchor: AnchorSolution) -> FeatureSet:
+def build_features(
+    dataset: Dataset,
+    anchor: AnchorSolution,
+    external_feature_columns: tuple[str, ...] = (),
+) -> FeatureSet:
     frame = dataset.voyages.copy()
     frame["MID_DRAFT"] = frame["MID_DRAFT"].fillna(
         frame[["FORE_DRAFT", "AFTER_DRAFT"]].mean(axis=1)
@@ -203,4 +207,5 @@ def build_features(dataset: Dataset, anchor: AnchorSolution) -> FeatureSet:
         frame.loc[frame["_predict_fuel"].eq(fuel), "fuel_lcv"] = lcv
     if frame.loc[frame["is_predict"], "fuel_lcv"].isna().any():
         raise ValueError("PREDICT row missing requested fuel LCV")
-    return FeatureSet(frame=frame, feature_columns=tuple(FEATURE_COLUMNS))
+    feature_columns = tuple([*FEATURE_COLUMNS, *external_feature_columns])
+    return FeatureSet(frame=frame, feature_columns=feature_columns)

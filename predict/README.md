@@ -22,6 +22,15 @@ model; MAPE breaks an RMSE tie. Pipeline prints
 `selected model: <name> (min extended-sim-mask RMSE)` and writes
 `output/submission.csv` using that model.
 
+Additional judge-facing outputs:
+
+- `output/validation-report.csv`: selected-model overall/fuel/class/prediction-
+  ship RMSE, MAPE, and signed bias.
+- `output/submission-with-confidence.csv`: same 102 cells plus `pred_lo` and
+  `pred_hi`, using ±1 residual standard deviation from the matching
+  `(ship class × fuel)` extended-mask slice. This is a rough empirical band,
+  not a calibrated probabilistic guarantee.
+
 Writer requires exactly:
 
 ```text
@@ -30,7 +39,27 @@ ship_id,day,fuel_type,predicted_value
 
 All 102 discovered cells are checked one-to-one using internal source-row
 identity. Values must be positive and finite. Output sorts by ship/day, formats
-six decimals, and refuses partial or mismatched submissions.
+six decimals, and refuses partial or mismatched submissions. Before any write,
+each prediction must also be no greater than that ship's maximum visible
+full-speed-period fuel mass × 1.5; violations identify the exact cell and abort.
+The official file remains exactly four columns and 102 rows.
+
+## Optional external-reanalysis seam
+
+External features are **OFF by default**; the default path performs no network
+calls and preserves baseline behavior. Day2 may pre-fetch a local daily SST/
+current CSV, add an absolute `NOON_DATE` mapping to voyage data, then run:
+
+```bash
+uv run python -m fleetpredict --use-external \
+  --external-path path/to/external-reanalysis.csv all
+```
+
+The local CSV needs `date` plus one or more of `external_sst_c`,
+`external_current_u_ms`, and `external_current_v_ms`; optional `ship_id` enables
+ship/date joining. Current organizer `NOON_UTC` is only a relative day, so the
+hook refuses `--use-external` until an absolute noon-date mapping exists. It
+never fetches data itself.
 
 ## Direct maintenance event-day join
 
@@ -117,17 +146,24 @@ Exact fouling features improve MAPE but worsen RMSE by 0.0199 MT, so added
 complexity does not beat incumbent and is not used for submission. GroupKFold's
 small blend advantage is secondary and does not override declared selection rule.
 
-### Selected-model extended-mask segments
+### Selected-model persisted validation report
 
 | Dimension | Segment | n | RMSE (MT) | MAPE (%) | Bias (MT) |
 | --- | --- | ---: | ---: | ---: | ---: |
+| Overall | overall | 578 | 3.5064 | 5.2171 | 0.6763 |
 | Fuel | HSHFO | 475 | 3.3735 | 4.1594 | 0.7049 |
 | Fuel | VLSFO | 77 | 3.3739 | 10.0108 | 0.5098 |
 | Ship class | W1 | 377 | 3.6447 | 5.9696 | 0.6801 |
 | Ship class | W2 | 201 | 3.2312 | 3.8056 | 0.6691 |
+| Prediction ship | S21 | 20 | 2.1128 | 2.0172 | 0.5728 |
+| Prediction ship | S22 | 9 | 4.8941 | 9.4349 | -0.4851 |
+| Prediction ship | S23 | 16 | 4.5252 | 4.4216 | -1.6434 |
 
-Remaining 26 held-out rows use BIO_HSFO, LSMGO, or ULSFO; pipeline prints all
-fuel segments, every selected-model window, and RMSE/MAPE/bias on each run.
+Overall/fuel/class rows use the 578-row primary S1–S12 extended mask. S21–S23
+rows use a separate leak-controlled mask of their visible post-event history;
+they never expose official hidden cells and never affect model selection.
+Remaining 26 primary held-out rows use BIO_HSFO, LSMGO, or ULSFO. Pipeline prints
+all fuel segments, every selected-model window, and persists the table above.
 
 Actual run: 8,192 qualified training rows; scikit-learn 1.9.0; fixed seed
 `20260714`. Blend GBM weight: 0.99. Re-running identical inputs produces an

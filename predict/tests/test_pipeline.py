@@ -9,7 +9,7 @@ from fleetpredict.features import _state_features, build_features
 from fleetpredict.load import load_dataset
 from fleetpredict.models import GBM_BASELINE_NAME, GBM_FOULING_NAME
 from fleetpredict.submit import write_submission
-from fleetpredict.validate import _select_model
+from fleetpredict.validate import _select_model, validate_models
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -104,6 +104,61 @@ def test_submission_refuses_wrong_row_count(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="expected 102"):
         write_submission(predictions, discovered, tmp_path / "bad.csv")
     assert not (tmp_path / "bad.csv").exists()
+
+
+def test_submission_refuses_physically_implausible_cell(tmp_path: Path) -> None:
+    predictions = pd.DataFrame(
+        [
+            {
+                "_row_id": 1,
+                "ship_id": "S21",
+                "day": 10,
+                "fuel_type": "ME_FULLSPEED_CONSUMP_HSHFO",
+                "predicted_value": 150.01,
+            }
+        ]
+    )
+    discovered = predictions[["_row_id", "ship_id", "day", "fuel_type"]].copy()
+    with pytest.raises(
+        ValueError, match=r"physically implausible.*S21 day=10"
+    ):
+        write_submission(
+            predictions,
+            discovered,
+            tmp_path / "unsafe.csv",
+            expected_count=1,
+            ship_visible_max={"S21": 100.0},
+        )
+    assert not (tmp_path / "unsafe.csv").exists()
+
+
+def test_validation_report_has_required_segment_rows(tmp_path: Path) -> None:
+    dataset = load_dataset(DATA_DIR)
+    solution = solve_anchor(dataset.voyages, dataset.maintenance)
+    features = build_features(dataset, solution)
+    validation = validate_models(features, dataset.maintenance, solution)
+    output = validation.write_report(tmp_path / "validation-report.csv")
+    report = pd.read_csv(output)
+    expected = {
+        ("overall", "overall"),
+        ("fuel", "HSHFO"),
+        ("fuel", "VLSFO"),
+        ("ship_class", "W1"),
+        ("ship_class", "W2"),
+        ("prediction_ship", "S21"),
+        ("prediction_ship", "S22"),
+        ("prediction_ship", "S23"),
+    }
+    assert set(zip(report["dimension"], report["segment"])) == expected
+    assert list(report.columns) == [
+        "dimension",
+        "segment",
+        "n",
+        "RMSE_MT",
+        "MAPE_pct",
+        "Bias_MT",
+    ]
+    assert report[["RMSE_MT", "MAPE_pct", "Bias_MT"]].notna().all().all()
 
 
 def test_model_selection_uses_rmse_then_mape() -> None:
