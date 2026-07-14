@@ -4,132 +4,213 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FleetMind · AI 船舶效能節能決策支援系統</title>
-  <meta name="description" content="FleetMind 依 ISO 19030 方法量測 15 艘船的 Speed Loss，提供門檻告警、跨越預估與分級養護建議。數字來自計算，語言來自 AI，決策留給人。">
+  <meta name="description" content="FleetMind 首頁：一艘船駛回港的沈浸式入口，通往決策看板、AWS 架構藍圖、航程 Demo 與後台設定。數字來自計算，語言來自 AI，決策留給人。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232FB09A'/%3E%3Cpath d='M6 20c3 2 5 2 8 0s5-2 8 0 5 2 6 1' fill='none' stroke='%23052029' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 6l5 9H11z' fill='%23052029'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/styles.css">
+  <style>
+    :root{
+      --bg:#071523;--surface:#0E2B49;--surface2:#12385C;
+      --line:rgba(148,183,214,.15);--ink:#EAF2F9;--ink-dim:#B7CBDD;--muted:#8AA6BF;
+      --teal:#3BA0C4;--seafoam:#37C0A6;--amber:#F4A72B;--coral:#EC7358;
+      --mono:ui-monospace,"SFMono-Regular",Menlo,monospace;
+      --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;overflow-x:hidden}
+    body{margin:0;font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;background:var(--bg);overflow-x:hidden;max-width:100%}
+    a{color:inherit}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+    .fm-topnav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px clamp(16px,4vw,40px);background:rgba(6,17,30,.55);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);position:fixed;top:0;left:0;right:0;z-index:900}
+    .fm-topnav .fm-brand{color:var(--ink);font-weight:800;text-decoration:none;font-size:15.5px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .fm-topnav .fm-brand b{color:var(--seafoam)}
+    .fm-topnav .fm-brand svg{width:20px;height:20px}
+    .fm-topnav .fm-links{display:flex;gap:3px;flex-wrap:wrap;margin-left:auto}
+    .fm-topnav .fm-links a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:7px 12px;border-radius:8px;transition:background .2s,color .2s;min-height:38px;display:inline-flex;align-items:center}
+    .fm-topnav .fm-links a:hover{background:rgba(47,176,154,.14);color:var(--ink)}
+    .fm-topnav .fm-links a[aria-current="page"]{background:rgba(47,176,154,.16);color:var(--seafoam)}
+    .fm-topnav .fm-links a:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
+    @media(max-width:600px){.fm-topnav .fm-links{margin-left:0;width:100%}}
+
+    /* ---- immersive sea hero ---- */
+    .sea{position:relative;min-height:100vh;min-height:100svh;min-height:100dvh;overflow:hidden;display:flex;align-items:center;
+      background:linear-gradient(180deg,#0a2036 0%,#0b2c47 42%,#0e3a5c 62%,#0c2f4d 100%)}
+    .sea .sky-glow{position:absolute;inset:0;background:radial-gradient(60% 55% at 74% 26%,rgba(244,167,43,.22),transparent 60%),radial-gradient(50% 45% at 20% 12%,rgba(55,192,166,.16),transparent 62%);pointer-events:none}
+    .sea .stars{position:absolute;inset:0;opacity:.5;pointer-events:none;
+      background-image:radial-gradient(1.4px 1.4px at 18% 22%,rgba(234,242,249,.7),transparent),radial-gradient(1.2px 1.2px at 62% 16%,rgba(234,242,249,.5),transparent),radial-gradient(1.5px 1.5px at 84% 30%,rgba(234,242,249,.6),transparent),radial-gradient(1px 1px at 40% 10%,rgba(234,242,249,.4),transparent)}
+
+    /* ship */
+    .ship{position:absolute;left:50%;bottom:20%;width:min(46vw,560px);z-index:3;transform:translateX(-50%);
+      animation:sail-in 2.4s cubic-bezier(.22,.61,.36,1) both, bob 6s ease-in-out 2.4s infinite}
+    .ship svg{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 24px rgba(2,10,20,.5))}
+    @keyframes sail-in{from{transform:translateX(60vw);opacity:0}to{transform:translateX(-50%);opacity:1}}
+    @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-.4deg)}50%{transform:translateX(-50%) translateY(-9px) rotate(.4deg)}}
+    .ship .wake{opacity:.0;animation:wake 6s ease-in-out 2.6s infinite}
+    @keyframes wake{0%,100%{opacity:.15}50%{opacity:.4}}
+
+    /* wave layers */
+    .waves{position:absolute;left:0;right:0;bottom:0;z-index:4;pointer-events:none}
+    .waves .layer{position:absolute;bottom:0;left:0;width:200%;height:auto}
+    .waves .l1{opacity:.9;animation:drift 13s linear infinite}
+    .waves .l2{opacity:.75;animation:drift 19s linear infinite reverse}
+    .waves .l3{opacity:.6;animation:drift 27s linear infinite}
+    @keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    .hero-inner{position:relative;z-index:6;max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px);width:100%}
+    .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--seafoam);margin:0 0 16px}
+    h1{font-size:clamp(32px,6.4vw,64px);line-height:1.02;letter-spacing:-.025em;margin:0 0 18px;font-weight:800;text-wrap:balance;text-shadow:0 2px 30px rgba(2,10,20,.5)}
+    h1 b{color:var(--seafoam)}
+    .lede{font-size:clamp(15px,2vw,18px);color:var(--ink-dim);max-width:56ch;margin:0;text-shadow:0 1px 12px rgba(2,10,20,.5)}
+    .tagline{margin:16px 0 0;font-style:italic;color:var(--muted);font-size:14px}
+    .meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+    .chip{font-family:var(--mono);font-size:12px;color:var(--ink-dim);padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(8,26,44,.5);backdrop-filter:blur(6px)}
+    .chip b{color:var(--seafoam)}
+    .scrollcue{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:6;color:var(--muted);font-size:12px;letter-spacing:.1em;text-align:center;animation:cue 2.4s ease-in-out infinite}
+    .scrollcue svg{display:block;margin:6px auto 0;width:20px;height:20px}
+    @keyframes cue{0%,100%{transform:translateX(-50%) translateY(0);opacity:.65}50%{transform:translateX(-50%) translateY(6px);opacity:1}}
+
+    /* ---- menu ---- */
+    .menu-wrap{background:linear-gradient(180deg,#0c2f4d,#071523 40%);padding:clamp(40px,6vw,72px) 0}
+    .wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+    .menu-head{margin-bottom:22px}
+    .menu-head .k{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--seafoam);margin:0 0 6px}
+    .menu-head h2{margin:0;font-size:clamp(20px,3vw,28px);font-weight:800;letter-spacing:-.02em}
+    .menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:16px}
+    .card{position:relative;display:flex;flex-direction:column;gap:11px;padding:22px 22px 20px;border-radius:18px;border:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(18,56,92,.5),rgba(10,32,54,.42));text-decoration:none;color:inherit;
+      box-shadow:0 16px 40px -24px rgba(2,10,20,.85);transition:transform .22s cubic-bezier(.22,.61,.36,1),border-color .2s,box-shadow .2s}
+    .card:hover{transform:translateY(-4px);border-color:rgba(55,192,166,.42);box-shadow:0 28px 60px -26px rgba(2,10,20,.9)}
+    .card:active{transform:translateY(-1px)}
+    .card:focus-visible{outline:2px solid var(--seafoam);outline-offset:3px}
+    .card .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(150deg,var(--teal),var(--seafoam))}
+    .card .ic svg{width:24px;height:24px}
+    .card .ic.b2{background:linear-gradient(150deg,#5468c9,#3BA0C4)}
+    .card .ic.b3{background:linear-gradient(150deg,#2f9e86,#37C0A6)}
+    .card .ic.b4{background:linear-gradient(150deg,#c98a3b,#F4A72B)}
+    .card h3{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+    .card p{margin:0;font-size:13.5px;color:var(--ink-dim);line-height:1.6}
+    .card .go{margin-top:auto;font-size:13px;font-weight:700;color:var(--seafoam);display:inline-flex;align-items:center;gap:6px}
+    .badge{font-size:10.5px;font-weight:700;font-family:var(--mono);padding:2px 8px;border-radius:6px}
+    .badge.live{color:var(--seafoam);background:rgba(55,192,166,.16);border:1px solid rgba(55,192,166,.4)}
+    .badge.new{color:var(--amber);background:rgba(244,167,43,.15);border:1px solid rgba(244,167,43,.4)}
+
+    footer{padding:26px 0 60px;color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
+    footer a{color:var(--ink-dim)}
+
+    @media(prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto}
+      .ship{animation:none;transform:translateX(-50%)}
+      .waves .layer{animation:none}
+      .scrollcue{animation:none}
+      *{transition:none!important}
+    }
+  </style>
 </head>
 <body>
-  <a class="skip-link" href="#fleet-section">跳到船隊列表</a>
+  <p class="sr-only">FleetMind 首頁：沈浸式入口，通往決策看板、AWS 架構藍圖、航程 Demo 與後台設定。</p>
 
-  <header class="app-header">
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#052029" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#052029"/></svg>
-      </span>
-      <div class="brand-text">
-        <p class="wordmark">Fleet<b>Mind</b></p>
-        <p class="subtitle">AI 船舶效能節能決策支援系統</p>
-        <p class="tagline">數字來自計算，語言來自 AI，決策留給人。</p>
+  <nav class="fm-topnav" aria-label="主選單">
+    <a class="fm-brand" href="/"><svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
+    <div class="fm-links">
+      <a href="/" aria-current="page">首頁</a>
+      <a href="/dashboard.html">決策看板</a>
+      <a href="/voyage.html">航程 Demo</a>
+      <a href="/architecture.html">AWS 架構</a>
+      <a href="/admin.html">後台</a>
+    </div>
+  </nav>
+
+  <section class="sea" aria-label="船舶駛回港的沈浸式開場">
+    <div class="sky-glow" aria-hidden="true"></div>
+    <div class="stars" aria-hidden="true"></div>
+
+    <div class="ship" aria-hidden="true">
+      <svg viewBox="0 0 560 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- hull -->
+        <path d="M60 150 H500 L470 205 Q465 214 452 214 H120 Q104 214 96 202 Z" fill="#0b2233" stroke="#16466F" stroke-width="2"/>
+        <rect x="60" y="139" width="440" height="14" rx="3" fill="#123f39"/>
+        <!-- containers -->
+        <g>
+          <rect x="120" y="96" width="52" height="44" rx="2" fill="#2E8DB0"/>
+          <rect x="176" y="96" width="52" height="44" rx="2" fill="#37C0A6"/>
+          <rect x="232" y="86" width="52" height="54" rx="2" fill="#F4A72B"/>
+          <rect x="288" y="96" width="52" height="44" rx="2" fill="#3BA0C4"/>
+          <rect x="344" y="104" width="52" height="36" rx="2" fill="#2f9e86"/>
+          <rect x="146" y="70" width="52" height="26" rx="2" fill="#1C7293"/>
+          <rect x="258" y="60" width="52" height="26" rx="2" fill="#EC7358"/>
+        </g>
+        <!-- bridge -->
+        <rect x="408" y="86" width="60" height="54" rx="3" fill="#0E2B49" stroke="#2E8DB0" stroke-width="1.5"/>
+        <rect x="418" y="96" width="10" height="9" fill="#8AA6BF"/><rect x="434" y="96" width="10" height="9" fill="#8AA6BF"/><rect x="450" y="96" width="10" height="9" fill="#8AA6BF"/>
+        <rect x="455" y="58" width="6" height="30" fill="#16466F"/>
+        <!-- waterline shimmer -->
+        <path class="wake" d="M20 178 Q60 172 96 180" stroke="#37C0A6" stroke-width="3" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+
+    <div class="waves" aria-hidden="true">
+      <svg class="layer l3" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 60 C180 30 360 90 720 60 C1080 30 1260 90 1440 60 V120 H0 Z" fill="#0e3a5c"/></svg>
+      <svg class="layer l2" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 70 C240 40 420 100 720 72 C1020 44 1200 100 1440 72 V120 H0 Z" fill="#0b2f4d"/></svg>
+      <svg class="layer l1" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 84 C220 58 460 108 720 86 C980 64 1220 108 1440 86 V120 H0 Z" fill="#081f34"/></svg>
+    </div>
+
+    <div class="hero-inner">
+      <p class="eyebrow">Yang Ming · AWS Summit Hackathon</p>
+      <h1>一艘船正悄悄<br>多燒<b>油</b>——我們看得見</h1>
+      <p class="lede">FleetMind 依 ISO 19030（k = FOC / STW³）從 15 艘同型船、5 年正午報表偵測船體污損造成的 Speed Loss，把「該不該安排水下檢查與清洗」變成有圖有據的決策。往下選一個入口進入 Demo。</p>
+      <p class="tagline">數字來自計算，語言來自 AI，決策留給人。</p>
+      <div class="meta-row">
+        <span class="chip">帳號 <b>516665228894</b></span>
+        <span class="chip">Region <b>us-east-1</b></span>
+        <span class="chip">運算 <b>ECS Fargate</b></span>
+        <span class="chip">AI <b>Amazon Bedrock</b></span>
       </div>
     </div>
-    <div class="header-right">
-      <div class="threshold" role="group" aria-label="Speed Loss 告警門檻設定">
-        <span class="th-label">告警門檻<b id="th-current">10%</b></span>
-        <div class="seg" id="th-seg" role="tablist" aria-label="門檻快選">
-          <button type="button" data-th="8">8%</button>
-          <button type="button" data-th="10">10%</button>
-          <button type="button" data-th="15">15%</button>
-        </div>
-        <input class="th-custom tnum" id="th-input" type="number" min="1" max="50" step="0.5"
-               inputmode="decimal" aria-label="自訂門檻 (%)" title="自訂門檻 (%)">
+
+    <a class="scrollcue" href="#menu" aria-label="往下探索">探索<svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </section>
+
+  <div class="menu-wrap" id="menu">
+    <div class="wrap">
+      <div class="menu-head">
+        <p class="k">Demo 入口</p>
+        <h2>四個入口，一套決策系統</h2>
       </div>
-      <a class="download" href="/api/fuel-consump/export" download>
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        FUEL_CONSUMP CSV
-      </a>
+      <main class="menu" aria-label="功能入口">
+        <a class="card" href="/dashboard.html">
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 13h4l2 5 4-12 2 7h6" stroke="#052029" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <h3>決策看板 <span class="badge live">LIVE</span></h3>
+          <p>15 艘船即時狀態燈（🟢🟡🔴）、可調告警門檻、預估跨越天數與分級養護建議（UWILD／船體清洗），含 AI 決策簡報。</p>
+          <span class="go">進入決策看板 →</span>
+        </a>
+
+        <a class="card" href="/voyage.html">
+          <span class="ic b3" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 17c2 1.4 3.5 1.4 5.5 0s3.5-1.4 5.5 0 3.5 1.4 5 0" stroke="#052029" stroke-width="1.8" stroke-linecap="round"/><path d="M12 3l5 9H7z" fill="#052029"/></svg></span>
+          <h3>航程沈浸 Demo <span class="badge new">NEW</span></h3>
+          <p>一艘船從入港、靠泊、水下事件、清洗前後對照、離港、航行遙測、衰退撞門檻到決策建議——全程真實數據驅動的 scroll 敘事。</p>
+          <span class="go">開始航程 →</span>
+        </a>
+
+        <a class="card" href="/architecture.html">
+          <span class="ic b2" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="7" height="7" rx="1.5" stroke="#eaf6fb" stroke-width="1.8"/><rect x="14" y="4" width="7" height="7" rx="1.5" stroke="#eaf6fb" stroke-width="1.8"/><rect x="8.5" y="14" width="7" height="7" rx="1.5" stroke="#eaf6fb" stroke-width="1.8"/><path d="M6.5 11v1.5M17.5 11v1.5M12 12.5V14" stroke="#eaf6fb" stroke-width="1.6"/></svg></span>
+          <h3>AWS 架構藍圖 <span class="badge live">LIVE</span></h3>
+          <p>現行已上線的 ECS Fargate + ALB + Bedrock + SNS 架構，加上 Serverless／App Runner／EC2／完整資料管線五種方案的圖解與取捨比較。</p>
+          <span class="go">看架構圖 →</span>
+        </a>
+
+        <a class="card" href="/admin.html">
+          <span class="ic b4" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#052029" stroke-width="1.8"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke="#052029" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+          <h3>後台設定 <span class="badge new">NEW</span></h3>
+          <p>門檻與決策參數、告警通道與收件人（Email／SNS／SES／Webhook）、燃料類型對應、資料來源與系統介接、正午報表上傳。</p>
+          <span class="go">開啟後台 →</span>
+        </a>
+      </main>
+
+      <footer>
+        <span>FleetMind · 陽明海運 AI 船舶效能節能決策支援系統</span>
+        <a href="/api/health">健康檢查</a>
+        <span style="margin-left:auto;font-family:var(--mono)">ISO 19030 · us-east-1</span>
+      </footer>
     </div>
-  </header>
-
-  <main>
-    <p id="app-error" role="alert"></p>
-
-    <section class="panel decisionboard enter d1" aria-labelledby="board-title">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">決策看板</p>
-          <h2 id="board-title">需要注意的船</h2>
-        </div>
-        <span class="board-count tnum" id="board-count" aria-live="polite"></span>
-      </div>
-      <div id="alerts"></div>
-    </section>
-
-    <section class="panel enter d2" id="fleet-section" aria-labelledby="fleet-title">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">船隊總覽</p>
-          <h2 id="fleet-title">船隊 · 依風險排序</h2>
-        </div>
-        <span class="section-note">點選任一列查看決策細節</span>
-      </div>
-      <div id="fleet-wrap" class="table-wrap">
-        <table id="fleet">
-          <thead>
-            <tr>
-              <th scope="col">狀態</th>
-              <th scope="col">船舶</th>
-              <th scope="col" class="num">Speed Loss</th>
-              <th scope="col" class="num">預估跨越</th>
-              <th scope="col" class="num">船體污損</th>
-              <th scope="col">清洗塗層</th>
-              <th scope="col">信賴度</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="detail-grid enter d3" aria-label="單船決策細節">
-      <div class="detail-left">
-        <article class="panel decision-card" id="decision" aria-live="polite"></article>
-        <div class="panel">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">效能趨勢</p>
-              <h2>Speed Loss · <span id="selected-vessel">—</span></h2>
-            </div>
-          </div>
-          <div id="performance"></div>
-        </div>
-      </div>
-      <div class="detail-right">
-        <div class="panel">
-          <h2>污損歸因 · 船體 vs 螺旋槳</h2>
-          <div id="attribution"></div>
-        </div>
-        <div class="panel">
-          <h2>養護前後 k 值（UWILD/清洗效果）</h2>
-          <div id="business"></div>
-        </div>
-        <div class="panel">
-          <div class="panel-heading">
-            <h2>AI 決策簡報</h2>
-            <div class="actions">
-              <button id="generate" class="btn primary" type="button">生成簡報</button>
-              <button id="force-fallback" class="btn secondary" type="button">離線備援</button>
-            </div>
-          </div>
-          <div id="brief"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel enter d4" aria-labelledby="quality-title">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">資料品質</p>
-          <h2 id="quality-title">正午報表篩選旗標</h2>
-        </div>
-      </div>
-      <div id="quality"></div>
-    </section>
-
-    <footer class="site-foot">
-      FleetMind · ISO 19030 方法論參考 · k = FOC / STW³（同航速正規化效能）· 門檻與建議可由營運端自行調整
-    </footer>
-  </main>
-
-  <script src="/app.js"></script>
+  </div>
 </body>
 </html>

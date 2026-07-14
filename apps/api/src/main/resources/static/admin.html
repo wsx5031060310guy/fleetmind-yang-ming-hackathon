@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FleetMind · 後台設定</title>
+  <meta name="description" content="FleetMind 後台：門檻與決策、告警通道與收件人、燃料對應、資料來源與介接、正午報表上傳。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232FB09A'/%3E%3Cpath d='M6 20c3 2 5 2 8 0s5-2 8 0 5 2 6 1' fill='none' stroke='%23052029' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 6l5 9H11z' fill='%23052029'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <nav class="topnav" aria-label="主選單">
+    <a class="brand" href="/"><svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
+    <div class="links">
+      <a href="/">首頁</a>
+      <a href="/dashboard.html">決策看板</a>
+      <a href="/voyage.html">航程</a>
+      <a href="/architecture.html">AWS 架構</a>
+      <a href="/admin.html" aria-current="page">後台</a>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <header class="page">
+      <p class="eyebrow">Admin · Settings &amp; Integrations</p>
+      <h1>後台<b>設定</b></h1>
+      <p>調整決策門檻與告警通道、維護燃料對應表、檢視系統介接端點，並上傳正午報表做逐列驗證預覽。設定為記憶體儲存（demo），正式版將持久化至 DynamoDB／SSM。</p>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="設定分頁">
+      <button class="tab" role="tab" id="tab-threshold" aria-controls="panel-threshold" aria-selected="true">門檻與決策</button>
+      <button class="tab" role="tab" id="tab-alerts" aria-controls="panel-alerts" aria-selected="false">告警通道與收件人</button>
+      <button class="tab" role="tab" id="tab-fuel" aria-controls="panel-fuel" aria-selected="false">燃料對應表</button>
+      <button class="tab" role="tab" id="tab-integrations" aria-controls="panel-integrations" aria-selected="false">資料來源與介接</button>
+      <button class="tab" role="tab" id="tab-upload" aria-controls="panel-upload" aria-selected="false">上傳正午報表</button>
+    </div>
+
+    <!-- 門檻與決策 -->
+    <section class="panel active" id="panel-threshold" role="tabpanel" aria-labelledby="tab-threshold">
+      <div class="card">
+        <h2>Speed Loss 決策門檻</h2>
+        <p class="hint">超過此百分比即判定為 ACT；接近門檻且趨勢向上者列為 WATCH。此門檻與決策看板共用同一全域狀態，改動後兩處一致。</p>
+        <label class="field" for="threshold">門檻 (%)
+          <div class="range-row">
+            <input type="range" id="threshold" min="1" max="50" step="0.5" value="10">
+            <output id="threshold-out" class="tnum">10.0%</output>
+          </div>
+        </label>
+        <p class="note" id="threshold-preview">即時預覽載入中…</p>
+      </div>
+      <div class="card">
+        <h2>預警期 (Alert Horizon)</h2>
+        <p class="hint">未來幾天內預估將跨越門檻即納入 WATCH 告警。</p>
+        <label class="field" for="horizon" style="max-width:260px;">天數
+          <input type="number" id="horizon" min="1" max="365" step="1" value="14" class="tnum">
+        </label>
+        <div class="actions">
+          <button class="btn btn-primary" id="save-threshold">儲存門檻與決策設定</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 告警通道與收件人 -->
+    <section class="panel" id="panel-alerts" role="tabpanel" aria-labelledby="tab-alerts">
+      <div class="card">
+        <h2>啟用的告警通道</h2>
+        <p class="hint">勾選要啟用的通道。徽章顯示該通道是否已於環境變數完成設定（可實際送出）。email／sns 走 SNS topic 扇出，ses 走品牌化 HTML email，webhook 為 system-to-system 推送。</p>
+        <div class="channels" id="channels"></div>
+      </div>
+      <div class="card">
+        <h2>Email 收件人</h2>
+        <p class="hint">SES HTML 告警的收件人；SNS email 未設環境收件人時亦以此為 fallback。</p>
+        <div class="rows" id="recipients"></div>
+        <button class="btn btn-ghost" id="add-recipient" type="button">+ 新增收件人</button>
+      </div>
+      <div class="card">
+        <div class="grid2">
+          <label class="field" for="sns-arn">SNS Topic ARN（顯示／預期值）
+            <input type="text" id="sns-arn" placeholder="arn:aws:sns:us-east-1:...:fleetmind-alerts">
+          </label>
+          <label class="field" for="schedule">自動掃描排程 (cron，顯示用)
+            <input type="text" id="schedule" placeholder="30 12 * * *" class="tnum">
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="save-alerts">儲存告警設定</button>
+          <button class="btn btn-ghost" id="test-send" type="button">測試發送一封</button>
+        </div>
+        <div class="channel-result" id="test-result" hidden></div>
+      </div>
+    </section>
+
+    <!-- 燃料對應表 -->
+    <section class="panel" id="panel-fuel" role="tabpanel" aria-labelledby="tab-fuel">
+      <div class="card">
+        <h2>燃料類型對應表</h2>
+        <p class="hint">把來源雜亂燃料名（raw）正規化為標準碼（canonical），供 FOC 比較與 k 值分群。查無對應時套用預設碼並標記 FUEL_TYPE_UNMAPPED。</p>
+        <div class="rows" id="fuel-rows"></div>
+        <button class="btn btn-ghost" id="add-fuel" type="button">+ 新增對應</button>
+        <label class="field" for="fuel-default" style="max-width:260px;margin-top:18px;">預設燃料碼 (default)
+          <input type="text" id="fuel-default" placeholder="VLSFO">
+        </label>
+        <div class="actions">
+          <button class="btn btn-primary" id="save-fuel">儲存燃料對應表</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 資料來源與介接 -->
+    <section class="panel" id="panel-integrations" role="tabpanel" aria-labelledby="tab-integrations">
+      <div class="card">
+        <h2>資料來源模式</h2>
+        <p class="hint">baked＝映像內 real-metrics.json；upload＝人工上傳；apiPush＝系統介接推送。此為顯示／意圖設定。</p>
+        <label class="field" for="datasource" style="max-width:280px;">模式
+          <select id="datasource">
+            <option value="baked">baked · 烤進映像</option>
+            <option value="upload">upload · 人工上傳</option>
+            <option value="apiPush">apiPush · 系統介接</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button class="btn btn-primary" id="save-datasource">儲存資料來源模式</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>介接 API 端點</h2>
+        <p class="hint">供陽明既有系統拉取決策／告警、或推入資料。<span class="badge-live">LIVE</span> 為本服務已提供；<span class="badge-soon">規劃中</span> 為 roadmap（尚未接後端）。</p>
+        <div id="endpoints"></div>
+      </div>
+    </section>
+
+    <!-- 上傳正午報表 -->
+    <section class="panel" id="panel-upload" role="tabpanel" aria-labelledby="tab-upload">
+      <div class="card">
+        <h2>上傳正午報表 (CSV)</h2>
+        <p class="hint">拖放或選擇 CSV（UTF-8／Big5 自動偵測）。預設 dryRun 只做逐列驗證預覽、不落庫。實際 commit 需重算管線（P1），本頁誠實標為 preview-only。</p>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="拖放或點擊上傳 CSV">
+          <p class="big">拖放 CSV 到這裡，或點擊選擇檔案</p>
+          <p class="sub" id="dz-filename">尚未選擇檔案 · 上限 10MB</p>
+        </div>
+        <input type="file" id="file-input" accept=".csv,text/csv" hidden>
+        <div class="dz-row">
+          <label class="switch"><input type="checkbox" id="dry-run" checked>dryRun（只預覽不落庫）</label>
+          <button class="btn btn-primary" id="do-upload" disabled>解析並驗證</button>
+        </div>
+      </div>
+      <div class="card" id="upload-result-card" hidden>
+        <h2>驗證結果</h2>
+        <p class="hint" id="upload-summary"></p>
+        <div class="stats" id="upload-stats"></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>行號</th><th>船舶</th><th>日期</th><th>結果</th><th>旗標</th></tr></thead>
+            <tbody id="upload-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <p class="note">數字來自計算，語言來自 AI，決策留給人。</p>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <h3 id="modal-title">確認測試發送</h3>
+      <p id="modal-body">將以目前門檻與最新告警快照，向已啟用且已設定的通道發送一次告警。確定要送出嗎？</p>
+      <div class="actions">
+        <button class="btn btn-ghost" id="modal-cancel" type="button">取消</button>
+        <button class="btn btn-primary" id="modal-confirm" type="button">確認送出</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin.js" defer></script>
+</body>
+</html>

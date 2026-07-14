@@ -33,8 +33,9 @@ class DecisionEndpointTest {
         ThresholdService threshold = new ThresholdService();
         FleetDecisionService decisions = new FleetDecisionService(data, threshold);
         notifications = new AlertNotificationService("", "");
+        AdminSettingsService adminSettings = new AdminSettingsService(threshold, "");
         FleetMindController controller = new FleetMindController(data, decisions, threshold,
-                notifications);
+                notifications, adminSettings);
         mvc = standaloneSetup(controller).build();
     }
 
