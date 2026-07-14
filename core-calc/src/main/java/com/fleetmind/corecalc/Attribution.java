@@ -39,7 +39,9 @@ public final class Attribution {
         boolean lowConfidence = stats.beforeK.length < minQualifiedEachSide
                 || stats.afterK.length < minQualifiedEachSide
                 || !finite(deltaPct);
-        boolean expectedImprovement = resetsAnything(event);
+        // Dry dock resets coating/cleaning clocks, but fuel improvement is not guaranteed.
+        boolean expectedImprovement = resetsAnything(event)
+                && event.type() != MaintenanceEvent.EventType.DD;
         return new EventImpact(stats.medianKBefore, stats.medianKAfter, deltaK, deltaPct,
                 stats.beforeK.length, stats.afterK.length, lowConfidence, expectedImprovement);
     }
@@ -117,8 +119,10 @@ public final class Attribution {
                     && stats.medianKBefore > 0.0
                     ? mad / stats.medianKBefore * 100.0
                     : Double.NaN;
-            EventValidation.Verdict verdict = verdict(impact.deltaPct(), noiseThresholdPct,
-                    impact.expectedImprovement());
+            EventValidation.Verdict verdict = event.type() == MaintenanceEvent.EventType.DD
+                    ? EventValidation.Verdict.DATA_OBSERVED
+                    : verdict(impact.deltaPct(), noiseThresholdPct,
+                            impact.expectedImprovement());
             boolean lowConfidence = impact.lowConfidence() || !finite(noiseThresholdPct);
             validations.add(new EventValidation(event, impact.deltaPct(), noiseThresholdPct,
                     impact.expectedImprovement(), lowConfidence, verdict));

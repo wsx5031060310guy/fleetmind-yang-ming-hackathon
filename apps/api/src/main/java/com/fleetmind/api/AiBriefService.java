@@ -159,10 +159,10 @@ public class AiBriefService {
         citations.forEach(metric -> values.put(metric.metricId(), metric.value()));
         return vesselId + " shows speed loss under comparable conditions. "
                 + "The deterministic calculation estimates " + values.get("latest_speed_loss_pct")
-                + "% speed loss [latest_speed_loss_pct] and about "
-                + values.get("payback_days") + " days payback [payback_days] "
-                + "under the stated fuel, carbon, and cleaning-cost assumptions. Recommend human review for inspection, "
-                + "then cleaning or propeller polishing if onboard evidence matches.";
+                + "% speed loss [latest_speed_loss_pct] and "
+                + values.get("fuel_penalty_pct")
+                + "% same-speed fuel penalty [fuel_penalty_pct]. Recommend UWILD first; "
+                + "clean only when inspection evidence and hull attribution support it.";
     }
 
     public record Result(

@@ -1,7 +1,5 @@
 package com.fleetmind.api;
 
-import com.fleetmind.corecalc.BusinessImpact;
-import com.fleetmind.corecalc.BusinessImpactResult;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -21,9 +19,12 @@ public class DemoDataService implements FleetDataProvider {
 
     public List<VesselSummaryDto> fleetSummary() {
         return List.of(
-                new VesselSummaryDto("YM-DEMO-01", 4.76, 68.0, "HIGH", 37, 37, 92, 1),
-                new VesselSummaryDto("YM-DEMO-02", 2.10, 41.0, "MEDIUM", 24, 84, 88, 2),
-                new VesselSummaryDto("YM-DEMO-03", 0.00, 0.0, "LOW", 12, 12, 75, 3));
+                summary("YM-DEMO-01", 4.76, 68.0, "HIGH", 37, 37, 92, 1,
+                        0.08, 15.7, 1, 420, "FRESH", "VLSFO"),
+                summary("YM-DEMO-02", 2.10, 41.0, "MEDIUM", 24, 84, 88, 2,
+                        0.02, 6.7, 2, 700, "DIMINISHING", "HFO"),
+                summary("YM-DEMO-03", 0.00, 0.0, "LOW", 12, 12, 75, 3,
+                        -0.01, 0.0, 4, null, "DEPLETED", "BLSF"));
     }
 
     public List<DailyMetricDto> performance(String vesselId) {
@@ -75,7 +76,6 @@ public class DemoDataService implements FleetDataProvider {
             focBefore = 48.1;
             focAfter = 46.9;
         }
-        BusinessImpactResult impact = BusinessImpact.estimate(focAfter, focBefore, 650.0, 40000.0, 90.0, 0.5);
         double recoveryPct = (medianKBefore - medianKAfter) / medianKBefore * 100.0;
         return new BeforeAfterDto(
                 eventId == null ? underwaterEvents(vesselId).getFirst().eventId() : eventId,
@@ -83,7 +83,8 @@ public class DemoDataService implements FleetDataProvider {
                 medianKBefore,
                 medianKAfter,
                 recoveryPct,
-                BusinessImpactDto.from(impact));
+                new BusinessImpactDto(Math.max(0.0, focBefore - focAfter),
+                        null, null, null, null, null, null, null, null));
     }
 
     public DataQualityDto dataQuality() {
@@ -146,26 +147,43 @@ public class DemoDataService implements FleetDataProvider {
         BeforeAfterDto data = beforeAfter(vesselId, underwaterEvents(vesselId).getFirst().eventId());
         String beforeAfterHref = "/api/vessels/" + vesselId + "/before-after?eventId=" + data.eventId();
         double latest = performance(vesselId).getLast().speedLossPct();
+        VesselSummaryDto summary = fleetSummary().stream()
+                .filter(candidate -> candidate.vesselId().equals(vesselId))
+                .findFirst().orElseThrow();
         List<CitedMetricDto> citations = List.of(
                 new CitedMetricDto("latest_speed_loss_pct", format(latest, 2), "/api/fleet/summary"),
+                new CitedMetricDto("fuel_penalty_pct", format(summary.fuelPenaltyPct(), 2),
+                        "/api/fleet/summary"),
                 new CitedMetricDto("median_k_before", format(data.medianKBefore(), 5), beforeAfterHref),
                 new CitedMetricDto("median_k_after", format(data.medianKAfter(), 5), beforeAfterHref),
-                new CitedMetricDto("recovery_pct", format(data.recoveryPct(), 2), beforeAfterHref),
-                new CitedMetricDto("payback_days", format(data.businessImpact().paybackDays(), 2), beforeAfterHref));
+                new CitedMetricDto("recovery_pct", format(data.recoveryPct(), 2), beforeAfterHref));
         return citations;
     }
 
     private String aiBriefText(String vesselId, BeforeAfterDto data) {
         return vesselId + " shows speed loss under comparable conditions. "
                 + "The deterministic calculation estimates " + format(performance(vesselId).getLast().speedLossPct(), 2)
-                + "% speed loss [latest_speed_loss_pct] and about "
-                + format(data.businessImpact().paybackDays(), 2) + " days payback [payback_days] "
-                + "under the stated fuel, carbon, and cleaning-cost assumptions. Recommend human review for inspection, "
-                + "then cleaning or propeller polishing if onboard evidence matches.";
+                + "% speed loss [latest_speed_loss_pct] and "
+                + format(fleetSummary().stream().filter(v -> v.vesselId().equals(vesselId))
+                        .findFirst().orElseThrow().fuelPenaltyPct(), 2)
+                + "% same-speed fuel penalty [fuel_penalty_pct]. Recommend UWILD first; "
+                + "clean only when inspection evidence supports it.";
     }
 
     private DailyMetricDto metric(String vesselId, String date, double foc, double k, double loss, String... flags) {
-        return new DailyMetricDto(vesselId, LocalDate.parse(date), foc, k, loss, List.of(flags));
+        return new DailyMetricDto(vesselId, LocalDate.parse(date), foc, k, loss,
+                "VLSFO", List.of(flags));
+    }
+
+    private VesselSummaryDto summary(String vesselId, double speedLoss, double hullPct,
+            String confidence, int sampleDays, int daysSinceCleaning, int qualityScore,
+            int priority, double slope, double fuelPenalty, int cleaningsSinceDryDock,
+            Integer daysSinceDryDock, String cleaningEffectiveness, String fuelType) {
+        return new VesselSummaryDto(vesselId, speedLoss, hullPct, confidence, sampleDays,
+                daysSinceCleaning, qualityScore, priority, 10.0, null, null,
+                null, null, null, cleaningsSinceDryDock, daysSinceDryDock,
+                cleaningEffectiveness, fuelPenalty, fuelType,
+                fuelPenalty <= 0.0 ? 0.0 : fuelPenalty * 10.0, slope, false);
     }
 
     private String format(Double value, int decimals) {

@@ -11,3 +11,4 @@ javac -encoding UTF-8 -cp "$MAIN_CLASSES" -d "$TEST_CLASSES" @"$ROOT_DIR/core-ca
 java -cp "$MAIN_CLASSES:$TEST_CLASSES" com.fleetmind.corecalc.CoreCalcGoldenTest
 java -cp "$MAIN_CLASSES:$TEST_CLASSES" com.fleetmind.corecalc.SpeedLossGoldenTest
 java -cp "$MAIN_CLASSES:$TEST_CLASSES" com.fleetmind.corecalc.AttributionGoldenTest
+java -cp "$MAIN_CLASSES:$TEST_CLASSES" com.fleetmind.corecalc.DecisionSupportGoldenTest

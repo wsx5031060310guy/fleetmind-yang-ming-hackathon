@@ -33,6 +33,9 @@ curl -fsS http://localhost:8080/api/fleet/summary | jq '.[0:2]'
 curl -fsS http://localhost:8080/api/vessels/S11/performance \
   | jq 'map(select(.speedLossPct != "NaN")) | last'
 curl -fsS http://localhost:8080/api/data-quality/summary | jq
+curl -fsS -X PUT 'http://localhost:8080/api/config/threshold?value=8' | jq
+curl -fsS http://localhost:8080/api/alerts | jq
+curl -fsS http://localhost:8080/api/vessels/S11/decision | jq
 jq '.vessels.S12.events[] | select(.verdict == "NO_CHANGE_AS_EXPECTED")' \
   core-calc/target/real-metrics.json
 ```
@@ -59,9 +62,22 @@ UWI verdicts: event-S11-UWI-2023-04-23=UNEXPECTED, event-S23-UWI-2023-02-10=UNEX
 ## Physics and business assumptions
 
 - Speed is `SPEED_THROUGH_WATER` (STW), matching `k = Daily FOC / STW³`.
-- Each day's positive full-speed fuel cells are summed as VLSFO equivalent via
-  supplied LCVs: MGO/LSMGO 42.7, ULSFO 41.2, HSHFO/VLSFO 40.2. No separate
-  BIO_HSFO LCV was supplied, so it uses 40.2 and is documented as a proxy.
+- Each day's positive full-speed fuel cells are summed as VLSFO equivalent.
+  Active fuel is the sorted set of positive fuel columns for that day; therefore
+  mixed days remain explicit, for example `HFO+VLSFO`.
+
+| Input variant | Exposed fuel | LCV used |
+| --- | --- | ---: |
+| `LSMGO`, `MGO` | MGO | 42.7 |
+| `ULSFO` | ULSFO | 41.2 |
+| `HSHFO`, `HFO` | HFO | 40.2 |
+| `LSFO` | LSFO | 40.2 |
+| `VLSFO` | VLSFO | 40.2 |
+| `BLSF`, `BIO_HSFO` | BLSF | 40.2 proxy |
+
+  Mapping lives in the `MetricsExportCli.FUEL_COLUMNS` table. New header aliases
+  need one table row; absent aliases are ignored. No distinct Yang Ming LCV was
+  supplied for BLSF/BIO_HSFO, so 40.2 is explicit and replaceable.
 - `CoreCalc.dailyFoc` runs before filtering. `WIND_SCALE <= 4` and
   `HOURS_FULL_SPEED >= 22` only control quality flags and Speed Loss eligibility.
 - `HIDDEN`, `PREDICT`, empty, or invalid fuel remains a performance row with
@@ -70,10 +86,13 @@ UWI verdicts: event-S11-UWI-2023-04-23=UNEXPECTED, event-S23-UWI-2023-02-10=UNEX
 - `SpeedLoss` supplies reference window, series, rolling median, before/after,
   and fuel penalty. `Attribution` supplies hull/propeller split and event
   validation. No exporter-side reimplementation of those calculations.
-- Counterfactual savings is
-  `positive fuelPenaltyPct × median qualified Daily FOC`, split by the computed
-  hull/propeller shares. Annual USD uses an explicit `USD 650/MT` fuel price.
-  This is review evidence, not causal proof or an autonomous maintenance order.
+- Primary impact is same-speed `fuelPenaltyPct`: current consumption increase
+  versus the clean baseline. Optional `estimatedAnnualExcessFuelMt` uses current
+  qualified median FOC and reports fuel tonnes only. Dollar ROI and price
+  assumptions are intentionally absent.
+- UWC and UWC+PP increment `cleaningsSinceDryDock`; DD resets the count; UWI and
+  PP do not count as hull cleaning. DD means a higher probability of improvement,
+  never a guarantee. Before/after data determines measured effect.
 
 UWI never resets hull or propeller state. Direct mapping changed synthetic event
 dates by one or two days for most UWI rows, but the current deterministic

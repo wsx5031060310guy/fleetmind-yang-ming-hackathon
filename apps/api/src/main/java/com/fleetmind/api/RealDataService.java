@@ -15,7 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public final class RealDataService implements FleetDataProvider {
-    private static final String TRANSFORM_VERSION = "yang-ming-real-v1";
+    private static final String TRANSFORM_VERSION = "yang-ming-real-v2";
 
     private final List<VesselSummaryDto> fleet;
     private final Map<String, VesselData> vessels;
@@ -74,10 +74,7 @@ public final class RealDataService implements FleetDataProvider {
             return vessel.beforeAfter.get(eventId);
         }
         return vessel.beforeAfter.values().stream()
-                .filter(comparison -> comparison.businessImpact().paybackDays() != null
-                        && Double.isFinite(comparison.businessImpact().paybackDays()))
                 .findFirst()
-                .or(() -> vessel.beforeAfter.values().stream().findFirst())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "no before-after metrics for vessel " + vesselId));
     }
@@ -131,6 +128,7 @@ public final class RealDataService implements FleetDataProvider {
                         numberOrNaN(metric.dailyFoc),
                         numberOrNaN(metric.kValue),
                         numberOrNaN(metric.speedLossPct),
+                        metric.activeFuelType == null ? "UNKNOWN" : metric.activeFuelType,
                         metric.qualityFlags == null ? List.of() : List.copyOf(metric.qualityFlags)))
                         .toList();
         List<UnderwaterEventDto> events = source.events == null ? List.of()
@@ -176,11 +174,11 @@ public final class RealDataService implements FleetDataProvider {
         return List.of(
                 new CitedMetricDto("latest_speed_loss_pct",
                         format(summary.latestSpeedLossPct(), 2), "/api/fleet/summary"),
+                new CitedMetricDto("fuel_penalty_pct",
+                        format(summary.fuelPenaltyPct(), 2), "/api/fleet/summary"),
                 new CitedMetricDto("median_k_before", format(data.medianKBefore(), 5), href),
                 new CitedMetricDto("median_k_after", format(data.medianKAfter(), 5), href),
-                new CitedMetricDto("recovery_pct", format(data.recoveryPct(), 2), href),
-                new CitedMetricDto("payback_days",
-                        format(data.businessImpact().paybackDays(), 2), href));
+                new CitedMetricDto("recovery_pct", format(data.recoveryPct(), 2), href));
     }
 
     private String deterministicBrief(String vesselId, List<CitedMetricDto> citations) {
@@ -189,11 +187,10 @@ public final class RealDataService implements FleetDataProvider {
         return vesselId + " shows speed loss under comparable conditions. "
                 + "The deterministic calculation estimates "
                 + values.get("latest_speed_loss_pct")
-                + "% speed loss [latest_speed_loss_pct] and about "
-                + values.get("payback_days") + " days payback [payback_days] "
-                + "under the stated fuel, carbon, and cleaning-cost assumptions. "
-                + "Recommend human review for inspection, then cleaning or propeller "
-                + "polishing if onboard evidence matches.";
+                + "% speed loss [latest_speed_loss_pct]. Current same-speed fuel penalty is "
+                + values.get("fuel_penalty_pct") + "% [fuel_penalty_pct]. "
+                + "Follow the deterministic recommendation: UWILD first; clean only when "
+                + "inspection evidence and hull attribution support it.";
     }
 
     private static String format(Double value, int decimals) {
@@ -209,17 +206,19 @@ public final class RealDataService implements FleetDataProvider {
         return new BusinessImpactDto(null, null, null, null, null, null, null, null, null);
     }
 
-    private record MetricsFile(List<VesselSummaryDto> fleet,
+    private record MetricsFile(String transformVersion, List<VesselSummaryDto> fleet,
             Map<String, VesselFile> vessels, DataQualityDto dataQuality) {
     }
 
     private record VesselFile(List<FileDailyMetric> performance, List<FileEvent> events,
             Map<String, FileBeforeAfter> beforeAfter, AttributionFile attribution,
-            CounterfactualFile counterfactual) {
+            Map<String, Object> decision, Map<String, Object> fuelImpact,
+            Map<String, Object> counterfactual) {
     }
 
     private record FileDailyMetric(String vesselId, String date, Double dailyFoc,
-            Double kValue, Double speedLossPct, List<String> qualityFlags) {
+            Double kValue, Double speedLossPct, String activeFuelType,
+            List<String> qualityFlags) {
     }
 
     private record FileEvent(String eventId, String vesselId, String date, String type,
@@ -233,10 +232,6 @@ public final class RealDataService implements FleetDataProvider {
 
     private record AttributionFile(Double hullPct, Double propPct, Boolean heuristic,
             Boolean lowConfidence) {
-    }
-
-    private record CounterfactualFile(Double uwcSavingsMtDay, Double ppSavingsMtDay,
-            Double pct, Double annualSavingsUsd, Double fuelPriceUsdPerMt) {
     }
 
     private record VesselData(List<DailyMetricDto> performance,

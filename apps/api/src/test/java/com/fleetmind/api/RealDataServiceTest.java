@@ -28,14 +28,29 @@ class RealDataServiceTest {
                     "sampleDays": 20,
                     "daysSinceLastCleaning": 42,
                     "dataQualityScore": 90,
-                    "reviewPriority": 1
+                    "reviewPriority": 1,
+                    "thresholdPct": 10.0,
+                    "forecastDaysToThreshold": 20,
+                    "projectedCrossValuePct": 10.1,
+                    "trendSlopePctPerDay": 0.05,
+                    "forecastLowConfidence": false,
+                    "status": "WATCH",
+                    "recommendedAction": "SCHEDULE_UWILD",
+                    "rationale": "forecast crossing",
+                    "cleaningsSinceDryDock": 2,
+                    "daysSinceDryDock": 400,
+                    "cleaningEffectiveness": "DIMINISHING",
+                    "fuelPenaltyPct": 11.0,
+                    "activeFuelType": "HFO",
+                    "estimatedAnnualExcessFuelMt": 1200.0
                   }],
                   "vessels": {
                     "S1": {
                       "performance": [{
                         "vesselId": "S1", "date": "2025-01-01",
                         "dailyFoc": 50.0, "kValue": 0.01,
-                        "speedLossPct": 3.25, "qualityFlags": []
+                        "speedLossPct": 3.25, "activeFuelType": "HFO",
+                        "qualityFlags": []
                       }],
                       "events": [{
                         "eventId": "event-S1-UWI-1", "vesselId": "S1",
@@ -48,21 +63,14 @@ class RealDataServiceTest {
                         "event-S1-UWI-1": {
                           "eventId": "event-S1-UWI-1", "vesselId": "S1",
                           "medianKBefore": 0.01, "medianKAfter": 0.01,
-                          "recoveryPct": 0.0,
-                          "businessImpact": {
-                            "extraFuelMtPerDay": 0.0, "dailyFuelCostUsd": 0.0,
-                            "annualizedFuelCostUsd": 0.0, "dailyCo2MetricTons": 0.0,
-                            "annualizedCo2MetricTons": 0.0, "dailyEuEtsCostUsd": 0.0,
-                            "annualizedEuEtsCostUsd": 0.0, "dailyAvoidableCostUsd": 0.0,
-                            "paybackDays": null
-                          }
+                          "recoveryPct": 0.0
                         }
                       },
                       "attribution": {"hullPct": 62.0, "propPct": 38.0,
                         "heuristic": false, "lowConfidence": false},
-                      "counterfactual": {"uwcSavingsMtDay": 1.0, "ppSavingsMtDay": 0.5,
-                        "pct": 3.0, "annualSavingsUsd": 355875.0,
-                        "fuelPriceUsdPerMt": 650.0}
+                      "decision": {"status": "WATCH"},
+                      "fuelImpact": {"fuelPenaltyPct": 11.0,
+                        "estimatedAnnualExcessFuelMt": 1200.0}
                     }
                   },
                   "dataQuality": {"totalRows": 1, "exportedRows": 1, "flagCounts": {}}
@@ -77,6 +85,9 @@ class RealDataServiceTest {
         assertFalse(service.fleetSummary().isEmpty());
         assertTrue(Double.isFinite(service.fleetSummary().getFirst().latestSpeedLossPct()));
         assertTrue(service.fleetSummary().getFirst().vesselId().startsWith("S"));
+        assertTrue("DIMINISHING".equals(
+                service.fleetSummary().getFirst().cleaningEffectiveness()));
+        assertTrue("HFO".equals(service.performance("S1").getFirst().activeFuelType()));
     }
 
     @Test

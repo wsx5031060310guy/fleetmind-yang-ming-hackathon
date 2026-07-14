@@ -6,6 +6,7 @@ public final class EventValidation {
     public enum Verdict {
         CONFIRMS_EXPECTED,
         NO_CHANGE_AS_EXPECTED,
+        DATA_OBSERVED,
         UNEXPECTED
     }
 
