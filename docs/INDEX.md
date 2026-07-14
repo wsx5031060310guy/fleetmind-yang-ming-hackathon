@@ -56,6 +56,7 @@
 | 23 fuel-prediction-plan | 25% 油耗預測任務計畫（102 PREDICT 格、錨點解謎、`predict/` pipeline、提交格式） | 🔴 Day1 主線 |
 | 24 yang-ming-questions | Day1 現場/線上要問陽明與主辦方的問題清單（讀真資料後產出，含 top-5） | 🔴 Day1 必用 |
 | 25 day1-onsite-execution | Day1/Day3 分鐘級現場執行清單（情報捕捉、T+ 時間軸、owner 矩陣、fallback、出發前 kit） | 🔴 Day1 必用 |
+| 26 aws-live-deploy | AWS live demo 部署 recipe（ECR + ECS Fargate ARM64 + Bedrock；Day1 已實測上線） | ✅ Day1 已部署 |
 | presentation/ | 提案 deck（真數字 v2 生成器，離線可重生）＋ Q&A 備援 | ✅ 已更新真資料 |
 
 ## 4. 角色閱讀路徑
