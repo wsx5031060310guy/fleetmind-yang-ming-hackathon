@@ -234,6 +234,8 @@
     <a href="#optC">App Runner</a>
     <a href="#optD">EC2</a>
     <a href="#optE">資料管線</a>
+    <a href="#security">資安</a>
+    <a href="#activeactive">多區域</a>
     <a href="#compare">比較表</a>
   </nav>
   <button class="theme-toggle" id="themeBtn" type="button" aria-label="切換深淺色">
@@ -498,6 +500,106 @@
       </ul></div>
     </div>
     <div class="whenrec"><b>何時選它：</b>從 demo 走向正式產品、要接船端即時資料與公司級 BI / 預測時的目標架構。</div>
+  </section>
+
+  <!-- ===================== SECURITY ===================== -->
+  <section id="security">
+    <div class="sec-head">
+      <p class="sec-kicker"><span class="tag cur">縱深防禦</span> Security</p>
+      <h2><span class="num">安</span>資安：VPC 隔離 ＋ GuardDuty 威脅偵測</h2>
+      <p class="sec-lede">船務資料敏感，安全不是加分是底線。VPC 把服務關進私有子網、只讓 ALB 對外；邊緣有 Shield/WAF，帳號層有 GuardDuty 持續偵測異常，憑證進 Secrets Manager、資料以 KMS 加密、所有動作留 CloudTrail、權限走 IAM 最小化。</p>
+    </div>
+    <div class="diagram"><div class="scroll">
+      <svg viewBox="0 0 960 360" role="img" aria-label="資安縱深防禦架構圖">
+        <title>資安縱深防禦</title>
+        <desc>邊緣 Shield 與 WAF 防護，Amazon VPC 以公有/私有子網隔離，ECS 在私有子網無公網 IP，GuardDuty 威脅偵測、Secrets Manager 管憑證、KMS 加密、CloudTrail 稽核、IAM 最小權限。</desc>
+        <g class="node"><rect x="18" y="150" width="128" height="56" rx="10"/><text class="svc" x="34" y="176">全球船務端</text><text class="role" x="34" y="194">網際網路</text></g>
+        <g class="node hl"><rect x="170" y="150" width="120" height="56" rx="10"/><text class="svc" x="186" y="176">Shield ＋ WAF</text><text class="role" x="186" y="194">DDoS · L7 過濾</text></g>
+        <rect class="band-rect" x="314" y="66" width="454" height="262" rx="14"/>
+        <text class="band-label" x="330" y="90">Amazon VPC（私有網路隔離）</text>
+        <rect class="band-rect" x="332" y="108" width="196" height="200" rx="10"/>
+        <text class="band-label" x="346" y="130">公有子網</text>
+        <g class="node hl"><rect x="350" y="170" width="162" height="60" rx="10"/><text class="svc" x="366" y="196">Application Load Balancer</text><text class="role" x="366" y="214">Security Group 只開 443</text></g>
+        <rect class="band-rect" x="544" y="108" width="208" height="200" rx="10"/>
+        <text class="band-label" x="558" y="130">私有子網（無公網 IP）</text>
+        <g class="node cur"><rect x="562" y="170" width="172" height="60" rx="10"/><text class="svc" x="578" y="196">ECS Fargate 決策服務</text><text class="role" x="578" y="214">NAT 出網 · VPC Endpoint</text></g>
+        <g class="node"><rect x="800" y="70" width="146" height="46" rx="9"/><text class="svc" x="814" y="90">GuardDuty</text><text class="role" x="814" y="107">威脅偵測</text></g>
+        <g class="node"><rect x="800" y="126" width="146" height="46" rx="9"/><text class="svc" x="814" y="146">Secrets Manager</text><text class="role" x="814" y="163">憑證管理</text></g>
+        <g class="node"><rect x="800" y="182" width="146" height="46" rx="9"/><text class="svc" x="814" y="202">KMS</text><text class="role" x="814" y="219">靜態加密</text></g>
+        <g class="node"><rect x="800" y="238" width="146" height="46" rx="9"/><text class="svc" x="814" y="258">CloudTrail</text><text class="role" x="814" y="275">稽核日誌</text></g>
+        <g class="node"><rect x="800" y="294" width="146" height="46" rx="9"/><text class="svc" x="814" y="314">IAM</text><text class="role" x="814" y="331">最小權限</text></g>
+        <path class="edge" d="M146 178 H170" marker-end="url(#arrow)"/>
+        <path class="edge strong" d="M290 178 H350" marker-end="url(#arrowS)"/>
+        <path class="edge" d="M512 200 H562" marker-end="url(#arrow)"/>
+        <path class="edge" d="M734 186 C 762 150, 776 110, 800 96" marker-end="url(#arrow)"/>
+        <path class="edge" d="M734 200 H800" marker-end="url(#arrow)"/>
+      </svg>
+    </div><div class="dcap">縱深防禦：邊緣 → VPC 子網隔離 → 帳號級威脅偵測 → 加密/稽核/最小權限，逐層收斂攻擊面。</div></div>
+    <div class="grid2">
+      <div class="card pros"><h3>◆ 防護面</h3><ul>
+        <li>VPC 私有子網：ECS 無公網 IP，只有 ALB 對外</li>
+        <li>GuardDuty 持續偵測異常 API／外連／憑證濫用</li>
+        <li>Secrets Manager ＋ KMS：憑證不落地、資料加密</li>
+        <li>WAF/Shield 擋 L7 攻擊與 DDoS；CloudTrail 全稽核</li>
+      </ul></div>
+      <div class="card cons"><h3>◆ 落地順序</h3><ul>
+        <li>先 VPC＋SG＋IAM 最小權限（現行已具雛形）</li>
+        <li>再開 GuardDuty＋CloudTrail（近乎零維運）</li>
+        <li>憑證遷入 Secrets Manager、S3/DynamoDB 啟用 KMS</li>
+        <li>對外入口加 WAF；規模化再上 Shield Advanced</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- ===================== ACTIVE-ACTIVE ===================== -->
+  <section id="activeactive">
+    <div class="sec-head">
+      <p class="sec-kicker"><span class="tag alt">全球韌性</span> Active-Active · DR</p>
+      <h2><span class="num">雙</span>多區域 Active-Active ＋ 即時告警與災備</h2>
+      <p class="sec-lede">船隊分佈不同國家，系統不能只活在一個區域。Route 53 依地理/延遲把各國船務端導到最近區域；亞洲與歐美兩區域同時 active-active，DynamoDB Global Tables 雙向複製，跨區 EventBridge 匯總即時告警，S3 跨區複製做備份；任一區域故障，健康檢查自動把全流量切到另一區，資料不丟。</p>
+    </div>
+    <div class="diagram"><div class="scroll">
+      <svg viewBox="0 0 960 400" role="img" aria-label="多區域 Active-Active 架構圖">
+        <title>多區域 Active-Active 與災難備援</title>
+        <desc>不同國家船務端經 Route 53 地理/延遲路由到最近區域；ap-northeast-1 與 us-east-1 皆 active-active；DynamoDB Global Tables 雙向複製、S3 跨區複製備份、跨區 EventBridge 匯總即時告警；健康檢查自動 failover。</desc>
+        <g class="node"><rect x="14" y="78" width="152" height="52" rx="10"/><text class="svc" x="30" y="99">亞洲船務端</text><text class="role" x="30" y="117">日 / 台 / 韓 / 星</text></g>
+        <g class="node"><rect x="14" y="270" width="152" height="52" rx="10"/><text class="svc" x="30" y="291">歐美船務端</text><text class="role" x="30" y="309">EU / US</text></g>
+        <g class="node hl"><rect x="198" y="162" width="150" height="78" rx="10"/><text class="svc" x="214" y="188">Route 53</text><text class="role" x="214" y="206">地理／延遲路由</text><text class="role" x="214" y="223">健康檢查 failover</text></g>
+        <rect class="band-rect" x="392" y="44" width="256" height="150" rx="12"/>
+        <text class="band-label" x="408" y="66">區域 A · ap-northeast-1</text>
+        <g class="node cur"><rect x="410" y="80" width="108" height="48" rx="8"/><text class="svc" x="422" y="100">ALB → ECS</text><text class="role" x="422" y="117">決策服務</text></g>
+        <g class="node hl"><rect x="530" y="80" width="102" height="48" rx="8"/><text class="svc" x="542" y="100">DynamoDB</text><text class="role" x="542" y="117">Global Table</text></g>
+        <g class="node"><rect x="410" y="138" width="108" height="44" rx="8"/><text class="svc" x="422" y="158">S3 報表/備份</text><text class="role" x="422" y="174">跨區複製</text></g>
+        <rect class="band-rect" x="392" y="214" width="256" height="150" rx="12"/>
+        <text class="band-label" x="408" y="236">區域 B · us-east-1</text>
+        <g class="node cur"><rect x="410" y="250" width="108" height="48" rx="8"/><text class="svc" x="422" y="270">ALB → ECS</text><text class="role" x="422" y="287">決策服務</text></g>
+        <g class="node hl"><rect x="530" y="250" width="102" height="48" rx="8"/><text class="svc" x="542" y="270">DynamoDB</text><text class="role" x="542" y="287">Global Table</text></g>
+        <g class="node"><rect x="410" y="308" width="108" height="44" rx="8"/><text class="svc" x="422" y="328">S3 報表/備份</text><text class="role" x="422" y="344">跨區複製</text></g>
+        <g class="node hl"><rect x="700" y="164" width="150" height="74" rx="10"/><text class="svc" x="716" y="190">EventBridge</text><text class="role" x="716" y="208">跨區告警匯總</text><text class="role" x="716" y="225">→ SNS / SES</text></g>
+        <path class="edge" d="M166 104 C 182 130, 190 150, 198 166" marker-end="url(#arrow)"/>
+        <path class="edge" d="M166 296 C 182 270, 190 250, 198 236" marker-end="url(#arrow)"/>
+        <path class="edge strong" d="M348 184 C 372 140, 384 118, 410 104" marker-end="url(#arrowS)"/>
+        <path class="edge strong" d="M348 216 C 372 260, 384 282, 410 274" marker-end="url(#arrowS)"/>
+        <path class="edge strong" d="M581 128 V250" marker-start="url(#arrowS)" marker-end="url(#arrowS)"/>
+        <text class="edge-label" x="588" y="194">雙向複製</text>
+        <path class="edge" d="M700 190 C 668 150, 650 130, 632 120" marker-end="url(#arrow)"/>
+        <path class="edge" d="M700 212 C 668 252, 650 272, 632 282" marker-end="url(#arrow)"/>
+      </svg>
+    </div><div class="dcap">兩區域同時服務、資料雙向複製；一區故障 Route 53 自動切換，另一區承接全量——無單一區域單點。</div></div>
+    <div class="grid2">
+      <div class="card pros"><h3>◆ 韌性與即時</h3><ul>
+        <li>Active-Active：兩區域皆服務，非冷備援</li>
+        <li>各國船務端就近路由，延遲低</li>
+        <li>DynamoDB Global Tables 雙向複製，切換零資料遺失</li>
+        <li>跨區 EventBridge 匯總告警，任一國事件即時通知</li>
+      </ul></div>
+      <div class="card cons"><h3>◆ 災備行為</h3><ul>
+        <li>Route 53 健康檢查偵測區域異常 → 自動 failover</li>
+        <li>S3 跨區複製（CRR）保存原始報表備份</li>
+        <li>回復後資料自動回補、恢復雙活</li>
+        <li>成本較單區高，但換全球可用性與合規落地</li>
+      </ul></div>
+    </div>
   </section>
 
   <!-- ===================== COMPARE ===================== -->

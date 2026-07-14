@@ -4,24 +4,28 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FleetMind · AWS 架構簡報</title>
-  <meta name="description" content="FleetMind AWS 架構簡報 13 頁網頁版：現行部署與五種上雲方案的圖解比較，可鍵盤/縮圖導覽、下載 PPTX。">
+  <meta name="description" content="FleetMind AWS 架構簡報 15 頁網頁版：現行部署、五種上雲方案、資安與多區域 Active-Active 的圖解，可鍵盤/縮圖/自動播放/全螢幕，下載 PPTX。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232FB09A'/%3E%3Cpath d='M6 20c3 2 5 2 8 0s5-2 8 0 5 2 6 1' fill='none' stroke='%23052029' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 6l5 9H11z' fill='%23052029'/%3E%3C/svg%3E">
   <style>
     :root{
-      --bg:#071523;--surface:#0E2B49;--surface2:#12385C;--line:rgba(148,183,214,.15);
+      --bg:#050f1c;--surface:#0E2B49;--line:rgba(148,183,214,.15);
       --ink:#EAF2F9;--ink-dim:#B7CBDD;--muted:#8AA6BF;--seafoam:#37C0A6;--teal:#3BA0C4;--amber:#F4A72B;
       --mono:ui-monospace,"SFMono-Regular",Menlo,monospace;
       --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
     }
     *{box-sizing:border-box}
     html,body{overflow-x:hidden}
-    body{margin:0;font-family:var(--sans);color:var(--ink);background:
-      radial-gradient(1100px 560px at 82% -12%,rgba(55,192,166,.10),transparent 60%),
-      linear-gradient(178deg,#081E33,#061523 64%);min-height:100dvh;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+    body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);min-height:100dvh;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;position:relative}
     a{color:inherit}
     .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+    /* cinematic ambient backdrop */
+    body::before{content:"";position:fixed;inset:0;z-index:-2;
+      background:linear-gradient(180deg,rgba(5,15,28,.86),rgba(5,15,28,.94)),url("/img/globe-network.jpg") center/cover no-repeat fixed;
+      filter:blur(3px) saturate(.9);transform:scale(1.06)}
+    body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+      background:radial-gradient(1200px 620px at 78% -6%,rgba(55,192,166,.14),transparent 60%),radial-gradient(900px 520px at 8% 108%,rgba(59,160,196,.12),transparent 60%)}
 
-    .fm-topnav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px clamp(16px,4vw,40px);background:rgba(8,26,44,.7);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:900}
+    .fm-topnav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px clamp(16px,4vw,40px);background:rgba(6,16,28,.6);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:900}
     .fm-topnav .fm-brand{color:var(--ink);font-weight:800;text-decoration:none;font-size:15.5px;display:flex;align-items:center;gap:8px}
     .fm-topnav .fm-brand b{color:var(--seafoam)}.fm-topnav .fm-brand svg{width:20px;height:20px}
     .fm-topnav .fm-links{display:flex;gap:3px;flex-wrap:wrap;margin-left:auto}
@@ -31,45 +35,67 @@
     .fm-topnav .fm-links a:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
     @media(max-width:640px){.fm-topnav .fm-links{margin-left:0;width:100%}}
 
-    .stage-wrap{flex:1;max-width:1200px;width:100%;margin:0 auto;padding:clamp(14px,3vw,28px) clamp(12px,4vw,40px);display:flex;flex-direction:column;gap:14px}
-    /* cinematic photo ambience strip (ship-dusk under a heavy navy scrim) — slides/nav untouched */
-    .head{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
-      padding:clamp(16px,3vw,22px) clamp(16px,3.5vw,24px);border-radius:14px;border:1px solid var(--line)}
-    .head::before{content:"";position:absolute;z-index:-1;inset:0;
-      background:linear-gradient(90deg,rgba(6,18,32,.84) 0%,rgba(7,21,35,.64) 48%,rgba(8,26,44,.5) 100%),
-        linear-gradient(180deg,rgba(6,18,32,.3),rgba(6,18,32,.55)),
-        url("/img/ship-dusk.jpg") center 42%/cover no-repeat}
-    .head .dl{background:rgba(6,17,30,.42)}
-    .head .dl:hover{background:rgba(47,176,154,.18)}
-    .head .k{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--seafoam);margin:0}
-    .head h1{margin:2px 0 0;font-size:clamp(18px,2.4vw,24px);font-weight:800;letter-spacing:-.02em}
-    .dl{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;border:1px solid var(--line);color:var(--ink-dim);text-decoration:none;font-size:13px;font-weight:600;transition:background .2s,border-color .2s}
-    .dl:hover{background:rgba(47,176,154,.12);border-color:rgba(47,176,154,.4);color:var(--ink)}
+    .stage-wrap{flex:1;max-width:1220px;width:100%;margin:0 auto;padding:clamp(16px,3vw,30px) clamp(12px,4vw,40px) clamp(20px,3vw,34px);display:flex;flex-direction:column;gap:16px}
+    .head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .head .k{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--seafoam);margin:0}
+    .head h1{margin:4px 0 0;font-size:clamp(19px,2.6vw,26px);font-weight:800;letter-spacing:-.02em}
+    .dl{display:inline-flex;align-items:center;gap:7px;padding:10px 15px;border-radius:11px;border:1px solid var(--line);color:var(--ink-dim);text-decoration:none;font-size:13px;font-weight:700;background:rgba(6,17,30,.5);backdrop-filter:blur(6px);transition:background .2s,border-color .2s,transform .1s}
+    .dl:hover{background:rgba(47,176,154,.16);border-color:rgba(47,176,154,.45);color:var(--ink)}
+    .dl:active{transform:translateY(1px)}
 
-    .stage{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#0a2036;box-shadow:0 24px 60px -30px rgba(2,10,20,.9);aspect-ratio:16/9}
-    .stage img{width:100%;height:100%;object-fit:contain;display:block;background:#0a2036}
-    .nav-btn{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid var(--line);
-      background:rgba(6,17,30,.6);backdrop-filter:blur(6px);color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:background .2s,transform .1s;z-index:2}
-    .nav-btn:hover{background:rgba(47,176,154,.25)}.nav-btn:active{transform:translateY(-50%) scale(.94)}
+    /* stage */
+    .stage{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:16/9;
+      border:1px solid rgba(148,183,214,.22);
+      background:#08182a;
+      box-shadow:0 40px 90px -40px rgba(0,0,0,.9), 0 0 0 1px rgba(55,192,166,.06), inset 0 1px 0 rgba(255,255,255,.05)}
+    .layer{position:absolute;inset:0;opacity:0;transition:opacity .55s ease, transform .7s cubic-bezier(.22,.61,.36,1);transform:scale(1.015)}
+    .layer.show{opacity:1;transform:scale(1)}
+    .layer img{width:100%;height:100%;object-fit:contain;display:block}
+    .sheen{position:absolute;inset:0;pointer-events:none;z-index:3;
+      background:radial-gradient(120% 90% at 50% -10%,rgba(255,255,255,.05),transparent 45%),linear-gradient(180deg,transparent 78%,rgba(3,10,20,.28))}
+    .progress{position:absolute;left:0;top:0;height:3px;width:100%;z-index:4;background:rgba(255,255,255,.08)}
+    .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--seafoam));box-shadow:0 0 10px rgba(55,192,166,.6);transition:width .4s ease}
+    .nav-btn{position:absolute;top:50%;transform:translateY(-50%);width:50px;height:50px;border-radius:50%;border:1px solid rgba(148,183,214,.28);
+      background:rgba(6,17,30,.5);backdrop-filter:blur(8px);color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:background .2s,transform .12s,box-shadow .2s;z-index:5}
+    .nav-btn:hover{background:rgba(47,176,154,.3);box-shadow:0 0 26px -6px rgba(55,192,166,.6)}
+    .nav-btn:active{transform:translateY(-50%) scale(.92)}
     .nav-btn:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
-    .nav-btn.prev{left:14px}.nav-btn.next{right:14px}
-    .nav-btn svg{width:22px;height:22px}
-    .counter{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:12px;color:var(--ink-dim);background:rgba(6,17,30,.6);backdrop-filter:blur(6px);padding:5px 12px;border-radius:999px;border:1px solid var(--line)}
+    .nav-btn.prev{left:16px}.nav-btn.next{right:16px}
+    .nav-btn svg{width:24px;height:24px}
 
-    .thumbs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin}
-    .thumbs button{flex:none;width:104px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:2px solid transparent;background:#0a2036;cursor:pointer;padding:0;opacity:.6;transition:opacity .2s,border-color .2s}
+    /* control bar */
+    .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;
+      padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(6,17,30,.42);backdrop-filter:blur(8px)}
+    .ctrl{appearance:none;border:1px solid var(--line);background:rgba(6,17,30,.5);color:var(--ink-dim);cursor:pointer;
+      width:40px;height:40px;border-radius:10px;display:grid;place-items:center;transition:background .2s,color .2s,transform .1s}
+    .ctrl:hover{background:rgba(47,176,154,.16);color:var(--ink)}
+    .ctrl:active{transform:scale(.94)}
+    .ctrl:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
+    .ctrl svg{width:18px;height:18px}
+    .counter{font-family:var(--mono);font-size:13px;color:var(--ink-dim);min-width:64px;text-align:center}
+    .counter b{color:var(--seafoam)}
+    .dotbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:min(52vw,420px)}
+    .dot{width:8px;height:8px;border-radius:50%;background:rgba(148,183,214,.28);border:0;padding:0;cursor:pointer;transition:background .2s,transform .2s}
+    .dot:hover{background:rgba(148,183,214,.6)}
+    .dot[aria-current="true"]{background:var(--seafoam);transform:scale(1.35);box-shadow:0 0 8px rgba(55,192,166,.7)}
+    .dot:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
+
+    /* thumbnails filmstrip */
+    .thumbs{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 10px;scrollbar-width:thin}
+    .thumbs button{flex:none;width:118px;aspect-ratio:16/9;border-radius:9px;overflow:hidden;border:2px solid transparent;background:#08182a;cursor:pointer;padding:0;opacity:.5;transition:opacity .2s,border-color .2s,transform .2s}
     .thumbs button img{width:100%;height:100%;object-fit:cover;display:block}
-    .thumbs button:hover{opacity:.9}
-    .thumbs button[aria-current="true"]{opacity:1;border-color:var(--seafoam)}
+    .thumbs button:hover{opacity:.85;transform:translateY(-2px)}
+    .thumbs button[aria-current="true"]{opacity:1;border-color:var(--seafoam);transform:translateY(-3px);box-shadow:0 8px 20px -8px rgba(55,192,166,.6)}
     .thumbs button:focus-visible{outline:2px solid var(--seafoam);outline-offset:1px}
 
     .hint{font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono)}
-    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
-    @media(max-width:640px){.nav-btn{width:40px;height:40px}.thumbs button{width:84px}}
+    :fullscreen .stage{border-radius:0;height:100vh;aspect-ratio:auto}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}.layer{transform:none}}
+    @media(max-width:640px){.nav-btn{width:42px;height:42px}.thumbs button{width:92px}.dotbar{display:none}}
   </style>
 </head>
 <body>
-  <p class="sr-only">FleetMind AWS 架構簡報，13 頁，可用左右鍵或縮圖切換。</p>
+  <p class="sr-only">FleetMind AWS 架構簡報，15 頁，可用左右鍵、縮圖、圓點或自動播放切換，支援全螢幕。</p>
 
   <nav class="fm-topnav" aria-label="主選單">
     <a class="fm-brand" href="/"><svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
@@ -87,8 +113,8 @@
   <div class="stage-wrap">
     <div class="head">
       <div>
-        <p class="k">AWS Architecture · 13 slides</p>
-        <h1>FleetMind AWS 架構簡報（網頁版）</h1>
+        <p class="k">AWS Architecture · 15 slides</p>
+        <h1>FleetMind AWS 架構簡報</h1>
       </div>
       <a class="dl" href="/deck/fleetmind-aws-architecture.pptx" download>
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -96,55 +122,84 @@
       </a>
     </div>
 
-    <div class="stage">
-      <img id="slide" src="/deck/slide-01.jpg" alt="投影片 1">
+    <div class="stage" id="stage">
+      <div class="progress"><i id="prog"></i></div>
+      <div class="layer show" id="layerA"><img id="imgA" src="/deck/slide-01.jpg" alt="投影片 1"></div>
+      <div class="layer" id="layerB"><img id="imgB" src="" alt=""></div>
+      <div class="sheen" aria-hidden="true"></div>
       <button class="nav-btn prev" id="prev" type="button" aria-label="上一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <button class="nav-btn next" id="next" type="button" aria-label="下一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <span class="counter" id="counter">1 / 13</span>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl" id="play" type="button" aria-label="自動播放"><svg id="playicon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+      <span class="counter"><b id="cur">1</b> / <span id="total">15</span></span>
+      <div class="dotbar" id="dots" role="tablist" aria-label="投影片"></div>
+      <button class="ctrl" id="fs" type="button" aria-label="全螢幕"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
 
     <div class="thumbs" id="thumbs" role="tablist" aria-label="投影片縮圖"></div>
-    <p class="hint">← → 或空白鍵切換 · 點縮圖跳頁 · 點投影片下一頁</p>
+    <p class="hint">← → 或空白鍵切換 · 點縮圖/圓點跳頁 · ▶ 自動播放 · ⛶ 全螢幕</p>
   </div>
 
   <script>
     (function () {
-      var TOTAL = 13;
-      var i = 0;
-      var slide = document.getElementById('slide');
-      var counter = document.getElementById('counter');
-      var thumbs = document.getElementById('thumbs');
+      var TOTAL = 15, i = 0, showA = true, playing = false, timer = null;
+      var layerA = document.getElementById('layerA'), layerB = document.getElementById('layerB');
+      var imgA = document.getElementById('imgA'), imgB = document.getElementById('imgB');
+      var prog = document.getElementById('prog'), cur = document.getElementById('cur');
+      var thumbs = document.getElementById('thumbs'), dots = document.getElementById('dots');
+      var playBtn = document.getElementById('play'), playIcon = document.getElementById('playicon');
       function pad(n){ return (n < 10 ? '0' : '') + n; }
-      // build thumbnails
-      for (var n = 1; n <= TOTAL; n++) {
-        (function (n) {
+      function src(n){ return '/deck/slide-' + pad(n) + '.jpg'; }
+      // preload
+      for (var p = 1; p <= TOTAL; p++){ var pi = new Image(); pi.src = src(p); }
+      // thumbnails + dots
+      var thumbBtns = [], dotBtns = [];
+      for (var n = 1; n <= TOTAL; n++){
+        (function (n){
           var b = document.createElement('button');
-          b.type = 'button'; b.setAttribute('role', 'tab');
-          b.setAttribute('aria-label', '投影片 ' + n);
-          var im = document.createElement('img');
-          im.src = '/deck/slide-' + pad(n) + '.jpg'; im.alt = '投影片 ' + n + ' 縮圖'; im.loading = 'lazy';
-          b.appendChild(im);
-          b.addEventListener('click', function () { go(n - 1); });
-          thumbs.appendChild(b);
+          b.type = 'button'; b.setAttribute('role','tab'); b.setAttribute('aria-label','投影片 ' + n);
+          var im = document.createElement('img'); im.src = src(n); im.alt = '投影片 ' + n + ' 縮圖'; im.loading = 'lazy';
+          b.appendChild(im); b.addEventListener('click', function(){ go(n - 1, true); });
+          thumbs.appendChild(b); thumbBtns.push(b);
+          var d = document.createElement('button'); d.className = 'dot'; d.type = 'button';
+          d.setAttribute('role','tab'); d.setAttribute('aria-label','投影片 ' + n);
+          d.addEventListener('click', function(){ go(n - 1, true); });
+          dots.appendChild(d); dotBtns.push(d);
         })(n);
       }
-      var thumbBtns = thumbs.querySelectorAll('button');
-      function render() {
-        slide.src = '/deck/slide-' + pad(i + 1) + '.jpg';
-        slide.alt = '投影片 ' + (i + 1);
-        counter.textContent = (i + 1) + ' / ' + TOTAL;
-        thumbBtns.forEach(function (b, idx) { b.setAttribute('aria-current', idx === i ? 'true' : 'false'); });
-        var cur = thumbBtns[i];
-        if (cur && cur.scrollIntoView) cur.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+      function render(){
+        var incoming = showA ? layerB : layerA;
+        var incomingImg = showA ? imgB : imgA;
+        var outgoing = showA ? layerA : layerB;
+        incomingImg.src = src(i + 1); incomingImg.alt = '投影片 ' + (i + 1);
+        incoming.classList.add('show'); outgoing.classList.remove('show');
+        showA = !showA;
+        prog.style.width = ((i + 1) / TOTAL * 100) + '%';
+        cur.textContent = (i + 1);
+        thumbBtns.forEach(function(b, idx){ b.setAttribute('aria-current', idx === i ? 'true' : 'false'); });
+        dotBtns.forEach(function(d, idx){ d.setAttribute('aria-current', idx === i ? 'true' : 'false'); });
+        var t = thumbBtns[i]; if (t && t.scrollIntoView) t.scrollIntoView({ inline:'center', block:'nearest', behavior:'smooth' });
       }
-      function go(n) { i = (n + TOTAL) % TOTAL; render(); }
-      document.getElementById('prev').addEventListener('click', function () { go(i - 1); });
-      document.getElementById('next').addEventListener('click', function () { go(i + 1); });
-      slide.addEventListener('click', function () { go(i + 1); });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(i + 1); }
-        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1); }
-        else if (e.key === 'Home') { go(0); } else if (e.key === 'End') { go(TOTAL - 1); }
+      function go(n, stop){ if (stop) pause(); i = (n + TOTAL) % TOTAL; render(); }
+      function play(){ playing = true; playIcon.innerHTML = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'; playBtn.setAttribute('aria-label','暫停'); clearInterval(timer); timer = setInterval(function(){ i = (i + 1) % TOTAL; render(); }, 4500); }
+      function pause(){ playing = false; playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; playBtn.setAttribute('aria-label','自動播放'); clearInterval(timer); }
+      playBtn.addEventListener('click', function(){ playing ? pause() : play(); });
+      document.getElementById('prev').addEventListener('click', function(){ go(i - 1, true); });
+      document.getElementById('next').addEventListener('click', function(){ go(i + 1, true); });
+      layerA.addEventListener('click', function(){ go(i + 1, true); });
+      layerB.addEventListener('click', function(){ go(i + 1, true); });
+      document.getElementById('fs').addEventListener('click', function(){
+        var s = document.getElementById('stage');
+        if (document.fullscreenElement) { document.exitFullscreen(); }
+        else if (s.requestFullscreen) { s.requestFullscreen(); }
+      });
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(i + 1, true); }
+        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1, true); }
+        else if (e.key === 'Home') { go(0, true); } else if (e.key === 'End') { go(TOTAL - 1, true); }
+        else if (e.key.toLowerCase() === 'f') { document.getElementById('fs').click(); }
       });
       render();
     })();

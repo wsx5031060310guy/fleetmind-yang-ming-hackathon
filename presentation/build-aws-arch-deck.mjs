@@ -34,7 +34,8 @@ pptx.author = "FleetMind";
 pptx.title = "FleetMind — AWS 架構藍圖與方案比較";
 
 const W = 13.333, H = 7.5, M = 0.7, CW = W - 2 * M;
-const TOTAL = 13; // 頁碼分母
+const TOTAL = 15; // 頁碼分母
+const imgDir = path.join(__dirname, "..", "apps", "api", "src", "main", "resources", "static", "img");
 
 // 服務類別 → 色 (視覺母題核心)
 const CAT = { comp: C.navy3, net: C.teal, stor: C.navy2, ai: C.seafoam, notify: C.coral, data: C.amber, sec: C.mute, block: C.coral, actor: C.slate };
@@ -42,6 +43,15 @@ const CAT = { comp: C.navy3, net: C.teal, stor: C.navy2, ai: C.seafoam, notify: 
 // ---------- helpers (每次呼叫都新建 options 物件, 不共用) ----------
 const darkBg = (s) => { s.background = { color: C.navy }; };
 const lightBg = (s) => { s.background = { color: C.white }; };
+
+// 電影感深色背景: 圖 + 深色 scrim overlay (文字可讀優先) — 資安 / 多區域頁專用
+function photoBg(s, imgFile, scrim = 34, edgeScrim = 10) {
+  s.background = { color: C.navy };
+  s.addImage({ path: path.join(imgDir, imgFile), x: 0, y: 0, w: W, h: H, sizing: { type: "cover", w: W, h: H } });
+  s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: H, fill: { color: C.navy, transparency: scrim }, line: { type: "none" } });
+  s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: 2.1, fill: { color: C.navy, transparency: edgeScrim }, line: { type: "none" } });
+  s.addShape(pptx.ShapeType.rect, { x: 0, y: H - 1.0, w: W, h: 1.0, fill: { color: C.navy, transparency: edgeScrim }, line: { type: "none" } });
+}
 
 // sonar「ping」海事符號 — 兩環 + 中心點, 全 deck 重複的識別元素
 function ping(s, cx, cy, r, ringColor, dotColor) {
@@ -418,8 +428,131 @@ optionSlide({
   notes: "方案 E 是企業級願景藍圖：S3 data lake + Glue ETL + Athena/Timestream + QuickSight BI + Bedrock/SageMaker 預測 + 未來 IoT Core 遙測。它不宜當 Day3 實跑主線，但作為架構故事線與企業資料應用說明極具說服力。",
 }, 8);
 
-/* ================= Slide 9 — 五案比較表 ================= */
-s = pptx.addSlide(); lightBg(s); pageMark(s, 9);
+/* ============== Slide 9 — 資安：VPC 隔離 + GuardDuty (NEW) ============== */
+s = pptx.addSlide();
+photoBg(s, "security-soc.jpg", 34, 9);
+pageMark(s, 9, true);
+head(s, "Security · 縱深防禦", "資安：VPC 隔離 + GuardDuty", C.white);
+s.addText("縱深防禦 (defense in depth)：邊緣擋量、VPC 最小暴露、帳號級偵測、全程加密與稽核 — 逐層收斂攻擊面，任一層被突破，下一層仍在。", { x: M, y: 1.62, w: 11.7, h: 0.5, fontFace: BODY, fontSize: 12.5, color: C.dim, italic: true, lineSpacingMultiple: 1.12, margin: 0 });
+const secLayers = [
+  { tag: "① 邊緣", note: "擋量 · L7 過濾", items: [
+      { label: "AWS Shield", sub: "DDoS 防護", code: "SLD", cat: "sec" },
+      { label: "AWS WAF", sub: "L7 規則過濾", code: "WAF", cat: "net" },
+    ] },
+  { tag: "② VPC 隔離", note: "最小暴露面", flow: true, items: [
+      { label: "公有子網 · ALB", sub: "唯一對外入口", code: "ALB", cat: "net" },
+      { label: "私有子網 · ECS", sub: "無公網 IP", code: "ECS", cat: "comp" },
+    ] },
+  { tag: "③ 帳號偵測", note: "持續監看", items: [
+      { label: "GuardDuty", sub: "威脅偵測", code: "GD", cat: "data" },
+      { label: "CloudTrail", sub: "稽核軌跡", code: "CT", cat: "sec" },
+    ] },
+  { tag: "④ 機密加密", note: "零信任存取", items: [
+      { label: "Secrets Manager", sub: "憑證託管", code: "SM", cat: "stor" },
+      { label: "KMS", sub: "金鑰加密", code: "KMS", cat: "ai" },
+      { label: "IAM", sub: "最小權限", code: "IAM", cat: "sec" },
+    ] },
+];
+const secTop = 2.25, secBandH = 0.86, secPitch = 1.01;
+secLayers.forEach((L, i) => {
+  const bx = M + i * 0.28, bw = CW - i * 0.56, by = secTop + i * secPitch;
+  s.addShape(pptx.ShapeType.roundRect, { x: bx, y: by, w: bw, h: secBandH, fill: { color: C.navy, transparency: 40 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.1 });
+  s.addText(L.tag, { x: bx + 0.18, y: by + 0.1, w: 1.55, h: 0.34, valign: "middle", fontFace: HEAD, fontSize: 13, bold: true, color: C.seafoam, margin: 0 });
+  s.addText(L.note, { x: bx + 0.18, y: by + 0.46, w: 1.55, h: 0.3, valign: "middle", fontFace: BODY, fontSize: 9, color: C.slate, margin: 0 });
+  const czx = bx + 1.86, czw = bw - 2.04, n = L.items.length, gap = 0.16;
+  const cw = (czw - gap * (n - 1)) / n, ch = 0.6, cy = by + (secBandH - ch) / 2;
+  const edges = [];
+  L.items.forEach((it, j) => {
+    const cx = czx + j * (cw + gap);
+    svcCardH(s, cx, cy, cw, ch, { label: it.label, sub: it.sub, code: it.code, cat: it.cat, fill: C.navy2, fs: 11 });
+    edges.push([cx, cx + cw]);
+  });
+  if (L.flow && edges.length === 2) {
+    s.addShape(pptx.ShapeType.line, { x: edges[0][1] + 0.02, y: cy + ch / 2, w: gap - 0.04, h: 0, line: { color: C.amber, width: 1.75, endArrowType: "triangle" } });
+  }
+});
+s.addShape(pptx.ShapeType.roundRect, { x: M, y: 6.32, w: CW, h: 0.8, fill: { color: C.navy2 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.08 });
+s.addText([
+  { text: "◆ 縱深防禦　", options: { bold: true, color: C.amber } },
+  { text: "邊緣擋量、VPC 隔離、帳號偵測、加密兜底 — 攻擊者要連過四關；憑證進 Secrets Manager、資料以 KMS 加密、操作全入 CloudTrail，IAM 全程最小權限。", options: { color: C.white } },
+], { x: M + 0.3, y: 6.32, w: CW - 0.6, h: 0.8, valign: "middle", fontFace: BODY, fontSize: 11.5, lineSpacingMultiple: 1.05, margin: 0 });
+s.addNotes("資安採縱深防禦：① 邊緣 Shield 擋 DDoS + WAF 過濾 L7；② VPC 隔離 — ALB 放公有子網當唯一入口、ECS 放私有子網無公網 IP；③ 帳號級 GuardDuty 威脅偵測 + CloudTrail 稽核；④ 機密與加密 — Secrets Manager 託管憑證、KMS 金鑰加密、IAM 最小權限。逐層收斂攻擊面，任一層被突破下一層仍在。");
+
+/* ======= Slide 10 — 多區域 Active-Active + 災備 (NEW) ======= */
+s = pptx.addSlide();
+photoBg(s, "multi-region.jpg", 36, 9);
+pageMark(s, 10, true);
+head(s, "Multi-Region · Active-Active", "多區域 Active-Active + 即時告警與災備", C.white);
+s.addText("不同國家船務端就近接入 → Route 53 智慧路由到兩個 active 區域；一區故障自動切換、跨區雙向複製，資料不丟、服務不中斷。", { x: M, y: 1.62, w: 11.7, h: 0.5, fontFace: BODY, fontSize: 12.5, color: C.dim, italic: true, lineSpacingMultiple: 1.12, margin: 0 });
+// Row1 — 船務端 → Route 53
+const cliY = 2.2, cliH = 0.72;
+s.addShape(pptx.ShapeType.roundRect, { x: M, y: cliY, w: 3.15, h: cliH, fill: { color: C.navy2 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.09 });
+s.addText([{ text: "亞洲船務端\n", options: { bold: true, color: C.white, fontSize: 12.5 } }, { text: "日 · 台 · 韓 · 星", options: { color: C.slate, fontSize: 9.5 } }], { x: M + 0.12, y: cliY, w: 2.91, h: cliH, valign: "middle", align: "center", fontFace: HEAD, lineSpacingMultiple: 1.0, margin: 0 });
+const amX = W - M - 3.15;
+s.addShape(pptx.ShapeType.roundRect, { x: amX, y: cliY, w: 3.15, h: cliH, fill: { color: C.navy2 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.09 });
+s.addText([{ text: "歐美船務端\n", options: { bold: true, color: C.white, fontSize: 12.5 } }, { text: "EU · US", options: { color: C.slate, fontSize: 9.5 } }], { x: amX + 0.12, y: cliY, w: 2.91, h: cliH, valign: "middle", align: "center", fontFace: HEAD, lineSpacingMultiple: 1.0, margin: 0 });
+const r53W = 4.4, r53X = (W - r53W) / 2, r53CX = W / 2;
+s.addShape(pptx.ShapeType.roundRect, { x: r53X, y: cliY, w: r53W, h: cliH, fill: { color: C.navy2 }, line: { color: C.seafoam, width: 1.25 }, rectRadius: 0.09 });
+badge(s, r53X + 0.42, cliY + cliH / 2, "R53", "net", 0.44);
+s.addText([{ text: "Route 53\n", options: { bold: true, color: C.white, fontSize: 13 } }, { text: "地理 / 延遲路由 · 健康檢查 failover", options: { color: C.seafoam, fontSize: 9.5 } }], { x: r53X + 0.76, y: cliY, w: r53W - 0.9, h: cliH, valign: "middle", align: "left", fontFace: HEAD, lineSpacingMultiple: 1.0, margin: 0 });
+s.addShape(pptx.ShapeType.line, { x: M + 3.18, y: cliY + cliH / 2, w: r53X - (M + 3.18) - 0.03, h: 0, line: { color: C.teal, width: 1.75, endArrowType: "triangle" } });
+s.addShape(pptx.ShapeType.line, { x: r53X + r53W + 0.03, y: cliY + cliH / 2, w: amX - (r53X + r53W) - 0.06, h: 0, line: { color: C.teal, width: 1.75, beginArrowType: "triangle" } });
+// Route 53 → 兩區域 分流匯流排
+const regW = 5.15, regY = 3.5, regH = 2.25;
+const regAX = M, regBX = W - M - regW;
+const regACX = regAX + regW / 2, regBCX = regBX + regW / 2;
+const busY = cliY + cliH + 0.2;
+s.addShape(pptx.ShapeType.line, { x: r53CX, y: cliY + cliH, w: 0, h: 0.2, line: { color: C.teal, width: 1.75 } });
+s.addShape(pptx.ShapeType.line, { x: regACX, y: busY, w: regBCX - regACX, h: 0, line: { color: C.teal, width: 1.75 } });
+s.addShape(pptx.ShapeType.line, { x: regACX, y: busY, w: 0, h: regY - busY - 0.02, line: { color: C.teal, width: 1.75, endArrowType: "triangle" } });
+s.addShape(pptx.ShapeType.line, { x: regBCX, y: busY, w: 0, h: regY - busY - 0.02, line: { color: C.teal, width: 1.75, endArrowType: "triangle" } });
+function regionPanel(px, title, sub) {
+  s.addShape(pptx.ShapeType.roundRect, { x: px, y: regY, w: regW, h: regH, fill: { color: C.navy2, transparency: 8 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.1 });
+  s.addShape(pptx.ShapeType.roundRect, { x: px, y: regY, w: regW, h: 0.5, fill: { color: C.navy3 }, line: { type: "none" }, rectRadius: 0.1 });
+  s.addShape(pptx.ShapeType.rect, { x: px, y: regY + 0.25, w: regW, h: 0.25, fill: { color: C.navy3 }, line: { type: "none" } });
+  s.addText([{ text: title, options: { bold: true, color: C.white, fontSize: 12.5 } }, { text: "　" + sub, options: { color: C.dim, fontSize: 9.5 } }], { x: px + 0.2, y: regY, w: regW - 1.45, h: 0.5, valign: "middle", fontFace: HEAD, margin: 0 });
+  chip(s, px + regW - 1.2, regY + 0.09, 1.05, "ACTIVE", C.seafoam, C.white, 9.5, 0.32);
+  const half = (regW - 0.55) / 2, rh = 0.52;
+  const ry1 = regY + 0.62;
+  svcCardH(s, px + 0.18, ry1, half, rh, { label: "ALB", sub: "區域入口", code: "ALB", cat: "net", fill: C.navy, fs: 11 });
+  svcCardH(s, px + 0.18 + half + 0.19, ry1, half, rh, { label: "ECS", sub: "私有子網", code: "ECS", cat: "comp", fill: C.navy, fs: 11 });
+  s.addShape(pptx.ShapeType.line, { x: px + 0.18 + half + 0.02, y: ry1 + rh / 2, w: 0.15, h: 0, line: { color: C.teal, width: 1.5, endArrowType: "triangle" } });
+  const ry2 = ry1 + rh + 0.12;
+  svcCardH(s, px + 0.18, ry2, half, rh, { label: "DynamoDB", sub: "Global Table", code: "DDB", cat: "data", fill: C.navy, fs: 11 });
+  svcCardH(s, px + 0.18 + half + 0.19, ry2, half, rh, { label: "S3", sub: "跨區複製源", code: "S3", cat: "stor", fill: C.navy, fs: 11 });
+}
+regionPanel(regAX, "區域 A", "ap-northeast-1（東京）");
+regionPanel(regBX, "區域 B", "us-east-1（維吉尼亞）");
+// 中央跨區複製 · 匯總欄
+const ccX = 5.95, ccW = 1.43;
+s.addShape(pptx.ShapeType.roundRect, { x: ccX, y: regY, w: ccW, h: regH, fill: { color: C.navy, transparency: 12 }, line: { color: C.amber, width: 1 }, rectRadius: 0.1 });
+s.addText("跨區複製 · 匯總", { x: ccX, y: regY + 0.08, w: ccW, h: 0.3, align: "center", fontFace: BODY, fontSize: 9, bold: true, color: C.amber, charSpacing: 1, margin: 0 });
+const ccItems = [
+  ["DynamoDB", "Global Tables ⇄ 雙向", C.amber],
+  ["S3 CRR", "跨區複製備份", C.seafoam],
+  ["EventBridge", "跨區匯總", C.dim],
+  ["SNS / SES", "即時告警", C.coral],
+];
+const ciY0 = regY + 0.44, ciH = 0.42, ciGap = 0.045;
+ccItems.forEach((it, i) => {
+  const y = ciY0 + i * (ciH + ciGap);
+  s.addShape(pptx.ShapeType.roundRect, { x: ccX + 0.1, y, w: ccW - 0.2, h: ciH, fill: { color: C.navy3 }, line: { type: "none" }, rectRadius: 0.06 });
+  s.addText([{ text: it[0] + "\n", options: { bold: true, color: it[2], fontSize: 9 } }, { text: it[1], options: { color: C.dim, fontSize: 7.5 } }], { x: ccX + 0.13, y, w: ccW - 0.26, h: ciH, valign: "middle", align: "center", fontFace: HEAD, lineSpacingMultiple: 0.95, margin: 0 });
+});
+// 區域 ⇄ 中央 ⇄ 區域 雙向複製箭頭
+const repY = regY + 1.15;
+s.addShape(pptx.ShapeType.line, { x: regAX + regW + 0.01, y: repY, w: ccX - (regAX + regW) - 0.01, h: 0, line: { color: C.amber, width: 1.5, beginArrowType: "triangle", endArrowType: "triangle" } });
+s.addShape(pptx.ShapeType.line, { x: ccX + ccW + 0.01, y: repY, w: regBX - (ccX + ccW) - 0.01, h: 0, line: { color: C.amber, width: 1.5, beginArrowType: "triangle", endArrowType: "triangle" } });
+// 底部災備保證帶
+s.addShape(pptx.ShapeType.roundRect, { x: M, y: 6.28, w: CW, h: 0.82, fill: { color: C.navy2 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.08 });
+s.addText([
+  { text: "◆ 一區故障　", options: { bold: true, color: C.amber } },
+  { text: "健康檢查失敗 → Route 53 自動剔除故障區、流量全導健康區；DynamoDB Global Tables 已雙向同步、S3 CRR 已備份 → RPO≈0、資料不丟、對外服務不中斷。", options: { color: C.white } },
+], { x: M + 0.3, y: 6.28, w: CW - 0.6, h: 0.82, valign: "middle", fontFace: BODY, fontSize: 11.5, lineSpacingMultiple: 1.05, margin: 0 });
+s.addNotes("多區域 Active-Active：不同國家船務端經 Route 53 地理/延遲路由就近接入，兩個區域（A ap-northeast-1 東京、B us-east-1 維吉尼亞）皆 active，各自 ALB→ECS + DynamoDB + S3。DynamoDB Global Tables 雙向複製、S3 跨區複製 CRR 備份、EventBridge 跨區匯總即時告警 → SNS/SES。任一區健康檢查失敗，Route 53 自動 failover 切換到健康區，資料已雙向同步 (RPO≈0)、不丟、服務不中斷。");
+
+/* ================= Slide 11 — 五案比較表 ================= */
+s = pptx.addSlide(); lightBg(s); pageMark(s, 11);
 head(s, "Side-by-Side", "五案比較 — 現行方案 A 為出賽基準線");
 const thO = { fill: C.navy, color: C.white, bold: true, align: "center", valign: "middle", fontSize: 11.5, fontFace: HEAD };
 const cel = (t, opt = {}) => ({ text: t, options: { fontFace: BODY, fontSize: 10.5, color: C.ink, valign: "middle", align: "center", margin: 2, ...opt } });
@@ -460,8 +593,8 @@ s.addText([
 ], { x: M + 0.35, y: 6.0, w: CW - 0.65, h: 1.05, valign: "middle", fontFace: BODY, fontSize: 12, lineSpacingMultiple: 1.15, margin: 0 });
 s.addNotes("比較表沿六個維度（運算 / 入口 / 閒置成本 / 維運 / 冷啟 / 黑客松適配）排列五案，highlight 現行方案 A。結論：A 為主線、D 為保底、B/E 為演進方向、C 受阻。");
 
-/* ================= Slide 10 — 未來延伸路線圖 ================= */
-s = pptx.addSlide(); lightBg(s); pageMark(s, 10);
+/* ================= Slide 12 — 未來延伸路線圖 ================= */
+s = pptx.addSlide(); lightBg(s); pageMark(s, 12);
 head(s, "Roadmap", "從 15 艘 demo 到全艦隊即時營運平台");
 const tlY = 2.2;
 s.addShape(pptx.ShapeType.line, { x: M + 0.3, y: tlY, w: CW - 0.6, h: 0, line: { color: C.line, width: 3 } });
@@ -489,8 +622,8 @@ s.addText([
 ], { x: M + 0.3, y: 6.3, w: CW - 0.6, h: 0.85, valign: "middle", fontFace: BODY, fontSize: 12, lineSpacingMultiple: 1.15, margin: 0 });
 s.addNotes("路線圖：Phase 0 現行 15 艘 demo；Phase 1 補資料驅動三扇門（系統介接 ingest API、檔案上傳 CSV/xlsx、後台設定門檻/通道/燃料對應）；Phase 2 擴到全艦隊 + Serverless + QuickSight/Athena BI；Phase 3 IoT Core 即時遙測 + SageMaker 預測，走向近即時偵測。");
 
-/* ================= Slide 11 — 決策級聯 (NEW) ================= */
-s = pptx.addSlide(); lightBg(s); pageMark(s, 11);
+/* ================= Slide 13 — 決策級聯 ================= */
+s = pptx.addSlide(); lightBg(s); pageMark(s, 13);
 head(s, "Decision Cascade", "決策級聯：正常 → 注意 → 行動");
 s.addText("同一套已上線服務，依 Speed Loss 對可調門檻的位置，把船分成三種決策狀態 — 數字觸發流程，最後一步永遠留給人。", { x: M, y: 1.6, w: CW, h: 0.55, fontFace: BODY, fontSize: 12.5, color: C.mute, italic: true, lineSpacingMultiple: 1.1, margin: 0 });
 const casc = [
@@ -530,8 +663,8 @@ s.addText([
 ], { x: M + 0.28, y: 6.5, w: CW - 0.5, h: 0.65, valign: "middle", fontFace: BODY, fontSize: 11.5, lineSpacingMultiple: 1.0, margin: 0 });
 s.addNotes("決策級聯把架構連到產品輸出：Speed Loss 相對可調門檻分三態 — 正常(綠,持續監測) / 注意(黃,進 review 佇列+Bedrock 證據簡報) / 行動(紅,SNS 告警+人安排清洗)。例子用真實資料：S23 8.9%(n=506,HIGH) 屬注意；S11 21.8%(539 有效日,691 天未清,priority 1) 屬行動。門檻與通道皆可調，最後一步留給人。");
 
-/* ================= Slide 12 — Live Demo 導覽 (NEW) ================= */
-s = pptx.addSlide(); darkBg(s); pageMark(s, 12, true);
+/* ================= Slide 14 — Live Demo 導覽 ================= */
+s = pptx.addSlide(); darkBg(s); pageMark(s, 14, true);
 // 背景 sonar 裝飾
 ping(s, 11.9, 6.1, 1.5, C.navy3, C.navy3);
 head(s, "Live Demo", "現場導覽：一個穩定 URL，三個入口", C.white);
@@ -560,7 +693,7 @@ s.addText([
 s.addText("帳號 516665228894 · us-east-1 · ECS Fargate (ARM64) 常駐 · ALB 靜態 URL 不換位址", { x: M, y: 6.62, w: 12, h: 0.4, fontFace: BODY, fontSize: 12, color: C.slate, margin: 0 });
 s.addNotes("現場導覽：三個入口都掛在同一顆 Fargate 容器 / 同一個 ALB 靜態網域。/ 首頁講命題與方法、/dashboard.html 是 15 艘決策看板（Speed Loss 排序 + 證據 + AI 簡報 + 可調門檻）、/architecture.html 是架構互動版。task 重啟不換 IP，現場可安心直接打開。");
 
-/* ================= Slide 13 — 結尾 ================= */
+/* ================= Slide 15 — 結尾 ================= */
 s = pptx.addSlide(); darkBg(s);
 // 背景 sonar hero
 ping(s, 11.6, 2.7, 1.6, C.navy3, C.navy3);
