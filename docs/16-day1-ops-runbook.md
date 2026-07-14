@@ -16,12 +16,59 @@ java -jar apps/api/target/fleetmind-api-0.1.0-SNAPSHOT.jar
 
 本機 Maven 若未安裝，交給 GitHub Actions；不要為了修本機工具耗掉 Day1。
 
+### 本機容器驗證（上雲前硬門檻）
+
+```bash
+./scripts/deploy-verify.sh
+```
+
+`PASS` 後才發布同一 Dockerfile 產物。腳本有 `data/` 時烘入真 metrics，驗 S1–S23；無 `data/` 時驗 demo fallback。Apple Silicon 上雲 build 強制 `linux/amd64`。失敗切換依 §3 表。
+
+```bash
+export AWS_REGION=us-east-1
+export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+export ECR_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fleetmind-api"
+aws ecr describe-repositories --repository-names fleetmind-api >/dev/null 2>&1 \
+  || aws ecr create-repository --repository-name fleetmind-api >/dev/null
+aws ecr get-login-password | docker login --username AWS --password-stdin \
+  "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+docker buildx build --platform linux/amd64 -f apps/api/Dockerfile \
+  -t "$ECR_URI:day1" --push .
+```
+
+App Runner（僅既有 customer；`APP_RUNNER_ECR_ROLE_ARN` 須可讀 ECR）：
+
+```bash
+aws apprunner create-service --service-name fleetmind-api \
+  --source-configuration "{\"ImageRepository\":{\"ImageIdentifier\":\"$ECR_URI:day1\",\"ImageRepositoryType\":\"ECR\",\"ImageConfiguration\":{\"Port\":\"8080\"}},\"AutoDeploymentsEnabled\":false,\"AuthenticationConfiguration\":{\"AccessRoleArn\":\"$APP_RUNNER_ECR_ROLE_ARN\"}}" \
+  --health-check-configuration Protocol=HTTP,Path=/api/health \
+  --region "$AWS_REGION"
+```
+
+ECS Express Mode（role 要求見 §3）：
+
+```bash
+aws ecs create-express-gateway-service --service-name fleetmind-api \
+  --primary-container "{\"image\":\"$ECR_URI:day1\",\"containerPort\":8080,\"environment\":[{\"name\":\"PORT\",\"value\":\"8080\"}]}" \
+  --execution-role-arn "$ECS_TASK_EXECUTION_ROLE_ARN" \
+  --infrastructure-role-arn "$ECS_INFRASTRUCTURE_ROLE_ARN" \
+  --health-check-path /api/health --monitor-resources --region "$AWS_REGION"
+```
+
+EC2 docker fallback（EC2 完成 ECR login 後）：
+
+```bash
+docker pull "$ECR_URI:day1"
+docker run -d --restart unless-stopped --name fleetmind-api \
+  -e PORT=8080 -p 8080:8080 "$ECR_URI:day1"
+```
+
 ## 2. AWS 權限探測
 
 可先複製 `.env.example` 到本機 `.env` 填值；不要提交填好的 `.env`。
 
 ```bash
-export AWS_REGION=ap-northeast-1
+export AWS_REGION=us-east-1
 ./scripts/probe.sh --region "$AWS_REGION"
 ./scripts/bedrock-models.sh --region "$AWS_REGION"
 ```
