@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FleetMind · 示意艦隊雷達地圖</title>
+  <meta name="description" content="FleetMind 示意艦隊雷達地圖：以真 API 船隊狀態渲染的電影級深色海面雷達視圖。座標為示意，非 GPS。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232FB09A'/%3E%3Cpath d='M6 20c3 2 5 2 8 0s5-2 8 0 5 2 6 1' fill='none' stroke='%23052029' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 6l5 9H11z' fill='%23052029'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/map.css">
+</head>
+<body>
+  <p class="sr-only">FleetMind 示意艦隊雷達地圖。船點依風險狀態著色，座標為示意排布、非 GPS。可用 Tab 聚焦船點、Enter 查看該船摘要。</p>
+
+  <nav class="fm-topnav" aria-label="主選單">
+    <a class="fm-brand" href="/"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
+    <div class="fm-links">
+      <a href="/">首頁</a>
+      <a href="/dashboard.html">決策看板</a>
+      <a href="/voyage.html">航程 Demo</a>
+      <a href="/map.html" aria-current="page">地圖</a>
+      <a href="/architecture.html">AWS 架構</a>
+      <a href="/deck.html">簡報</a>
+      <a href="/admin.html">後台</a>
+    </div>
+  </nav>
+
+  <main class="map-wrap">
+    <header class="map-head">
+      <div>
+        <p class="k">Fleet Radar · 示意視圖</p>
+        <h1>示意艦隊雷達地圖</h1>
+        <p class="sub">以陽明船隊的即時風險狀態，投影在一張電影級的深色海面雷達上。船點顏色即決策燈號——先看紅點在哪。</p>
+      </div>
+      <div class="map-status" id="mapStatus" aria-live="polite">
+        <span class="live-dot"></span><span>載入船隊中…</span>
+      </div>
+    </header>
+
+    <div class="radar-grid">
+      <div class="radar-frame" id="radarFrame">
+        <div class="radar-sweep" aria-hidden="true"></div>
+        <!-- SVG 雷達（環/軸/航線/船點）由 map.js 注入至此 -->
+        <div class="radar-legend" aria-hidden="true">
+          <span class="lg"><i class="s-act"></i>行動</span>
+          <span class="lg"><i class="s-watch"></i>注意</span>
+          <span class="lg"><i class="s-normal"></i>正常</span>
+        </div>
+        <span class="radar-disclaimer">示意 · 非 GPS 座標</span>
+      </div>
+
+      <aside class="ship-detail" id="shipDetail" aria-live="polite">
+        <p class="empty">點選雷達上的船點或下方船名，查看該船的效能摘要。</p>
+      </aside>
+    </div>
+
+    <section class="fleet-strip">
+      <h2>船隊 · 依風險排序</h2>
+      <div class="chip-row" id="chipRow"></div>
+    </section>
+
+    <footer class="map-foot">
+      本頁雷達座標為示意排布（由船名決定性生成），非真實 GPS 定位；船點狀態與 Speed Loss 來自即時 API。數字來自計算，語言來自 AI，決策留給人。
+    </footer>
+  </main>
+
+  <script src="/map.js"></script>
+</body>
+</html>
