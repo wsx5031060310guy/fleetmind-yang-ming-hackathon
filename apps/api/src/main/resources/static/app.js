@@ -270,7 +270,6 @@ async function selectVessel(vesselId) {
 async function boot() {
   document.querySelector("#generate").addEventListener("click", () => loadBrief(false));
   document.querySelector("#force-fallback").addEventListener("click", () => loadBrief(true));
-  const vesselLoad = selectVessel(state.vesselId);
   const [fleet, quality] = await Promise.allSettled([
     getJson("/api/fleet/summary"),
     getJson("/api/data-quality/summary")
@@ -279,7 +278,13 @@ async function boot() {
   else showError("#fleet-wrap", fleet.reason);
   if (quality.status === "fulfilled") renderQuality(quality.value);
   else showError("#quality", quality.reason);
-  await vesselLoad;
+  // Default to the top-priority fleet vessel so the app works on any dataset
+  // (demo YM-DEMO-* or real S*), instead of a hardcoded id that may not exist.
+  const defaultVessel =
+    fleet.status === "fulfilled" && Array.isArray(fleet.value) && fleet.value.length
+      ? String(fleet.value[0].vesselId || state.vesselId)
+      : state.vesselId;
+  await selectVessel(defaultVessel);
 }
 
 boot().catch((error) => {
