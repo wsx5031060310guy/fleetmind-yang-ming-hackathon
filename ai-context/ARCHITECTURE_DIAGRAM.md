@@ -167,7 +167,7 @@ flowchart TD
 
 ```mermaid
 graph TB
-    subgraph AWS["AWS Cloud (Event Account)"]
+    subgraph AWS["AWS Cloud (Event Account — us-east-1)"]
         subgraph ECR["ECR (Container Registry)"]
             Image["fleetmind-api:latest<br/>(ARM64 multi-stage build)"]
         end
@@ -245,7 +245,7 @@ graph TB
 
 | 變數 | 用途 | 必要性 |
 |------|------|--------|
-| `AWS_REGION` | Bedrock 與 AWS 服務 region | Bedrock 必要 |
+| `AWS_REGION` | Bedrock 與 AWS 服務 region (us-east-1) | Bedrock 必要 |
 | `FLEETMIND_BEDROCK_MODEL_ID` | Bedrock model ID | Bedrock 必要 |
 | `FLEETMIND_METRICS_FILE` | real-metrics.json 路徑 | Real data 必要 |
 | `PORT` | HTTP port (default 8080) | 選用 |
@@ -301,7 +301,7 @@ java -jar apps/api/target/fleetmind-api-0.1.0-SNAPSHOT.jar  # 啟動
 docker build -f apps/api/Dockerfile -t fleetmind-api .
 docker run -p 8080:8080 \
   -e FLEETMIND_METRICS_FILE=/app/real-metrics.json \
-  -e AWS_REGION=ap-northeast-1 \
+  -e AWS_REGION=us-east-1 \
   -e FLEETMIND_BEDROCK_MODEL_ID=<model-id> \
   fleetmind-api
 
@@ -369,7 +369,7 @@ gitGraph
 ```mermaid
 pie title Yang Ming 評分權重 vs 模組
     "Speed Loss Dashboard (30%)" : 30
-    "FUEL_CONSUMP 正確性 (25%)" : 25
+    "油耗預測正確性 (25%)" : 25
     "Business Decision Value (20%)" : 20
     "Technical Feasibility (15%)" : 15
     "AI Collaboration (10%)" : 10
@@ -378,7 +378,7 @@ pie title Yang Ming 評分權重 vs 模組
 | 評分項目 (權重) | 對應模組/功能 |
 |----------------|---------------|
 | Speed Loss Dashboard (30%) | core-calc/SpeedLoss + apps/api dashboard (SVG chart + vessel switching) |
-| FUEL_CONSUMP 正確性 (25%) | predict/ pipeline → submission.csv (102 rows, RMSE ~3.5 MT) |
+| 油耗預測正確性 (25%) | predict/ pipeline → submission.csv (102 rows, RMSE ~3.5 MT)；注意：此分數來自預測 102 個 PREDICT 格，非 dashboard 的 FuelConsumpExport |
 | Business Decision Value (20%) | core-calc/BusinessImpact + BeforeAfter + AI Brief |
 | Technical Feasibility (15%) | Docker + ECS + Bedrock + CI/CD + golden tests |
 | AI Collaboration Creativity (10%) | AiBriefService (Bedrock + guardrail + fallback) + AI agent 工作流程 |
