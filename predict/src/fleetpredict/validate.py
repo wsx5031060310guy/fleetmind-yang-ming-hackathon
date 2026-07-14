@@ -1,4 +1,4 @@
-"""Leak-controlled validation matching official post-maintenance masking."""
+"""Leak-controlled model selection matching official post-maintenance masking."""
 
 from __future__ import annotations
 
@@ -10,7 +10,18 @@ from sklearn.model_selection import GroupKFold
 
 from .anchor import AnchorSolution, maintenance_with_relative_days
 from .features import FeatureSet
-from .models import GBMModel, PhysicsBaseline, choose_blend_weight
+from .models import (
+    BASELINE_FEATURE_COLUMNS,
+    BLEND_NAME,
+    GBM_BASELINE_NAME,
+    GBM_FOULING_NAME,
+    MODEL_NAMES,
+    PHYSICS_NAME,
+    BlendModel,
+    GBMModel,
+    PhysicsBaseline,
+    choose_blend_weight,
+)
 
 TRAIN_SHIPS = tuple(f"S{i}" for i in range(1, 13))
 
@@ -18,20 +29,36 @@ TRAIN_SHIPS = tuple(f"S{i}" for i in range(1, 13))
 @dataclass(frozen=True)
 class ValidationResult:
     comparison: pd.DataFrame
+    segment_metrics: pd.DataFrame
     per_window: pd.DataFrame
     blend_weight: float
+    selected_model: str
     feature_importances: pd.DataFrame
     heldout_rows: int
     window_count: int
+    fouling_rmse_delta: float
 
     def print_report(self) -> None:
         print("\nValidation comparison")
         print(self.comparison.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
-        print("\nSimulated-mask per-window breakdown")
-        print(self.per_window.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+        print("\nExtended simulated-mask segment breakdown")
+        print(
+            self.segment_metrics.to_string(
+                index=False, float_format=lambda x: f"{x:.4f}"
+            )
+        )
+        print(f"\nSelected-model per-window breakdown ({self.selected_model})")
+        selected_windows = self.per_window.loc[
+            self.per_window["model"].eq(self.selected_model)
+        ]
+        print(
+            selected_windows.to_string(
+                index=False, float_format=lambda x: f"{x:.4f}"
+            )
+        )
 
 
-def _metrics(actual: np.ndarray, predicted: np.ndarray) -> tuple[float, float]:
+def _metrics(actual: np.ndarray, predicted: np.ndarray) -> tuple[float, float, float]:
     actual = np.asarray(actual, dtype=float)
     predicted = np.asarray(predicted, dtype=float)
     rmse = float(np.sqrt(np.mean(np.square(actual - predicted))))
@@ -39,17 +66,22 @@ def _metrics(actual: np.ndarray, predicted: np.ndarray) -> tuple[float, float]:
     mape = float(
         np.mean(np.abs((actual[valid] - predicted[valid]) / actual[valid])) * 100
     )
-    return rmse, mape
+    bias = float(np.mean(predicted - actual))
+    return rmse, mape, bias
 
 
 def _candidate_windows(
     features: FeatureSet, maintenance: pd.DataFrame, anchor: AnchorSolution
 ) -> list[dict[str, object]]:
+    """Use every eligible training-ship event, not a hand-picked 14-window subset."""
+
     frame = features.frame
     events = maintenance_with_relative_days(maintenance, anchor)
     candidates: list[dict[str, object]] = []
     for ship_id in TRAIN_SHIPS:
-        ship_events = events.loc[events["ship_id"].eq(ship_id)].sort_values("event_day")
+        ship_events = events.loc[events["ship_id"].eq(ship_id)].sort_values(
+            ["event_day", "_event_id"]
+        )
         for position, (_, event) in enumerate(ship_events.iterrows()):
             event_day = int(event["event_day"])
             next_day = (
@@ -68,44 +100,84 @@ def _candidate_windows(
             ].sort_values(["day", "_row_id"])
             if len(rows) < 5:
                 continue
-            rows = rows.head(10)
             candidates.append(
                 {
-                    "window_id": f"{ship_id}:{event['event_type']}:{pd.Timestamp(event['event_date']).date()}",
+                    "window_id": f"{ship_id}:{event['event_type']}:day-{event_day}",
                     "ship_id": ship_id,
                     "event_type": event["event_type"],
-                    "event_date": pd.Timestamp(event["event_date"]),
-                    "row_ids": tuple(int(x) for x in rows["_row_id"]),
+                    "event_day": event_day,
+                    "row_ids": tuple(int(value) for value in rows.head(10)["_row_id"]),
                 }
             )
-    return candidates
+    return sorted(candidates, key=lambda item: (item["ship_id"], item["event_day"]))
 
 
-def _select_windows(
-    candidates: list[dict[str, object]], count: int = 14
-) -> list[dict[str, object]]:
-    if len(candidates) < count:
-        return candidates
-    selected: list[dict[str, object]] = []
-    selected_ids: set[str] = set()
-    # First cover as many ships as possible, using each ship's chronologically
-    # latest eligible event to resemble current prediction periods.
-    for ship_id in TRAIN_SHIPS:
-        ship_candidates = [c for c in candidates if c["ship_id"] == ship_id]
-        if ship_candidates:
-            chosen = max(ship_candidates, key=lambda c: c["event_date"])
-            selected.append(chosen)
-            selected_ids.add(str(chosen["window_id"]))
-    remaining = sorted(
-        candidates, key=lambda c: (c["event_date"], c["window_id"]), reverse=True
+def _fit_candidate_models(
+    train: pd.DataFrame, heldout: pd.DataFrame
+) -> tuple[dict[str, object], dict[str, np.ndarray], float]:
+    physics = PhysicsBaseline().fit(train)
+    baseline = GBMModel(feature_columns=BASELINE_FEATURE_COLUMNS).fit(train)
+    exact_fouling = GBMModel().fit(train)
+
+    predictions = {
+        GBM_BASELINE_NAME: baseline.predict(heldout),
+        GBM_FOULING_NAME: exact_fouling.predict(heldout),
+        PHYSICS_NAME: physics.predict(heldout),
+    }
+    actual = heldout["target_raw_mass"].to_numpy(dtype=float)
+    weight = choose_blend_weight(
+        actual, predictions[PHYSICS_NAME], predictions[GBM_FOULING_NAME]
     )
-    for candidate in remaining:
-        if len(selected) >= count:
-            break
-        if str(candidate["window_id"]) not in selected_ids:
-            selected.append(candidate)
-            selected_ids.add(str(candidate["window_id"]))
-    return sorted(selected[:count], key=lambda c: (c["ship_id"], c["event_date"]))
+    blend = BlendModel(physics, exact_fouling, weight)
+    predictions[BLEND_NAME] = blend.predict(heldout)
+    models: dict[str, object] = {
+        GBM_BASELINE_NAME: baseline,
+        GBM_FOULING_NAME: exact_fouling,
+        PHYSICS_NAME: physics,
+        BLEND_NAME: blend,
+    }
+    return models, predictions, weight
+
+
+def _select_model(comparison: pd.DataFrame) -> str:
+    extended = comparison.loc[
+        comparison["evaluation"].eq("ExtendedSimulatedMask")
+    ].copy()
+    # Six-decimal equality is a practical tie. MAPE breaks it; incumbent order
+    # breaks a complete tie so complexity never ships without measurable gain.
+    extended["_rmse_key"] = extended["RMSE_MT"].round(6)
+    extended["_mape_key"] = extended["MAPE_pct"].round(6)
+    order = {name: position for position, name in enumerate(MODEL_NAMES)}
+    extended["_order"] = extended["model"].map(order)
+    return str(
+        extended.sort_values(
+            ["_rmse_key", "_mape_key", "_order"], kind="stable"
+        ).iloc[0]["model"]
+    )
+
+
+def _segment_records(
+    heldout: pd.DataFrame, predictions: dict[str, np.ndarray]
+) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    actual = heldout["target_raw_mass"].to_numpy(dtype=float)
+    for dimension, column in (("fuel", "fuel_used"), ("ship_class", "ship_class")):
+        for segment in sorted(heldout[column].dropna().unique()):
+            mask = heldout[column].eq(segment).to_numpy()
+            for model_name in MODEL_NAMES:
+                rmse, mape, bias = _metrics(actual[mask], predictions[model_name][mask])
+                records.append(
+                    {
+                        "dimension": dimension,
+                        "segment": segment,
+                        "n": int(mask.sum()),
+                        "model": model_name,
+                        "RMSE_MT": rmse,
+                        "MAPE_pct": mape,
+                        "Bias_MT": bias,
+                    }
+                )
+    return records
 
 
 def validate_models(
@@ -115,56 +187,39 @@ def validate_models(
     group_splits: int = 5,
 ) -> ValidationResult:
     frame = features.frame
-    candidates = _candidate_windows(features, maintenance, anchor)
-    windows = _select_windows(candidates, 14)
+    windows = _candidate_windows(features, maintenance, anchor)
     if len(windows) < 10:
-        raise ValueError(
-            f"too few eligible post-event validation windows: {len(windows)}"
-        )
+        raise ValueError(f"too few eligible post-event validation windows: {len(windows)}")
     heldout_ids = {row_id for window in windows for row_id in window["row_ids"]}
     train = frame.loc[
         frame["is_trainable"] & ~frame["_row_id"].isin(heldout_ids)
     ].copy()
     heldout = frame.loc[frame["_row_id"].isin(heldout_ids)].copy()
 
-    physics = PhysicsBaseline().fit(train)
-    gbm = GBMModel().fit(train)
+    models, predictions, weight = _fit_candidate_models(train, heldout)
     actual = heldout["target_raw_mass"].to_numpy(dtype=float)
-    physics_pred = physics.predict(heldout)
-    gbm_pred = gbm.predict(heldout)
-    weight = choose_blend_weight(actual, physics_pred, gbm_pred)
-    blend_pred = (1.0 - weight) * physics_pred + weight * gbm_pred
-
     comparison_records: list[dict[str, object]] = []
-    for model_name, prediction in (
-        ("PhysicsBaseline", physics_pred),
-        ("GBMModel", gbm_pred),
-        ("BlendModel", blend_pred),
-    ):
-        rmse, mape = _metrics(actual, prediction)
+    for model_name in MODEL_NAMES:
+        rmse, mape, bias = _metrics(actual, predictions[model_name])
         comparison_records.append(
             {
-                "evaluation": "SimulatedMask",
+                "evaluation": "ExtendedSimulatedMask",
                 "model": model_name,
+                "n": len(heldout),
                 "RMSE_MT": rmse,
                 "MAPE_pct": mape,
+                "Bias_MT": bias,
             }
         )
 
     prediction_map = pd.DataFrame(
-        {
-            "_row_id": heldout["_row_id"].to_numpy(),
-            "actual": actual,
-            "PhysicsBaseline": physics_pred,
-            "GBMModel": gbm_pred,
-            "BlendModel": blend_pred,
-        }
+        {"_row_id": heldout["_row_id"].to_numpy(), "actual": actual, **predictions}
     ).set_index("_row_id")
     window_records: list[dict[str, object]] = []
     for window in windows:
         subset = prediction_map.loc[list(window["row_ids"])]
-        for model_name in ("PhysicsBaseline", "GBMModel", "BlendModel"):
-            rmse, mape = _metrics(
+        for model_name in MODEL_NAMES:
+            rmse, mape, bias = _metrics(
                 subset["actual"].to_numpy(), subset[model_name].to_numpy()
             )
             window_records.append(
@@ -174,6 +229,7 @@ def validate_models(
                     "model": model_name,
                     "RMSE_MT": rmse,
                     "MAPE_pct": mape,
+                    "Bias_MT": bias,
                 }
             )
 
@@ -181,44 +237,65 @@ def validate_models(
         frame["is_trainable"] & frame["ship_id"].isin(TRAIN_SHIPS)
     ].copy()
     fold_actual: list[np.ndarray] = []
-    fold_physics: list[np.ndarray] = []
-    fold_gbm: list[np.ndarray] = []
+    fold_predictions = {name: [] for name in MODEL_NAMES}
     splitter = GroupKFold(n_splits=group_splits)
-    for train_index, test_index in splitter.split(
-        cv_source, groups=cv_source["ship_id"]
-    ):
+    for train_index, test_index in splitter.split(cv_source, groups=cv_source["ship_id"]):
         fold_train = cv_source.iloc[train_index]
         fold_test = cv_source.iloc[test_index]
-        fold_physics_model = PhysicsBaseline().fit(fold_train)
-        fold_gbm_model = GBMModel().fit(fold_train)
+        fold_models, fold_pred, _ = _fit_candidate_models(fold_train, fold_test)
+        del fold_models
         fold_actual.append(fold_test["_visible_fuel_mass"].to_numpy(dtype=float))
-        fold_physics.append(fold_physics_model.predict(fold_test))
-        fold_gbm.append(fold_gbm_model.predict(fold_test))
+        # Blend selection weight must come only from primary extended validation.
+        physics_pred = fold_pred[PHYSICS_NAME]
+        exact_pred = fold_pred[GBM_FOULING_NAME]
+        fold_pred[BLEND_NAME] = (1.0 - weight) * physics_pred + weight * exact_pred
+        for model_name in MODEL_NAMES:
+            fold_predictions[model_name].append(fold_pred[model_name])
     cv_actual = np.concatenate(fold_actual)
-    cv_physics = np.concatenate(fold_physics)
-    cv_gbm = np.concatenate(fold_gbm)
-    cv_blend = (1.0 - weight) * cv_physics + weight * cv_gbm
-    for model_name, prediction in (
-        ("PhysicsBaseline", cv_physics),
-        ("GBMModel", cv_gbm),
-        ("BlendModel", cv_blend),
-    ):
-        rmse, mape = _metrics(cv_actual, prediction)
+    for model_name in MODEL_NAMES:
+        prediction = np.concatenate(fold_predictions[model_name])
+        rmse, mape, bias = _metrics(cv_actual, prediction)
         comparison_records.append(
             {
                 "evaluation": "GroupKFoldShip",
                 "model": model_name,
+                "n": len(cv_actual),
                 "RMSE_MT": rmse,
                 "MAPE_pct": mape,
+                "Bias_MT": bias,
             }
         )
 
-    importances = gbm.feature_importances(heldout, n_repeats=3)
+    comparison = pd.DataFrame(comparison_records)
+    selected = _select_model(comparison)
+    selected_model_object = models[selected]
+    if isinstance(selected_model_object, BlendModel):
+        importance_model = selected_model_object.gbm
+    elif isinstance(selected_model_object, GBMModel):
+        importance_model = selected_model_object
+    else:
+        importance_model = None
+    importances = (
+        importance_model.feature_importances(heldout, n_repeats=3)
+        if importance_model is not None
+        else pd.DataFrame(columns=["feature", "importance"])
+    )
+
+    extended = comparison.loc[comparison["evaluation"].eq("ExtendedSimulatedMask")]
+    baseline_rmse = float(
+        extended.loc[extended["model"].eq(GBM_BASELINE_NAME), "RMSE_MT"].iloc[0]
+    )
+    fouling_rmse = float(
+        extended.loc[extended["model"].eq(GBM_FOULING_NAME), "RMSE_MT"].iloc[0]
+    )
     return ValidationResult(
-        comparison=pd.DataFrame(comparison_records),
+        comparison=comparison,
+        segment_metrics=pd.DataFrame(_segment_records(heldout, predictions)),
         per_window=pd.DataFrame(window_records),
         blend_weight=weight,
+        selected_model=selected,
         feature_importances=importances,
         heldout_rows=len(heldout),
         window_count=len(windows),
+        fouling_rmse_delta=fouling_rmse - baseline_rmse,
     )

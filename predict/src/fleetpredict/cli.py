@@ -1,4 +1,4 @@
-"""Command-line orchestration for anchor, validation, fitting, and submission."""
+"""Command-line orchestration for event mapping, model selection, and submission."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 from .anchor import solve_anchor
 from .features import build_features
 from .load import load_dataset
-from .models import BlendModel, GBMModel, PhysicsBaseline
+from .models import GBM_BASELINE_NAME, fit_named_model
 from .submit import predict_submission_rows, write_submission
 from .validate import validate_models
 
@@ -22,12 +22,11 @@ def _parser() -> argparse.ArgumentParser:
         default="data",
         help="directory containing vt_fd.csv and maintenance.csv",
     )
-    parser.add_argument("--model", choices=["physics", "gbm", "blend"], default="blend")
     parser.add_argument("command", choices=["all"], nargs="?", default="all")
     return parser
 
 
-def run_all(data_dir: str, model_name: str) -> Path:
+def run_all(data_dir: str) -> Path:
     dataset = load_dataset(data_dir)
     print(
         f"Loaded {len(dataset.voyages):,} rows, {len(dataset.maintenance)} events, "
@@ -43,13 +42,36 @@ def run_all(data_dir: str, model_name: str) -> Path:
     )
     validation = validate_models(features, dataset.maintenance, anchor)
     validation.print_report()
-    print(f"\nSelected blend GBM weight: {validation.blend_weight:.2f}")
+    selected_row = validation.comparison.loc[
+        validation.comparison["evaluation"].eq("ExtendedSimulatedMask")
+        & validation.comparison["model"].eq(validation.selected_model)
+    ].iloc[0]
+    print(
+        f"\nselected model: {validation.selected_model} "
+        "(min extended-sim-mask RMSE)"
+    )
+    print(
+        f"  RMSE={selected_row['RMSE_MT']:.4f} MT; "
+        f"MAPE={selected_row['MAPE_pct']:.4f}%; "
+        f"bias={selected_row['Bias_MT']:.4f} MT"
+    )
+    print(f"  blend GBM weight: {validation.blend_weight:.2f}")
+    if abs(validation.fouling_rmse_delta) < 1e-6:
+        fouling_effect = "tied"
+    elif validation.fouling_rmse_delta < 0:
+        fouling_effect = "improved"
+    else:
+        fouling_effect = "worsened"
+    print(
+        "  corrected fouling features: "
+        f"{fouling_effect} plain GBM by "
+        f"{abs(validation.fouling_rmse_delta):.4f} MT RMSE"
+    )
 
     training = features.training_rows
-    physics = PhysicsBaseline().fit(training)
-    gbm = GBMModel().fit(training)
-    blend = BlendModel(physics, gbm, validation.blend_weight)
-    selected = {"physics": physics, "gbm": gbm, "blend": blend}[model_name]
+    selected = fit_named_model(
+        validation.selected_model, training, validation.blend_weight
+    )
 
     predictions = predict_submission_rows(selected, features.predict_rows)
     project_dir = Path(__file__).resolve().parents[2]
@@ -59,10 +81,6 @@ def run_all(data_dir: str, model_name: str) -> Path:
         project_dir / "output" / "submission.csv",
     )
 
-    simulated = validation.comparison.loc[
-        validation.comparison["evaluation"].eq("SimulatedMask")
-    ]
-    best = simulated.loc[simulated["RMSE_MT"].idxmin()]
     print("\nTop-10 permutation feature importances (held-out simulated masks)")
     print(
         validation.feature_importances.head(10).to_string(
@@ -71,17 +89,24 @@ def run_all(data_dir: str, model_name: str) -> Path:
     )
     print("\nFinal summary")
     print(
-        f"  anchor: {anchor.mode}; global exact {anchor.exact_global_matches}/14; "
-        f"fallback {anchor.fallback_aligned_count}/14"
+        f"  anchor: {anchor.mode}; mapped {anchor.mapped_event_count} events; "
+        "calendar/fallback logic removed"
     )
     print(
-        f"  best simulated-mask model: {best['model']} "
-        f"RMSE={best['RMSE_MT']:.4f} MT, MAPE={best['MAPE_pct']:.4f}%"
+        f"  selected model: {validation.selected_model}; "
+        f"extended RMSE={selected_row['RMSE_MT']:.4f} MT, "
+        f"MAPE={selected_row['MAPE_pct']:.4f}%"
     )
-    print(f"  submission model: {model_name}; rows=102; path={destination}")
+    baseline_note = (
+        "baseline retained"
+        if validation.selected_model == GBM_BASELINE_NAME
+        else "baseline beaten"
+    )
+    print(f"  corrected fouling result: {fouling_effect}; {baseline_note}")
+    print(f"  submission rows=102; path={destination}")
     return destination
 
 
 def main(argv: list[str] | None = None) -> None:
     args = _parser().parse_args(argv)
-    run_all(args.data_dir, args.model)
+    run_all(args.data_dir)

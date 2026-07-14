@@ -67,6 +67,11 @@ BASE_NUMERIC = [
 ]
 CATEGORICAL = ["ship_id", "ship_class", "fuel_used"]
 FEATURE_COLUMNS = BASE_NUMERIC + CATEGORICAL
+FOULING_FEATURES = (
+    "days_since_last_hull_intervention",
+    "days_since_last_prop_intervention",
+    "cumulative_degree_days_since_hull_cleaning",
+)
 
 
 @dataclass(frozen=True)

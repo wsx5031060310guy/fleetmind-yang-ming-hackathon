@@ -135,11 +135,14 @@ def load_dataset(data_dir: str | Path = "data") -> Dataset:
         root / "maintenance.csv", dtype=str, keep_default_na=False
     )
     maintenance = _clean_strings(maintenance)
-    maintenance["event_date"] = pd.to_datetime(
-        maintenance["event_date"], errors="coerce"
-    )
-    if maintenance["event_date"].isna().any():
-        raise ValueError("maintenance.csv contains unparseable event_date")
+    if "event_day" not in maintenance.columns:
+        raise ValueError("maintenance.csv missing required event_day")
+    event_day = pd.to_numeric(maintenance["event_day"], errors="coerce")
+    if event_day.isna().any() or not np.isfinite(event_day).all():
+        raise ValueError("maintenance.csv contains unparseable event_day")
+    if not event_day.eq(np.floor(event_day)).all():
+        raise ValueError("maintenance.csv event_day must contain integers")
+    maintenance["event_day"] = event_day.astype(int)
     maintenance.insert(0, "_event_id", np.arange(len(maintenance), dtype=int))
 
     return Dataset(voyages, maintenance, predict_cells, fuel_columns, root)
