@@ -55,7 +55,8 @@
 | 22 official-workshop-rules | 官方 workshop 命題/規則團隊摘要（§7 落差已於 7/14 回寫，見各檔更新註記） | ✅ 已回寫 |
 | 23 fuel-prediction-plan | 25% 油耗預測任務計畫（102 PREDICT 格、錨點解謎、`predict/` pipeline、提交格式） | 🔴 Day1 主線 |
 | 24 yang-ming-questions | Day1 現場/線上要問陽明與主辦方的問題清單（讀真資料後產出，含 top-5） | 🔴 Day1 必用 |
-| presentation/ | 可編輯提案 deck、preview、可重生 source | ✅ 骨架完成 |
+| 25 day1-onsite-execution | Day1/Day3 分鐘級現場執行清單（情報捕捉、T+ 時間軸、owner 矩陣、fallback、出發前 kit） | 🔴 Day1 必用 |
+| presentation/ | 提案 deck（真數字 v2 生成器，離線可重生）＋ Q&A 備援 | ✅ 已更新真資料 |
 
 ## 4. 角色閱讀路徑
 
