@@ -256,7 +256,7 @@
 <body>
 
 
-<p class="sr-only" role="doc-abstract">FleetMind AWS 架構報告：現行 ECS Fargate 部署架構，以及四個替代架構方案（Serverless、App Runner、EC2、完整資料分析管線）的比較。</p>
+<p class="sr-only" role="doc-abstract">FleetMind AWS 架構報告：現行 ECS Fargate 部署架構，四個替代架構方案（Serverless、App Runner、EC2、完整資料分析管線）的比較，以及建議陽明實際營運的正式目標架構與四階段落地路線圖（提案，尚未部署）。</p>
 
 <div class="topbar">
   <a class="brand" href="/" style="text-decoration:none;color:inherit" aria-label="返回決策看板">
@@ -277,6 +277,7 @@
     <a href="#optC">App Runner</a>
     <a href="#optD">EC2</a>
     <a href="#optE">資料管線</a>
+    <a href="#target">目標架構</a>
     <a href="#security">資安</a>
     <a href="#activeactive">多區域</a>
     <a href="#compare">比較表</a>
@@ -491,6 +492,36 @@
       </ul></div>
     </div>
     <div class="whenrec"><b>何時選它：</b>從 demo 走向正式產品、要接船端即時資料與公司級 BI / 預測時的目標架構。</div>
+  </section>
+
+  <!-- ===================== TARGET ARCHITECTURE ===================== -->
+  <section id="target">
+    <div class="sec-head">
+      <p class="sec-kicker"><span class="tag alt">建議方案 · 尚未部署</span> Target architecture</p>
+      <h2><span class="num">目標</span>建議實際營運的架構 ＋ 落地路線圖</h2>
+      <p class="sec-lede">前面五段講的是「這套系統可以長成什麼形狀」。這一段回答評審真正會問的那個問題：<b>那你們建議陽明實際上跑哪一套？</b>下圖是提案的目標架構——規則是每個服務都得說出它憑什麼在圖上，說不出來的就不畫（被點名卻仍被我們拒畫的四項，連同「什麼條件成立它才該畫上來」，都列在圖的右下角）。它要修的是三個今天真實存在的缺口：<b>完全沒有身分驗證</b>、<b>請求路徑上沒有資料層</b>、<b>任務待在公有子網</b>。<b>整張圖都還沒有蓋</b>——這是提案，不是部署清單。</p>
+    </div>
+    <div class="diagram"><div class="scroll">
+      <button class="bp-open" type="button" data-src="/img/diagrams/sec-target.svg" data-title="目標架構 · 建議實際營運的形狀與落地路線圖（提案，尚未部署）">
+        <img src="/img/diagrams/sec-target.svg" width="1600" height="900" alt="FleetMind 正式目標架構與落地路線圖，全圖為提案：灰色虛線節點今天不存在，彩色實線節點為 2026-07-15 自帳號 516665228894 讀回、今日已存在者（ALB fleetmind-alb、ECS 服務 fleetmind-svc、ECR fleetmind-api、Bedrock、SNS topic fleetmind-alerts、SES v2、CloudWatch Logs /fleetmind/api）。目標架構要修的三個缺口：一、今日完全沒有身分驗證——實測未帶憑證的 curl PUT /api/config/threshold?value=11 回 200 且真的改掉告警門檻，/admin.html 對全世界 200；提案以 Cognito 聯邦陽明既有 IdP、由 ALB 原生 authenticate-oidc 在容器之前擋下未登入者，授權則以 JWT 群組區分唯讀與可改門檻兩種角色。二、請求路徑上沒有任何資料存放層，real-metrics.json 於 build time 烘入映像；提案以 S3 承接原始正午報表與匯出、以 DynamoDB 承接每船時間序列與組態稽核表，並說明為何不選 Aurora。三、任務位於公有子網且持有公網 IP；提案改為私有子網加 NAT Gateway 與 VPC Endpoint，AWS 服務流量走 endpoint 不經 NAT。CloudFront 為提案的單一前門，負責 TLS 終止與靜態卸載，WAF WebACL 掛在 CloudFront 上而非 ALB 上。四階段路線圖依相依性排序：階段一狀態外置、階段二傳輸加密與身分、階段三邊界與私有網路、階段四多區域。圖中另列出四項刻意不畫的服務與其條件：NLB、AWS Network Firewall、API Gateway、Aurora。">
+        <span class="bp-hint">⤢ 點擊放大閱讀</span>
+      </button>
+    </div><div class="dcap">灰色虛線＝提案（今天不存在）· 彩色實線＝今日已存在（ALB／ECS／ECR／Bedrock／SNS／SES／CloudWatch）。圖下方四張卡是依相依性排序的落地路線圖；右下角是被點名、但在這套系統上還不夠格的四項服務，以及它們該被畫上來的條件。</div></div>
+    <div class="grid2">
+      <div class="card pros"><h3>◆ 這套設計買到什麼（提案）</h3><ul>
+        <li><b>身分</b>：Cognito 聯邦陽明既有 IdP ＋ ALB 原生 <code>authenticate-oidc</code>——未登入者連容器都碰不到，且零應用程式碼；授權讀 JWT 群組：viewer 只能讀，admin 才能改門檻</li>
+        <li><b>狀態外置</b>：S3 收原始正午報表與匯出檔，DynamoDB 收每船時間序列與「誰改了門檻」稽核表——歷史、稽核、免重建映像更新資料一次到位</li>
+        <li><b>網路收口</b>：任務移入私有子網、不再有公網 IP；ECR／S3／Bedrock／Logs 走 VPC Endpoint，AWS 服務流量不必經過 NAT</li>
+        <li><b>邊緣</b>：CloudFront ＋ ACM 補上今天沒有的 HTTPS，靜態內容不再穿到 Fargate；WAF WebACL 只掛在 CloudFront 這唯一前門，不重複掛兩處</li>
+      </ul></div>
+      <div class="card cons"><h3>◆ 代價 · 以及刻意不畫的東西</h3><ul>
+        <li>每一階段都在增加要維護、要付費的東西：NAT、interface endpoint、CloudFront、WAF 沒有一項免費；成本只寫相對敘述，因為本次讀回沒有任何帳單資料</li>
+        <li>狀態外置後<b>冷啟不再「開機就有真資料」</b>——換來歷史與稽核，但多了一層相依</li>
+        <li><b>刻意不畫</b>：NLB（HTTP 應用該用 ALB，除非要固定 IP 放行或 TLS 直通）、Network Firewall（共用 VPC 集中出網才需要）、API Gateway（authorizer 能做的 ALB OIDC 已做完）、Aurora（存取型態不需要關聯式）</li>
+        <li><b>全圖尚未部署</b>：CloudFront 0 個 distribution · Route 53 0 個 zone · S3 0 個 bucket · DynamoDB 0 張表；WAF 只讀回 <code>REGIONAL</code> scope 為 0，<code>CLOUDFRONT</code> scope 未探測，故本圖不主張該 scope 的狀態</li>
+      </ul></div>
+    </div>
+    <div class="whenrec"><b>落地順序（依相依性，不是依願望）：</b>① 狀態外置 → ② 傳輸加密與身分 → ③ 邊界與私有網路 → ④ 多區域。狀態外置排第一，因為稽核要有地方寫、跨區要有東西可複製；TLS 與身分同一階段，因為今天只有 <code>HTTP:80</code> 監聽器，OIDC 權杖走明文等於沒做。本頁最後的「多區域」之所以還只是設計，正是卡在第 ① 步——這也是為什麼那一段不能先做。</div>
   </section>
 
   <!-- ===================== SECURITY ===================== -->
