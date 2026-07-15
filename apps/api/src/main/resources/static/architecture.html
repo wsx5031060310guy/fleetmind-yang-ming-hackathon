@@ -57,9 +57,9 @@
     :root:not([data-theme="dark"]) {
       --bg: #EEF3F8; --bg-2: #E3ECF4; --surface: #FFFFFF; --surface-2: #F3F7FB;
       --line: rgba(20, 54, 92, 0.16); --line-soft: rgba(20, 54, 92, 0.09);
-      --ink: #10263C; --ink-dim: #2C4967; --muted: #5A768F; --muted-2: #86A0B6;
-      --teal: #1C7293; --seafoam: #1B9E86; --amber: #C57F11; --coral: #C6543B;
-      --current: #1B9E86; --alt: #1C7293; --node: #EAF1F8; --node-cur: #E1F3EE;
+      --ink: #10263C; --ink-dim: #2C4967; --muted: #4F6880; --muted-2: #86A0B6;
+      --teal: #1C7293; --seafoam: #137A66; --amber: #C57F11; --coral: #C6543B;
+      --current: #137A66; --alt: #1C7293; --node: #EAF1F8; --node-cur: #E1F3EE;
       --band: rgba(28, 114, 147, 0.07); --shadow: 0 18px 40px -24px rgba(20, 54, 92, 0.4);
     }
   }
@@ -94,13 +94,20 @@
     background: linear-gradient(150deg, var(--teal), var(--seafoam)); flex: none; }
   .brand .mk svg { width: 18px; height: 18px; }
   .brand b { color: var(--seafoam); }
+  /* At <=1366 (a normal laptop) the 16 links wrapped and stranded one link — 「比較表」 — alone
+     on a second row. Tighter gap/padding buys the width back rather than hiding links in a menu. */
   .nav { display: flex; gap: 4px; flex-wrap: wrap; }
   .nav a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 600;
     padding: 6px 11px; border-radius: 8px; transition: background .2s, color .2s; }
+  @media (max-width: 1420px) { .nav { gap: 2px; } .nav a { padding-left: 6px; padding-right: 6px; font-size: 12.5px; } }
+
   .nav a:hover { background: var(--band); color: var(--ink); }
   .nav a.soon { opacity: .45; pointer-events: none; }
   .nav a.soon::after { content: "建置中"; font-size: 9px; margin-left: 4px; }
-  .theme-toggle { appearance: none; border: 1px solid var(--line); background: var(--surface);
+  /* white-space + flex-shrink: without them 「淺色」 breaks between the two han characters at
+     <=1400px (CJK has no spaces to break on, so the browser breaks anywhere) and the button
+     grows from 35px to 54px tall, shoving the nav row out of alignment. */
+  .theme-toggle { appearance: none; white-space: nowrap; flex-shrink: 0; border: 1px solid var(--line); background: var(--surface);
     color: var(--ink-dim); font: inherit; font-size: 12px; font-weight: 600; padding: 7px 12px;
     border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   .theme-toggle:hover { border-color: var(--seafoam); color: var(--ink); }
@@ -158,7 +165,7 @@
   .bp-tab { appearance: none; border: 1px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 700; padding: 7px 12px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: baseline; gap: 8px; transition: background .18s, color .18s, border-color .18s; }
   .bp-tab .n { font-family: var(--mono); font-size: 10.5px; font-weight: 600; color: var(--muted-2); }
   .bp-tab:hover { background: var(--band); color: var(--ink); }
-  .bp-tab[aria-selected="true"] { background: color-mix(in srgb, var(--current) 16%, transparent); border-color: color-mix(in srgb, var(--current) 42%, transparent); color: var(--current); }
+  .bp-tab[aria-selected="true"] { background: var(--node-cur); border-color: color-mix(in srgb, var(--current) 42%, transparent); color: var(--current); }
   .bp-tab[aria-selected="true"] .n { color: var(--current); }
   .bp-tab:focus-visible, .bp-open:focus-visible, .bp-btn:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
 
@@ -203,7 +210,10 @@
 
   /* svg node styling (shared) */
   .band-rect { fill: var(--band); }
-  .band-label { fill: var(--muted-2); font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+  /* was --muted-2, a de-emphasis token shared with h2 .num and .bp-tab .n: measured 3.26:1 in
+     dark and 2.72:1 in light, both under AA 4.5. These labels name the lanes of every diagram —
+     they carry meaning, so they get the readable token, and the decorative uses keep --muted-2. */
+  .band-label { fill: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
   .node rect { fill: var(--node); stroke: var(--line); stroke-width: 1.2; }
   .node.cur rect { fill: var(--node-cur); stroke: color-mix(in srgb, var(--current) 55%, transparent); stroke-width: 1.6; }
   .node.hl rect { stroke: color-mix(in srgb, var(--alt) 60%, transparent); stroke-width: 1.6; }
@@ -321,7 +331,7 @@
   <section id="current">
     <div class="sec-head">
       <p class="sec-kicker"><span class="tag cur">現行・已上線</span> Deployed today</p>
-      <h2><span class="num">現行</span>ECS Fargate ＋ ALB ＋ Bedrock ＋ SNS</h2>
+      <h2><span class="num">現行</span>ECS Fargate ＋ ALB ＋ Bedrock ＋ SNS/SES</h2>
       <p class="sec-lede">單一 Spring Boot 服務同時吐 dashboard 與 REST API，跑在 Fargate 上、掛在 ALB 後面拿到永不變的網址。指標離線由 core-calc 算好、烤進映像；AI 解讀走 Bedrock，門檻告警走 SNS。</p>
     </div>
 
@@ -329,7 +339,7 @@
       <div class="scroll">
         <svg viewBox="0 0 960 400" role="img" aria-label="現行架構圖">
           <title>FleetMind 現行 AWS 架構</title>
-          <desc>離線由 core-calc 產生 metrics 並烤入 Docker 映像推上 ECR；使用者經 ALB 進到 ECS Fargate 上的 Spring Boot 服務，服務呼叫 Bedrock 與 SNS。</desc>
+          <desc>離線由 core-calc 產生 metrics 並烤入 Docker 映像推上 ECR；使用者經 HTTP 埠 80 的 ALB 進到 ECS Fargate 上的 Spring Boot 服務（ALB 目前只有 HTTP:80 listener，demo 未配置 TLS），服務呼叫 Bedrock 產生決策簡報，並在跨越門檻時同時呼叫 SNS Publish 與 SES SendEmail；SNS topic 目前 0 個訂閱，今天真正把信寄達收件匣的是 SES。</desc>
           <!-- bands -->
           <rect class="band-rect" x="8" y="44" width="300" height="330" rx="12"/>
           <text class="band-label" x="24" y="66">離線建置 / Build</text>
@@ -356,8 +366,8 @@
 
           <!-- managed lane -->
           <g class="node hl"><rect x="700" y="150" width="238" height="52" rx="10"/><text class="svc" x="716" y="176">Amazon Bedrock (Converse)</text><text class="role" x="716" y="192">Claude Haiku · 只解讀數字不產數字</text></g>
-          <g class="node hl"><rect x="700" y="238" width="238" height="52" rx="10"/><text class="svc" x="716" y="264">Amazon SNS</text><text class="role" x="716" y="280">fleetmind-alerts · Email/SMS 告警</text></g>
-          <g class="node"><rect x="700" y="308" width="238" height="52" rx="10"/><text class="svc" x="716" y="334">Task Role</text><text class="role" x="716" y="350">bedrock:Invoke · sns:Publish</text></g>
+          <g class="node hl"><rect x="700" y="238" width="238" height="52" rx="10"/><text class="svc" x="716" y="264">Amazon SNS ＋ SES v2</text><text class="role" x="716" y="280">SNS fleetmind-alerts（0 訂閱）· SES 實際寄達</text></g>
+          <g class="node"><rect x="700" y="308" width="238" height="52" rx="10"/><text class="svc" x="716" y="334">Task Role</text><text class="role" x="716" y="350">bedrock:Invoke · sns:Publish · ses:SendEmail</text></g>
           <path class="edge strong" d="M644 264 H700" marker-end="url(#arrowS)"/>
           <text class="edge-label" x="650" y="256">brief</text>
           <path class="edge strong" d="M644 288 C 670 288, 686 264, 700 264" marker-end="url(#arrowS)"/>
@@ -365,11 +375,11 @@
           <!-- user -->
           <g class="node"><rect x="344" y="88" width="300" height="42" rx="10"/><text class="svc" x="360" y="113">陽明營運端 / 評審 (瀏覽器)</text></g>
           <path class="edge strong" d="M494 130 V150" marker-end="url(#arrowS)"/>
-          <text class="edge-label" x="504" y="145">HTTPS</text>
+          <text class="edge-label" x="504" y="145">HTTP :80</text>
           <path class="edge" d="M494 202 V238" marker-end="url(#arrow)"/>
         </svg>
       </div>
-      <div class="dcap">資料流：正午報表 → core-calc 算 metrics → 烤映像 → ECR → ECS 拉取；使用者 → ALB → Fargate 服務 → Bedrock / SNS。</div>
+      <div class="dcap">資料流：正午報表 → core-calc 算 metrics → 烤映像 → ECR → ECS 拉取；使用者 → ALB → Fargate 服務 → Bedrock / SNS + SES。</div>
     </div>
 
     <div class="grid2">
@@ -661,14 +671,14 @@
   <!-- ===================== ACTIVE-ACTIVE ===================== -->
   <section id="activeactive">
     <div class="sec-head">
-      <p class="sec-kicker"><span class="tag alt">全球韌性</span> Active-Active · DR</p>
-      <h2><span class="num">雙</span>多區域 Active-Active ＋ 即時告警與災備</h2>
-      <p class="sec-lede">船隊分佈不同國家，系統不能只活在一個區域。Route 53 依地理/延遲把各國船務端導到最近區域；亞洲與歐美兩區域同時 active-active，DynamoDB Global Tables 雙向複製，跨區 EventBridge 匯總即時告警，S3 跨區複製做備份；任一區域故障，健康檢查自動把全流量切到另一區，資料不丟。</p>
+      <p class="sec-kicker"><span class="tag alt">設計藍圖 · 未部署</span> Active-Active · DR</p>
+      <h2><span class="num">雙</span>多區域 Active-Active：設計，不是現況</h2>
+      <p class="sec-lede"><b>先說清楚：這一段全部還沒有蓋。</b>現況是單一區域 us-east-1、一個 ALB、一個 ECS 服務、desiredCount 1；帳號裡 Route 53 hosted zone 0、DynamoDB 0 張表、EventBridge 0 條規則、S3 0 個 bucket。而且本次 workshop 帳號<b>連跨區都不允許</b>——ap-northeast-1 的 ECS 與 ECR 直接回 AccessDenied，這條路在比賽帳號上走不了。<br>但船隊本來就分佈在不同國家，這是貴司自有帳號上該長的樣子，所以照樣把它畫出來、講清楚取捨。</p>
     </div>
     <div class="diagram"><div class="scroll">
       <svg viewBox="0 0 960 400" role="img" aria-label="多區域 Active-Active 架構圖">
-        <title>多區域 Active-Active 與災難備援</title>
-        <desc>不同國家船務端經 Route 53 地理/延遲路由到最近區域；ap-northeast-1 與 us-east-1 皆 active-active；DynamoDB Global Tables 雙向複製、S3 跨區複製備份、跨區 EventBridge 匯總即時告警；健康檢查自動 failover。</desc>
+        <title>多區域 Active-Active 與災難備援（設計藍圖，尚未部署）</title>
+        <desc>設計藍圖，尚未部署：現況為單一區域 us-east-1、一個 ALB、一個 ECS 服務；帳號內 Route 53、DynamoDB、EventBridge、S3 皆為 0，且 ap-northeast-1 的 ECS 與 ECR 回 AccessDenied。以下為提案的目標狀態：不同國家船務端經 Route 53 地理或延遲路由到最近區域；ap-northeast-1 與 us-east-1 兩區同時服務；DynamoDB Global Tables 雙向複製、S3 跨區複製備份、跨區 EventBridge 匯總即時告警；健康檢查自動 failover。</desc>
         <g class="node"><rect x="14" y="78" width="152" height="52" rx="10"/><text class="svc" x="30" y="99">亞洲船務端</text><text class="role" x="30" y="117">日 / 台 / 韓 / 星</text></g>
         <g class="node"><rect x="14" y="270" width="152" height="52" rx="10"/><text class="svc" x="30" y="291">歐美船務端</text><text class="role" x="30" y="309">EU / US</text></g>
         <g class="node hl"><rect x="198" y="162" width="150" height="78" rx="10"/><text class="svc" x="214" y="188">Route 53</text><text class="role" x="214" y="206">地理／延遲路由</text><text class="role" x="214" y="223">健康檢查 failover</text></g>
@@ -692,19 +702,19 @@
         <path class="edge" d="M700 190 C 668 150, 650 130, 632 120" marker-end="url(#arrow)"/>
         <path class="edge" d="M700 212 C 668 252, 650 272, 632 282" marker-end="url(#arrow)"/>
       </svg>
-    </div><div class="dcap">兩區域同時服務、資料雙向複製；一區故障 Route 53 自動切換，另一區承接全量——無單一區域單點。</div></div>
+    </div><div class="dcap">目標狀態（尚未部署）：兩區域同時服務、資料雙向複製；一區故障 Route 53 自動切換，另一區承接全量——無單一區域單點。今天的實況是圖左下那一塊的單區版本。</div></div>
     <div class="grid2">
-      <div class="card pros"><h3>◆ 韌性與即時</h3><ul>
+      <div class="card pros"><h3>◆ 設計目標（提案）</h3><ul>
         <li>Active-Active：兩區域皆服務，非冷備援</li>
         <li>各國船務端就近路由，延遲低</li>
         <li>DynamoDB Global Tables 雙向複製，切換零資料遺失</li>
-        <li>跨區 EventBridge 匯總告警，任一國事件即時通知</li>
+        <li>Route 53 健康檢查偵測區域異常 → 自動 failover；S3 CRR 保存原始報表備份</li>
       </ul></div>
-      <div class="card cons"><h3>◆ 災備行為</h3><ul>
-        <li>Route 53 健康檢查偵測區域異常 → 自動 failover</li>
-        <li>S3 跨區複製（CRR）保存原始報表備份</li>
-        <li>回復後資料自動回補、恢復雙活</li>
-        <li>成本較單區高，但換全球可用性與合規落地</li>
+      <div class="card cons"><h3>◆ 為什麼今天沒有它</h3><ul>
+        <li><b>比賽帳號不允許</b>：ap-northeast-1 的 ECS / ECR 回 AccessDenied，跨區這條路在此帳號上不通</li>
+        <li><b>要先有資料層</b>：現行把 real-metrics.json 烤進映像、請求路徑上沒有任何資料存放層——沒有東西可以「跨區複製」。多區域的前提是先把狀態外置到 DynamoDB</li>
+        <li>成本較單區高，且 3 天的黑客松時程內無法驗證 failover 真的會動；未經演練的災備等於沒有</li>
+        <li>落地順序：先狀態外置 → 單區多 AZ（ALB 已跨 1d/1f）→ 再談雙區</li>
       </ul></div>
     </div>
   </section>

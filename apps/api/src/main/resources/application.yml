@@ -14,3 +14,10 @@ management:
 
 server:
   port: ${PORT:8080}
+  # The pages are hand-authored HTML with inline SVG, plus three ~20KB blueprint SVGs —
+  # ~127KB of highly compressible text on the architecture page alone, previously served raw.
+  # Config only: no build step, no dependency.
+  compression:
+    enabled: true
+    mime-types: text/html,text/css,text/plain,text/xml,application/json,application/javascript,image/svg+xml
+    min-response-size: 1KB
