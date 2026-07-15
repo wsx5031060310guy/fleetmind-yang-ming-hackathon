@@ -4,7 +4,8 @@ This folder contains the proposal deck for the Yang Ming AWS AI Hackathon presen
 
 Tracked deliverables:
 
-- `fleetmind-proposal-deck.pptx` — the deck (11 main slides + 2 Q&A backup slides), real-data numbers, zh-TW.
+- `fleetmind-proposal-deck.pptx` — the deck (11 main slides + 5 Q&A backup slides), real-data numbers, zh-TW.
+- `apps/api/src/main/resources/static/deck.html` — the public 11-slide web viewer. It uses the proposal deck's main narrative, not the separate AWS architecture options deck.
 - `build-fleetmind-deck-v2.mjs` — **current** generator. Offline, pure `pptxgenjs` (no private deps), runs anywhere.
 - `build-fleetmind-deck.mjs` — legacy generator (needs the private `@oai/artifact-tool`; does **not** run on the rental Mac). Superseded by v2; kept for reference only.
 - `fleetmind-proposal-deck-preview.webp` — visual montage (from the legacy deck).
@@ -35,5 +36,5 @@ soffice --headless --convert-to pdf presentation/fleetmind-proposal-deck.pptx
 ## Day2/Day3 update points
 
 - The numbers in `build-fleetmind-deck-v2.mjs` come from the real run (fleet Speed Loss, prediction RMSE/MAPE, bounded counterfactual ROI). Refresh them from the frozen Day3 metrics before recording.
-- Slides 1–11 are the 8-minute flow; the last two are Q&A backup.
+- Slides 1–11 are the 8-minute flow; slides 12–16 are Q&A backup.
 - Do not commit dashboard screenshots that contain enterprise raw data; QA render artifacts (`slide-*.jpg`, `*.pdf`) are gitignored.
