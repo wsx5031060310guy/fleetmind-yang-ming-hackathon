@@ -661,14 +661,14 @@
   <!-- ===================== ACTIVE-ACTIVE ===================== -->
   <section id="activeactive">
     <div class="sec-head">
-      <p class="sec-kicker"><span class="tag alt">全球韌性</span> Active-Active · DR</p>
-      <h2><span class="num">雙</span>多區域 Active-Active ＋ 即時告警與災備</h2>
-      <p class="sec-lede">船隊分佈不同國家，系統不能只活在一個區域。Route 53 依地理/延遲把各國船務端導到最近區域；亞洲與歐美兩區域同時 active-active，DynamoDB Global Tables 雙向複製，跨區 EventBridge 匯總即時告警，S3 跨區複製做備份；任一區域故障，健康檢查自動把全流量切到另一區，資料不丟。</p>
+      <p class="sec-kicker"><span class="tag alt">設計藍圖 · 未部署</span> Active-Active · DR</p>
+      <h2><span class="num">雙</span>多區域 Active-Active：設計，不是現況</h2>
+      <p class="sec-lede"><b>先說清楚：這一段全部還沒有蓋。</b>現況是單一區域 us-east-1、一個 ALB、一個 ECS 服務、desiredCount 1；帳號裡 Route 53 hosted zone 0、DynamoDB 0 張表、EventBridge 0 條規則、S3 0 個 bucket。而且本次 workshop 帳號<b>連跨區都不允許</b>——ap-northeast-1 的 ECS 與 ECR 直接回 AccessDenied，這條路在比賽帳號上走不了。<br>但船隊本來就分佈在不同國家，這是貴司自有帳號上該長的樣子，所以照樣把它畫出來、講清楚取捨。</p>
     </div>
     <div class="diagram"><div class="scroll">
       <svg viewBox="0 0 960 400" role="img" aria-label="多區域 Active-Active 架構圖">
-        <title>多區域 Active-Active 與災難備援</title>
-        <desc>不同國家船務端經 Route 53 地理/延遲路由到最近區域；ap-northeast-1 與 us-east-1 皆 active-active；DynamoDB Global Tables 雙向複製、S3 跨區複製備份、跨區 EventBridge 匯總即時告警；健康檢查自動 failover。</desc>
+        <title>多區域 Active-Active 與災難備援（設計藍圖，尚未部署）</title>
+        <desc>設計藍圖，尚未部署：現況為單一區域 us-east-1、一個 ALB、一個 ECS 服務；帳號內 Route 53、DynamoDB、EventBridge、S3 皆為 0，且 ap-northeast-1 的 ECS 與 ECR 回 AccessDenied。以下為提案的目標狀態：不同國家船務端經 Route 53 地理或延遲路由到最近區域；ap-northeast-1 與 us-east-1 兩區同時服務；DynamoDB Global Tables 雙向複製、S3 跨區複製備份、跨區 EventBridge 匯總即時告警；健康檢查自動 failover。</desc>
         <g class="node"><rect x="14" y="78" width="152" height="52" rx="10"/><text class="svc" x="30" y="99">亞洲船務端</text><text class="role" x="30" y="117">日 / 台 / 韓 / 星</text></g>
         <g class="node"><rect x="14" y="270" width="152" height="52" rx="10"/><text class="svc" x="30" y="291">歐美船務端</text><text class="role" x="30" y="309">EU / US</text></g>
         <g class="node hl"><rect x="198" y="162" width="150" height="78" rx="10"/><text class="svc" x="214" y="188">Route 53</text><text class="role" x="214" y="206">地理／延遲路由</text><text class="role" x="214" y="223">健康檢查 failover</text></g>
@@ -692,19 +692,19 @@
         <path class="edge" d="M700 190 C 668 150, 650 130, 632 120" marker-end="url(#arrow)"/>
         <path class="edge" d="M700 212 C 668 252, 650 272, 632 282" marker-end="url(#arrow)"/>
       </svg>
-    </div><div class="dcap">兩區域同時服務、資料雙向複製；一區故障 Route 53 自動切換，另一區承接全量——無單一區域單點。</div></div>
+    </div><div class="dcap">目標狀態（尚未部署）：兩區域同時服務、資料雙向複製；一區故障 Route 53 自動切換，另一區承接全量——無單一區域單點。今天的實況是圖左下那一塊的單區版本。</div></div>
     <div class="grid2">
-      <div class="card pros"><h3>◆ 韌性與即時</h3><ul>
+      <div class="card pros"><h3>◆ 設計目標（提案）</h3><ul>
         <li>Active-Active：兩區域皆服務，非冷備援</li>
         <li>各國船務端就近路由，延遲低</li>
         <li>DynamoDB Global Tables 雙向複製，切換零資料遺失</li>
-        <li>跨區 EventBridge 匯總告警，任一國事件即時通知</li>
+        <li>Route 53 健康檢查偵測區域異常 → 自動 failover；S3 CRR 保存原始報表備份</li>
       </ul></div>
-      <div class="card cons"><h3>◆ 災備行為</h3><ul>
-        <li>Route 53 健康檢查偵測區域異常 → 自動 failover</li>
-        <li>S3 跨區複製（CRR）保存原始報表備份</li>
-        <li>回復後資料自動回補、恢復雙活</li>
-        <li>成本較單區高，但換全球可用性與合規落地</li>
+      <div class="card cons"><h3>◆ 為什麼今天沒有它</h3><ul>
+        <li><b>比賽帳號不允許</b>：ap-northeast-1 的 ECS / ECR 回 AccessDenied，跨區這條路在此帳號上不通</li>
+        <li><b>要先有資料層</b>：現行把 real-metrics.json 烤進映像、請求路徑上沒有任何資料存放層——沒有東西可以「跨區複製」。多區域的前提是先把狀態外置到 DynamoDB</li>
+        <li>成本較單區高，且 3 天的黑客松時程內無法驗證 failover 真的會動；未經演練的災備等於沒有</li>
+        <li>落地順序：先狀態外置 → 單區多 AZ（ALB 已跨 1d/1f）→ 再談雙區</li>
       </ul></div>
     </div>
   </section>

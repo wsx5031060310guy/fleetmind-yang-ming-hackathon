@@ -596,13 +596,16 @@ docSlide({
   notes: "前一頁說「IAM 職責分離」可當場驗、且不宣稱全程最小權限 —— 這頁是那句話的圖證，2026-07-15 自帳號讀回。上半兩個角色，trust policy 都是 ecs-tasks.amazonaws.com：執行角色 fleetmind-ecs-exec 由 ECS agent 使用，掛 AWS 受管政策 AmazonECSTaskExecutionRolePolicy，負責拉 ECR 映像與寫 CloudWatch Logs —— 應用程式取不到這組憑證。任務角色 fleetmind-ecs-task 才是容器內應用程式的執行期身分，三條 inline 政策：fleetmind-ecs-task-inline（bedrock:InvokeModel 與 InvokeModelWithResponseStream）、fleetmind-ecs-task-sns（sns:Publish）、fleetmind-ses-send（ses:SendEmail、ses:SendRawEmail）。角色分離是真的最小權限收穫：應用程式永遠不能拉映像，也不能寫自己的 log group。但誠實框架就印在圖右邊 —— 三條政策裡只有 SNS 那條把 Resource 釘死到單一 topic ARN arn:aws:sns:us-east-1:516665228894:fleetmind-alerts，Bedrock 與 SES 兩條仍是萬用字元 *，未縮小到資源層級。所以正確說法是「動作已收斂、一個資源釘死、兩個仍是萬用字元」，不是「最小權限」。下半是網路權限邊界：任務 SG 先前入站為 0.0.0.0/0，任務以公網 IP 直接對外應答，curl http://98.92.30.118:8080/api/health 已證明回 200；改為只放行 ALB SG 之後，同一支 curl 逾時，而 ALB 仍回 200 —— 這兩支 curl 評審要驗當場就能驗。任務仍有公網 IP（assignPublicIp ENABLED，為了不架 NAT gateway 也能從 ECR 拉映像），所以不是 private subnet、也不是沒有公網 IP；正確說法是 public subnet + public IP，但 SG 只放行 ALB。",
 }, 12);
 
-/* ======= Slide 13 — 多區域 Active-Active + 災備 (multi-region.jpg) ======= */
+/* ======= Slide 13 — 多區域 Active-Active：設計藍圖, 非現況 (multi-region.jpg) =======
+   全帳號實查: Route 53 hosted zone 0 / DynamoDB 0 / EventBridge 0 / S3 bucket 0;
+   ap-northeast-1 的 ECS + ECR 回 AccessDenied → 這條路在比賽帳號上根本不通。
+   別把它寫回現在式: 旁邊就放著 live URL, 評審一問就穿幫 (資安頁已經被抓過一次)。 */
 s = pptx.addSlide();
 photoBg(s, "multi-region.jpg", { scrim: 32 });
 pageMark(s, 13);
-head(s, "Multi-Region · Active-Active", "多區域 Active-Active + 即時告警與災備");
+head(s, "Multi-Region · 設計藍圖（未部署）", "多區域 Active-Active：設計，不是現況");
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: 1.6, w: CW, h: 0.5, fill: { color: C.navy, transparency: 14 }, line: { type: "none" }, rectRadius: 0.07 });
-s.addText("不同國家船務端就近接入 → Route 53 智慧路由到兩個 active 區域；一區故障自動切換、跨區雙向複製，資料不丟、服務不中斷。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.5, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.12, margin: 0 });
+s.addText("這一頁全部還沒有蓋。現況：單一區域 us-east-1、一個 ALB、一個 ECS 服務；帳號裡 Route 53 / DynamoDB / EventBridge / S3 皆為 0。且本次帳號連跨區都不允許（ap-northeast-1 的 ECS/ECR 回 AccessDenied）。但船隊本來就跨國，這是貴司自有帳號上該長的樣子。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.5, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.12, margin: 0 });
 // Row1 — 船務端 → Route 53
 const cliY = 2.2, cliH = 0.72;
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: cliY, w: 3.15, h: cliH, fill: { color: C.navy2, transparency: 4 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.09 });
@@ -668,7 +671,7 @@ s.addText([
   { text: "◆ 一區故障　", options: { bold: true, color: C.amber } },
   { text: "健康檢查失敗 → Route 53 自動剔除故障區、流量全導健康區；DynamoDB Global Tables 已雙向同步、S3 CRR 已備份 → RPO≈0、資料不丟、對外服務不中斷。", options: { color: C.white } },
 ], { x: M + 0.3, y: 6.25, w: CW - 0.6, h: 0.75, valign: "middle", fontFace: BODY, fontSize: 11.5, lineSpacingMultiple: 1.05, margin: 0 });
-s.addNotes("多區域 Active-Active：不同國家船務端經 Route 53 地理/延遲路由就近接入，兩個區域（A ap-northeast-1 東京、B us-east-1 維吉尼亞）皆 active，各自 ALB→ECS + DynamoDB + S3。DynamoDB Global Tables 雙向複製、S3 跨區複製 CRR 備份、EventBridge 跨區匯總即時告警 → SNS/SES。任一區健康檢查失敗，Route 53 自動 failover 切換到健康區，資料已雙向同步 (RPO≈0)、不丟、服務不中斷。");
+s.addNotes("開場先講清楚：這一頁是設計，不是現況——全部還沒有蓋。實查帳號：Route 53 hosted zone 0、DynamoDB 0 張表、EventBridge 0 條規則、S3 0 個 bucket；而且本次 workshop 帳號連跨區都不允許，ap-northeast-1 的 ECS 與 ECR 直接回 AccessDenied，所以這條路在比賽帳號上走不了。/ 設計本身：不同國家船務端經 Route 53 地理/延遲路由就近接入，兩區域皆 active，各自 ALB→ECS + DynamoDB；Global Tables 雙向複製、S3 CRR 備份、EventBridge 跨區匯總告警 → SNS/SES；健康檢查失敗自動 failover，RPO≈0。/ 為什麼今天沒有它：現行把 real-metrics.json 烤進映像、請求路徑上沒有資料存放層，沒有東西可以跨區複製——多區域的前提是先把狀態外置到 DynamoDB。而且 3 天內無法演練 failover，未經演練的災備等於沒有。落地順序：狀態外置 → 單區多 AZ（ALB 已跨 1d/1f）→ 再談雙區。");
 
 /* ================= Slide 14 — 五案比較表 (ocean-deep.jpg) ================= */
 s = pptx.addSlide();

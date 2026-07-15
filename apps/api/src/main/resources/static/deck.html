@@ -190,7 +190,7 @@
         {t:"方案 E · 完整資料分析管線（未來式）", n:"S3 資料湖 → Glue/Lambda ETL → Athena/Timestream → App + QuickSight BI + 預測 + IoT 即時遙測。企業級終局，對三天賽程過度設計，但畫出成長路線。"},
         {t:"資安：已收口的入口 + 規劃中的縱深", n:"縱深防禦是目標，這頁把「已經在跑的」和「還沒做的」分開講。已實作：ALB 是唯一對外入口 —— fleetmind-sg 只放行 ALB SG 的 8080，直打 task 公網 IP 已 timeout、走 ALB 仍 200；IAM 兩角色分離；CloudWatch Logs；Shield Standard 在 ALB 自動生效。誠實補充：兩個子網都是公有、task 仍有公網 IP（無 NAT 要拉 ECR），收口靠的是 SG 不是子網隔離。規劃中：WAF 目前 0 個 WebACL、Secrets Manager 0 個 secret、GuardDuty 受本 workshop 帳號權限阻擋開不了。旁邊就是 live URL，寫得比實際好只會被 curl 拆穿。"},
         {t:"權限邊界：誰能拉映像、誰能呼叫 Bedrock", n:"執行角色 fleetmind-ecs-exec 拉 ECR、寫 log，應用程式拿不到；任務角色 fleetmind-ecs-task 只有 Bedrock / SNS / SES 三條 inline 政策。角色分離是真的；但只有 SNS 那條把 Resource 釘死到單一 topic ARN，Bedrock 與 SES 仍是萬用字元 —— 動作已收斂，不宣稱最小權限。"},
-        {t:"多區域 Active-Active + 即時告警與災備", n:"船隊分佈不同國家，Route 53 依地理/延遲路由到最近區域；亞洲與歐美兩區雙活，DynamoDB Global Tables 雙向複製、跨區 EventBridge 即時告警、S3 CRR 備份；一區故障自動切換，RPO≈0、資料不丟、服務不中斷。"},
+        {t:"多區域 Active-Active：設計，不是現況", n:"先講清楚：這一頁全部還沒有蓋。實查帳號 Route 53 hosted zone 0、DynamoDB 0 張表、EventBridge 0 條規則、S3 0 個 bucket；而且本次 workshop 帳號連跨區都不允許——ap-northeast-1 的 ECS 與 ECR 直接回 AccessDenied。設計本身：Route 53 依地理/延遲把各國船務端路由到最近區域，兩區雙活、DynamoDB Global Tables 雙向複製、跨區 EventBridge 匯總告警、S3 CRR 備份，健康檢查自動 failover，RPO≈0。為什麼今天沒有它：現行把 real-metrics.json 烤進映像、請求路徑上沒有資料存放層，沒有東西可以跨區複製——前提是先把狀態外置到 DynamoDB；且 3 天內無法演練 failover，未經演練的災備等於沒有。落地順序：狀態外置 → 單區多 AZ（ALB 已跨 1d/1f）→ 再談雙區。"},
         {t:"五案比較：現行 A 為出賽基準線", n:"運算／入口／閒置成本／維運／冷啟／黑客松適配一表看懂。現行 ECS Fargate 在三天賽程的可交付性與 demo 穩定度綜合最優；EC2 保底、Serverless 與資料管線是願景。"},
         {t:"未來路線圖 · Phase 0–3", n:"從 15 艘 demo 到全艦隊營運平台：先穩上線，再走資料驅動、多區域韌性、BI/預測與系統介接。落地三扇門：系統介接、檔案上傳、後台設定。"},
         {t:"決策級聯：正常 → 注意 → 行動", n:"系統不只給數字，而是狀態＋建議：正常持續觀察 → 注意排 UWILD 檢查 → 行動先檢查再規劃清洗。把 ISO 19030 的速度損失變成可執行的下一步。"},
