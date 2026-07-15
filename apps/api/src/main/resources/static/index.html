@@ -137,6 +137,10 @@
     .kicker.act-hot::before{background:linear-gradient(90deg,transparent,var(--act));box-shadow:0 0 8px rgba(233,105,78,.6)}
     .scene-title{font-size:clamp(27px,5.4vw,54px);font-weight:800;line-height:1.08;letter-spacing:-.02em;margin:0 0 18px;max-width:18ch;text-wrap:balance;
       text-shadow:0 2px 34px rgba(2,10,20,.6)}
+    /* a3 只有這句超過 18ch (15 字 + ——): 54px 下需 ~918px, 但 18ch 只給 653px, 於是斷在「多燒/油」中間。
+       .stage-in 本來就有 1080px, 放寬到 26ch (~936px) 就能單行。只放寬 a3, 其餘兩幕的斷行是刻意的。
+       手機仍會斷: 27px × 15 字 = 405px, 而 390px 螢幕只有 327px —— 單行在實體上做不到。 */
+    @media(min-width:1000px){ .act.a3 .scene-title{max-width:26ch} }
     .scene-title b{color:var(--accent)}
     .scene-title.hot b{color:var(--act)}
     .scene-lead{font-size:clamp(15px,2vw,18px);color:var(--ink-dim);max-width:58ch;margin:0;text-wrap:pretty;text-shadow:0 1px 12px rgba(2,10,20,.5)}

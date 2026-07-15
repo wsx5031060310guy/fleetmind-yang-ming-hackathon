@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.bedrockruntime.model.ConverseRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseResponse;
 import software.amazon.awssdk.services.bedrockruntime.model.InferenceConfiguration;
 import software.amazon.awssdk.services.bedrockruntime.model.Message;
+import software.amazon.awssdk.services.bedrockruntime.model.StopReason;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -77,7 +78,9 @@ public class AiBriefService {
                             .content(ContentBlock.fromText(prompt))
                             .build())
                     .inferenceConfig(InferenceConfiguration.builder()
-                            .maxTokens(600)
+                            // 600 truncated the real zh-TW brief mid-sentence: a Traditional Chinese
+                            // character costs roughly a token, and a four-section brief runs ~630.
+                            .maxTokens(1200)
                             .temperature(0.2F)
                             .build())
                     .build());
@@ -86,6 +89,15 @@ public class AiBriefService {
                     .filter(java.util.Objects::nonNull)
                     .reduce("", String::concat)
                     .trim();
+            /* A truncated brief is a bad brief: it ends mid-sentence, and its last claim may be
+               cut off before the citation that would have justified it. The guardrail reads the
+               text alone and cannot see this — every numeric claim it did receive is cited, so a
+               cut-off brief passes and gets cached as last-good. Route it into the same ladder as
+               a guardrail failure instead. */
+            if (response.stopReason() == StopReason.MAX_TOKENS) {
+                LOGGER.warn("Bedrock brief truncated for vessel {} ({} chars, hit maxTokens)", vesselId, text.length());
+                return fallbackAfterFailure(vesselId, fallback, citations);
+            }
             AiBriefGuardrailDto guardrail = AiBriefGuardrail.validate(text, citations);
             if (guardrail.passed()) {
                 lastGoodByVessel.put(vesselId, new CacheEntry(text, List.copyOf(citations)));
