@@ -1,7 +1,7 @@
 # FleetMind 系統流程架構圖
 
 > 此文件供 AI Agents (Claude / Codex / Kiro) 參考，用於理解專案完整架構後執行各自分工任務。
-> 最後更新：2026-07-14
+> 最後更新：2026-07-15（部署段依實際 production 校正：加 ALB/SNS/SES，移除未使用的 S3/DynamoDB，App Runner 標記為受阻）
 
 ---
 
@@ -19,12 +19,10 @@ graph TB
         subgraph Dependencies
             CoreCalc["core-calc<br/>(pure Java lib)"]
             Bedrock["AWS Bedrock<br/>(Claude/Nova)"]
-            Storage["S3 / DynamoDB"]
         end
 
         API --> CoreCalc
         API --> Bedrock
-        API --> Storage
         Predict --> |"output/submission.csv<br/>(102 rows)"| Submission["Submission File"]
     end
 ```
@@ -36,7 +34,7 @@ graph TB
 ```mermaid
 graph TD
     subgraph Deployment["Deployment Layer"]
-        Docker["Docker (ECR) → ECS Fargate ARM64<br/>或 App Runner / EC2 docker fallback"]
+        Docker["Docker (ECR) → ECS Fargate ARM64 + ALB<br/>(App Runner 受帳號權限阻擋; EC2 docker 為未啟用的保底)"]
     end
 
     subgraph API["apps/api (Spring Boot 4.1)"]
@@ -165,36 +163,52 @@ flowchart TD
 
 ## 6. 部署架構 (AWS)
 
+> 以下是**實際部署**（帳號 516665228894 · us-east-1），非候選方案。
+> 驗證方式：`grep -rl SnsClient|SesV2Client|s3|dynamodb apps/api/src/main/java` + `pom.xml` 的 AWS SDK 宣告。
+> **沒有 S3、沒有 DynamoDB**：正午報表由 core-calc 離線算完，產物 `real-metrics.json`
+> 在 build 時烤進映像（見 `apps/api/Dockerfile`）→ 容器冷啟即有真資料、零外部資料相依、repo 不含企業資料。
+
 ```mermaid
 graph TB
-    subgraph AWS["AWS Cloud (Event Account — us-east-1)"]
+    User["User / Judge Browser"] --> ALB
+
+    subgraph AWS["AWS Cloud (Event Account 516665228894 — us-east-1)"]
+        ALB["ALB (fleetmind-alb)<br/>固定網址 · port 80<br/>task 重啟換 IP 也不斷連結"]
+
         subgraph ECR["ECR (Container Registry)"]
-            Image["fleetmind-api:latest<br/>(ARM64 multi-stage build)"]
+            Image["fleetmind-api:latest<br/>ARM64 multi-stage build<br/>real-metrics.json 烤入映像"]
         end
 
-        subgraph Compute["ECS Fargate / App Runner / EC2"]
+        subgraph Compute["ECS Fargate (ARM64) — cluster fleetmind / svc fleetmind-svc"]
             Container["fleetmind-api container<br/>Spring Boot 4.1 + Java 21<br/>Port 8080<br/>Health: GET /api/health"]
         end
 
-        subgraph Services["AWS Services"]
-            S3["S3<br/>(data storage)"]
-            DynamoDB["DynamoDB<br/>(metrics)"]
-            BedrockSvc["Bedrock<br/>(Claude/Nova)"]
+        subgraph Services["AWS Services (實際有用到的)"]
+            BedrockSvc["Bedrock<br/>Claude Haiku · Converse<br/>(AI 決策簡報, guardrail 驗數值)"]
+            SNS["SNS fleetmind-alerts<br/>(門檻跨越告警扇出)"]
+            SES["SES v2<br/>(告警 Email)"]
         end
 
         subgraph Observability["Observability"]
-            CW["CloudWatch<br/>(logs / alarms)"]
+            CW["CloudWatch Logs<br/>/fleetmind/api"]
         end
 
         ECR --> Compute
-        Container --> S3
-        Container --> DynamoDB
+        ALB --> Container
         Container --> BedrockSvc
+        Container --> SNS
+        Container --> SES
         Container --> CW
     end
-
-    User["User / Judge Browser"] --> Container
 ```
+
+**不在部署路徑上的**：
+
+| 服務 | 狀態 |
+|---|---|
+| App Runner | ❌ 本次帳號權限阻擋（AccessDenied），未採用 |
+| EC2 + Docker | 🔸 保底方案，未啟用 |
+| S3 / DynamoDB | ❌ 未使用（Java 端 0 引用、pom 無 SDK 宣告）；資料烤在映像裡 |
 
 ---
 
