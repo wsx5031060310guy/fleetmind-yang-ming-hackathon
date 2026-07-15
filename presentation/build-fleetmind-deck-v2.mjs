@@ -205,7 +205,11 @@ const mstats = [
   { n: "102/102", u: "格提交 1:1", c: C.seafoam },
 ];
 mstats.forEach((p, i) => {
-  const x = M + i * 2.55, w = 2.35;
+  // 2.55/2.35 put card 3 at 0.7 + 5.10 + 2.35 = 8.15, and the honesty panel starts at 8.05 —
+  // a 0.10" overlap. The panel is drawn after the cards, so it buried card 3's right rounded
+  // corner: two cards with round corners and a third squared off mid-air. 2.45/2.25 ends the
+  // row at 7.85 and gives the panel the same 0.20" gap the cards give each other.
+  const x = M + i * 2.45, w = 2.25;
   card(s, x, 1.85, w, 1.5);
   s.addText(p.n, { x: x + 0.15, y: 2.0, w: w - 0.3, h: 0.7, fontFace: HEAD, fontSize: 28, bold: true, color: p.c, margin: 0 });
   s.addText(p.u, { x: x + 0.15, y: 2.72, w: w - 0.3, h: 0.5, fontFace: BODY, fontSize: 12, bold: true, color: C.mute, margin: 0 });
