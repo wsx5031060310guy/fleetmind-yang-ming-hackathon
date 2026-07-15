@@ -219,14 +219,20 @@ function tierBadges(s, cost, fit, fitColor = C.seafoam) {
 
 /* ========================= Slide 1 — 封面 (hero-dawn.jpg) ========================= */
 let s = pptx.addSlide();
-photoBg(s, "hero-dawn.jpg", { scrim: 36, topH: 0, botH: 2.6, edge: 18 });
+// botH: 0 — 底部 stats 卡 (tr 6) 與 Live 條 (tr 4) 各自幾乎不透明, 不需要下緣 band。
+// 留著的話 band 上緣 (y=4.9) 比卡片 (y=5.15) 還高, 那 0.25" 裸露的平navy 會跟晨霧船影
+// 硬碰出一條直線 (同 slide 15 的病)。
+photoBg(s, "hero-dawn.jpg", { scrim: 36, topH: 0, botH: 0, edge: 18 });
 // 左側標題群坐在半透明 navy 面板上 (船影透出, 文字全可讀)
 s.addShape(pptx.ShapeType.roundRect, { x: 0.5, y: 0.95, w: 7.8, h: 4.05, fill: { color: C.navy, transparency: 18 }, line: { type: "none" }, rectRadius: 0.12, shadow: { type: "outer", color: "04101B", opacity: 0.5, blur: 14, offset: 4, angle: 90 } });
 // 右側 hero: sonar ping + k=FOC/STW³ 公式視覺焦點
 ping(s, 10.35, 2.55, 1.35, C.navy3, C.navy3);
 ping(s, 10.35, 2.55, 0.9, C.teal, C.navy3);
 s.addShape(pptx.ShapeType.roundRect, { x: 8.35, y: 1.5, w: 4.05, h: 2.55, fill: { color: C.navy2, transparency: 4 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.12, shadow: { type: "outer", color: "05121F", opacity: 0.5, blur: 12, offset: 4, angle: 90 } });
-s.addText("k =", { x: 8.55, y: 1.5, w: 1.2, h: 2.55, align: "center", valign: "middle", fontFace: HEAD, fontSize: 40, bold: true, color: C.white, margin: 0 });
+// y 對齊分數線 (2.55) 而非卡片中線: 關係運算子要坐在數學軸上。
+// box 垂直置中 → y = 2.55 - h/2 = 1.275。用 1.5 的話 = 置中於 2.775, 比分數線低 0.225",
+// 「k =」會明顯掛在除線下面 (FOC 中線 2.13 / STW³ 中線 2.95 → 分數自身中線 2.54 ≈ 線)。
+s.addText("k =", { x: 8.55, y: 1.275, w: 1.2, h: 2.55, align: "center", valign: "middle", fontFace: HEAD, fontSize: 40, bold: true, color: C.white, margin: 0 });
 s.addText("FOC", { x: 9.65, y: 1.8, w: 2.5, h: 0.66, align: "center", valign: "middle", fontFace: HEAD, fontSize: 30, bold: true, color: C.seafoam, margin: 0 });
 s.addShape(pptx.ShapeType.line, { x: 9.75, y: 2.55, w: 2.3, h: 0, line: { color: C.white, width: 2 } });
 s.addText("STW³", { x: 9.65, y: 2.62, w: 2.5, h: 0.66, align: "center", valign: "middle", fontFace: HEAD, fontSize: 30, bold: true, color: C.amber, margin: 0 });
