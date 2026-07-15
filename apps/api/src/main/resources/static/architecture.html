@@ -549,7 +549,7 @@
         <li>每一階段都在增加要維護、要付費的東西：NAT、interface endpoint、CloudFront、WAF 沒有一項免費；成本只寫相對敘述，因為本次讀回沒有任何帳單資料</li>
         <li>狀態外置後<b>冷啟不再「開機就有真資料」</b>——換來歷史與稽核，但多了一層相依</li>
         <li><b>刻意不畫</b>：NLB（HTTP 應用該用 ALB，除非要固定 IP 放行或 TLS 直通）、Network Firewall（共用 VPC 集中出網才需要）、API Gateway（authorizer 能做的 ALB OIDC 已做完）、Aurora（存取型態不需要關聯式）</li>
-        <li><b>全圖尚未部署</b>：CloudFront 0 個 distribution · Route 53 0 個 zone · S3 0 個 bucket · DynamoDB 0 張表；WAF 只讀回 <code>REGIONAL</code> scope 為 0，<code>CLOUDFRONT</code> scope 未探測，故本圖不主張該 scope 的狀態</li>
+        <li><b>全圖尚未部署</b>：CloudFront 0 個 distribution · Route 53 0 個 zone · S3 0 個 bucket · DynamoDB 0 張表 · Cognito 0 個 user pool · ACM 0 張憑證 · NAT 0 座 · VPC Endpoint 0 個；WAF <code>REGIONAL</code> 與 <code>CLOUDFRONT</code> 兩個 scope 皆 0 個 WebACL</li>
       </ul></div>
     </div>
     <div class="whenrec"><b>落地順序（依相依性，不是依願望）：</b>① 狀態外置 → ② 傳輸加密與身分 → ③ 邊界與私有網路 → ④ 多區域。狀態外置排第一，因為稽核要有地方寫、跨區要有東西可複製；TLS 與身分同一階段，因為今天只有 <code>HTTP:80</code> 監聽器，OIDC 權杖走明文等於沒做。本頁最後的「多區域」在本次比賽帳號上根本做不了——ap-northeast-1 的 ECS／ECR 直接回 <code>AccessDenied</code>（2026-07-15 讀回）；就算帳號允許，它也得排在第 ① 步之後，因為跨區要先有東西可複製。</div>

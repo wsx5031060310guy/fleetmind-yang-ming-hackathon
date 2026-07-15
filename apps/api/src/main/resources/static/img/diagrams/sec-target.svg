@@ -121,7 +121,7 @@
   <!-- ===================== proposal envelope ===================== -->
   <rect x="42" y="122" width="1516" height="434" rx="6" fill="none" stroke="#A7AFB7" stroke-width="1.2" stroke-dasharray="6 4"/>
   <text x="58" y="137" font-size="11.5" font-weight="700" fill="#414D5C">提案的目標狀態<tspan font-weight="400" fill="#6E7B8B"> —— 本框內只有標「今日已存在」的彩色節點今天真的在跑，其餘每個灰色虛線節點與每條虛線今天都不存在。每個服務都得說出它憑什麼在圖上，說不出來的沒有畫（理由見右下角「刻意不畫」）。</tspan></text>
-  <text x="58" y="149" font-size="9.5" fill="#6E7B8B">2026-07-15 讀回：CloudFront 0 個 distribution · Route 53 0 個 hosted zone · S3 0 個 bucket（全帳號）· DynamoDB 0 張表 · WAF <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">REGIONAL</tspan> scope 0 個 WebACL —— <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">CLOUDFRONT</tspan> scope 未探測，本圖不主張該 scope 的狀態。</text>
+  <text x="58" y="149" font-size="9.5" fill="#6E7B8B">讀回：CloudFront 0 個 distribution · Route 53 0 個 hosted zone · S3 0 個 bucket（全帳號）· DynamoDB 0 張表 · Cognito 0 個 user pool · ACM 0 張憑證 · NAT 0 座 · VPC Endpoint 0 個 · WAF <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">REGIONAL</tspan> 與 <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">CLOUDFRONT</tspan> 兩個 scope 皆 0 個 WebACL。</text>
 
   <!-- ===================== AWS Cloud boundary (users stay outside) ===================== -->
   <rect x="150" y="152" width="1396" height="396" rx="6" fill="none" stroke="#879196" stroke-width="1"/>
@@ -457,5 +457,5 @@
   <text x="1200" y="874" font-size="8.5" fill="#5A6875">出現真正的關聯式需求（多表 join、交易一致性、臨時 SQL）。</text>
 
   <!-- ===================== footnote ===================== -->
-  <text x="42" y="892" font-size="9" fill="#5A6875">現況對照（2026-07-15 讀回）：兩個子網皆 mapPublicIpOnLaunch=true、任務 assignPublicIp=ENABLED（免 NAT 拉 ECR），今天擋下直連的是 Security Group 而非子網隔離；ALB 監聽器只有 HTTP:80，部署路徑上沒有 HTTPS。本圖的私有子網、NAT、endpoint、CloudFront、S3、DynamoDB 全部尚未存在；WAF 與 Cognito 未探測，本圖不主張其帳號現況。</text>
+  <text x="42" y="892" font-size="9" fill="#5A6875">現況對照（2026-07-15 讀回）：兩個子網皆 mapPublicIpOnLaunch=true、任務 assignPublicIp=ENABLED（免 NAT 拉 ECR），今天擋下直連的是 Security Group 而非子網隔離；ALB 監聽器只有 HTTP:80，部署路徑上沒有 HTTPS。本圖的私有子網、NAT、endpoint、CloudFront、WAF、Cognito、S3、DynamoDB 全部尚未存在——每一項都已讀回為 0。</text>
 </svg>
