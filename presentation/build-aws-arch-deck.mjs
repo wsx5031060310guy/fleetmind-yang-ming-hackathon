@@ -86,10 +86,15 @@ function pageMark(s, n) {
   ], { x: W - M - 1.5, y: 0.24, w: 1.5, h: 0.3, align: "right", valign: "middle", fontFace: BODY, fontSize: 10, charSpacing: 1, margin: 0 });
 }
 
-// 標題字寬估算 (CJK≈1em/字, 拉丁≈0.55em) → 自動選最大且不溢出的級數
+// 標題字寬估算 → 自動選最大且不溢出的級數。
+// 係數是量出來的, 不是猜的: Hiragino Sans bold 36pt 實際 render 後量 ink 寬 →
+// CJK 0.996 em/字 (取 1), 混合大小寫拉丁 0.62 em/字。
+// 拉丁曾寫 0.55 (別的字體的值): 低估 → 標題溢出換兩行 → 文字框垂直置中把第一行往上推 →
+// 鑽進右上 tierBadges 底下被切頭 (slide 5 「DynamoDB（資料驅動）」)。單行就不會撞, 所以
+// 這裡估得準比什麼都重要。改字體 = 這兩個係數要重量。
 function unitLen(t) {
   let u = 0;
-  for (const ch of t) u += ch.codePointAt(0) > 0x2e80 ? 1 : 0.55;
+  for (const ch of t) u += ch.codePointAt(0) > 0x2e80 ? 1 : 0.62;
   return u;
 }
 function head(s, eyebrow, title, titleColor = C.white) {
@@ -333,7 +338,8 @@ s.addText("資料流", { x: M + 0.25, y: y1 + 0.16, w: colW - 0.5, h: 0.35, font
 s.addText([
   "離線　core-calc 讀 15 船 2021–2025 正午報表，跑 ISO 19030 k 與品質旗標 → MetricsExportCli 產 real-metrics.json",
   "Build　Dockerfile COPY real-metrics.json 一起打包 jar → 推 ECR",
-  "Runtime　評審 → ALB → Fargate 回決策看板 + REST（/fleet/summary、/vessels/{id}/decision、/config/threshold…）",
+  // 用冒號不用括號: 這行剛好滿寬, 收尾的「）」會被擠到下一行獨自成行 (CJK 禁則: 閉括號不可行首)。
+  "Runtime　評審 → ALB → Fargate 回決策看板 + REST：/fleet/summary、/vessels/{id}/decision、/config/threshold…",
   "AI 簡報　/ai-brief → Bedrock Converse → guardrail 驗 cited 數值",
   "告警　門檻跨越 → /alerts/notify → SNS Publish",
 ].map((p, j, a) => ({ text: p, options: { bullet: { code: "2022", indent: 12 }, color: C.dim, breakLine: j < a.length - 1, paraSpaceAfter: 5 } })), { x: M + 0.25, y: y1 + 0.52, w: colW - 0.45, h: 1.75, fontFace: BODY, fontSize: 10.5, lineSpacingMultiple: 1.0, margin: 0 });
