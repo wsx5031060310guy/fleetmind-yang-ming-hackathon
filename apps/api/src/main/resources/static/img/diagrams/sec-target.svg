@@ -116,7 +116,7 @@
   <rect x="42" y="74" width="1516" height="40" rx="5" fill="#FDECEE" stroke="#DD344C" stroke-width="1"/>
   <rect x="42" y="74" width="3" height="40" fill="#DD344C"/>
   <text x="58" y="92" font-size="11.5" font-weight="700" fill="#232F3E">這張圖存在的理由：今天完全沒有身分驗證。2026-07-15 實測，未帶任何憑證的裸 curl <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5">PUT /api/config/threshold?value=11</tspan> 回 200，而且真的把告警門檻改掉了。</text>
-  <text x="58" y="108" font-size="9.5" fill="#5F6B7A">同一支裸 curl：<tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">PUT /api/admin/settings</tspan> → 200 · <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">POST /api/alerts/notify</tspan> → 200（陌生人可以叫系統寄信）· <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">/admin.html</tspan> → 對全世界 200。原始碼側佐證〔非讀回〕：任何 pom 都沒有 spring-security、沒有 SecurityFilterChain、沒有 @PreAuthorize —— 不是設定錯，是整層不存在。</text>
+  <text x="58" y="108" font-size="9.5" fill="#5F6B7A">同一支裸 curl：<tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">PUT /api/admin/settings</tspan> → 200 · <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">POST /api/alerts/notify</tspan> → 200（無憑證即入 handler；正式環境會走到 SES〔推導〕）·<tspan font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">/admin.html</tspan> → 對全世界 200。四支皆非 401／403。原始碼側佐證〔非讀回〕：任何 pom 都沒有 spring-security、沒有 SecurityFilterChain、沒有 @PreAuthorize —— 不是設定錯，是整層不存在。</text>
 
   <!-- ===================== proposal envelope ===================== -->
   <rect x="42" y="122" width="1516" height="434" rx="6" fill="none" stroke="#A7AFB7" stroke-width="1.2" stroke-dasharray="6 4"/>
@@ -457,5 +457,5 @@
   <text x="1200" y="874" font-size="8.5" fill="#5A6875">出現真正的關聯式需求（多表 join、交易一致性、臨時 SQL）。</text>
 
   <!-- ===================== footnote ===================== -->
-  <text x="42" y="892" font-size="9" fill="#5A6875">現況對照（2026-07-15 讀回）：兩個子網皆 mapPublicIpOnLaunch=true、任務 assignPublicIp=ENABLED（免 NAT 拉 ECR），今天擋下直連的是 Security Group 而非子網隔離；ALB 監聽器只有 HTTP:80，部署路徑上沒有 HTTPS。本圖的私有子網、NAT、endpoint、CloudFront、WAF、Cognito、S3、DynamoDB 全部尚未存在。</text>
+  <text x="42" y="892" font-size="9" fill="#5A6875">現況對照（2026-07-15 讀回）：兩個子網皆 mapPublicIpOnLaunch=true、任務 assignPublicIp=ENABLED（免 NAT 拉 ECR），今天擋下直連的是 Security Group 而非子網隔離；ALB 監聽器只有 HTTP:80，部署路徑上沒有 HTTPS。本圖的私有子網、NAT、endpoint、CloudFront、S3、DynamoDB 全部尚未存在；WAF 與 Cognito 未探測，本圖不主張其帳號現況。</text>
 </svg>
