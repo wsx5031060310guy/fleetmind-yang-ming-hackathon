@@ -139,9 +139,21 @@ public class AiBriefService {
     }
 
     private BedrockRuntimeClient buildClient() {
+        /* Budget, top down: app.js gives this endpoint 15s before it aborts the fetch, so the
+           whole call has to fail and fall back inside that. A complete zh-TW brief measured
+           8.0s median / 9.6s worst over the real model from Taipei — the task sits in the same
+           region as Bedrock, so that is an upper bound. 12s per attempt clears the worst case
+           with room; 13s overall stays 2s under app.js.
+
+           These were 10s/12s, tuned when maxTokens was 600 and the model always stopped early
+           at ~7.1s. Raising the cap to 1200 pushed generation past the attempt timeout, and the
+           deployed brief silently became the English deterministic fallback.
+
+           The 1s gap between attempt and overall is deliberate: a fast failure (throttling) has
+           its retry, a slow one does not — retrying a timeout would only blow the 15s budget. */
         ClientOverrideConfiguration overrides = ClientOverrideConfiguration.builder()
-                .apiCallAttemptTimeout(Duration.ofSeconds(10))
-                .apiCallTimeout(Duration.ofSeconds(12))
+                .apiCallAttemptTimeout(Duration.ofSeconds(12))
+                .apiCallTimeout(Duration.ofSeconds(13))
                 .retryPolicy(RetryPolicy.builder().numRetries(1).build())
                 .build();
         return BedrockRuntimeClient.builder()
