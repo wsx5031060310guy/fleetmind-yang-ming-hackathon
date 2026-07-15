@@ -99,7 +99,14 @@ check_contains() {
 
   tmp="$(mktemp)"
   if [[ "$method" == "POST" ]]; then
-    metrics="$(curl_post_safe "$url" -w "%{http_code} %{time_total}" -o "$tmp")"
+    # The only POST here is the ai-brief, and curl_post_safe's shared --max-time 12 is tuned for
+    # the fast endpoints. A warm brief takes ~7s, but the FIRST one after a deploy also pays a cold
+    # JVM, the lazily-built Bedrock client and a TLS handshake — it blew past 12s and curl reported
+    # HTTP 000, failing the one call this script exists to make. A later --max-time overrides an
+    # earlier one (verified), so this widens it without touching api-smoke.sh or freeze-demo-snapshot.sh.
+    # 25s sits above the server's own ceiling: app.js aborts at 15s and AiBriefService gives up at 13s,
+    # so the server always answers first and curl never decides the outcome.
+    metrics="$(curl_post_safe "$url" --max-time 25 -w "%{http_code} %{time_total}" -o "$tmp")"
   else
     metrics="$(curl_safe "$url" -w "%{http_code} %{time_total}" -o "$tmp")"
   fi
