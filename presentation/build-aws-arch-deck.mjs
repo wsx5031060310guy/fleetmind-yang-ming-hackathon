@@ -484,56 +484,51 @@ optionSlide({
   notes: "方案 E 是企業級願景藍圖：S3 data lake + Glue ETL + Athena/Timestream + QuickSight BI + Bedrock/SageMaker 預測 + 未來 IoT Core 遙測。它不宜當 Day3 實跑主線，但作為架構故事線與企業資料應用說明極具說服力。",
 }, 8);
 
-/* ============== Slide 9 — 資安：VPC 隔離 + GuardDuty (security-soc.jpg) ============== */
+/* ============== Slide 9 — 資安：已實作 vs 規劃中 (security-soc.jpg) ============== */
 s = pptx.addSlide();
 photoBg(s, "security-soc.jpg", { scrim: 28 }); // SOC 螢幕牆重紋理 → scrim 加重
 pageMark(s, 9);
-head(s, "Security · 縱深防禦", "資安：VPC 隔離 + GuardDuty");
+head(s, "Security · 現況與規劃", "資安：已收口的入口 + 規劃中的縱深");
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: 1.6, w: CW, h: 0.54, fill: { color: C.navy, transparency: 14 }, line: { type: "none" }, rectRadius: 0.07 });
-s.addText("縱深防禦 (defense in depth)：邊緣擋量、VPC 最小暴露、帳號級偵測、全程加密與稽核 — 逐層收斂攻擊面，任一層被突破，下一層仍在。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.54, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.12, margin: 0 });
-const secLayers = [
-  { tag: "① 邊緣", note: "擋量 · L7 過濾", items: [
-      { label: "AWS Shield", sub: "DDoS 防護", code: "SLD", cat: "sec" },
-      { label: "AWS WAF", sub: "L7 規則過濾", code: "WAF", cat: "net" },
+s.addText("縱深防禦是目標；這頁把「已經在跑的」和「還沒做的」分開講。入口已用 SG 收成 ALB 單點、IAM 已職責分離 — 這兩項可當場驗。其餘是下一步。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.54, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.12, margin: 0 });
+// 分兩區, 因為原本四層縱深把「規劃」畫得跟「已上線」一模一樣 —— 而實查結果:
+// WAF 0 個 WebACL、Secrets Manager 0 個 secret、GuardDuty 呼叫直接 AccessDenied、
+// CloudTrail 只有主辦方自己的 trail。這頁旁邊就放著 live URL, 評審問一句就穿幫。
+// 每一項的 evid 都是實際查得的證據, 改動任何一項前先重查, 別憑印象。
+const secZones = [
+  { tag: "已實作", note: "可當場驗證", tone: C.seafoam, items: [
+      { label: "ALB", sub: "唯一對外入口", code: "ALB", cat: "net", evid: "直打 task IP:8080 → timeout" },
+      { label: "Security Group", sub: "只放行 ALB SG", code: "SG", cat: "sec", evid: "fleetmind-sg 無 0.0.0.0/0" },
+      { label: "IAM 職責分離", sub: "task / execution role", code: "IAM", cat: "sec", evid: "app 拉不到 ECR、寫不了 log" },
+      { label: "CloudWatch Logs", sub: "/fleetmind/api", code: "CW", cat: "data", evid: "awslogs driver 已設" },
+      { label: "Shield Standard", sub: "ALB 自動生效", code: "SLD", cat: "sec", evid: "AWS 預設, 非我們部署" },
     ] },
-  { tag: "② VPC 隔離", note: "最小暴露面", flow: true, items: [
-      { label: "公有子網 · ALB", sub: "唯一對外入口", code: "ALB", cat: "net" },
-      { label: "私有子網 · ECS", sub: "無公網 IP", code: "ECS", cat: "comp" },
-    ] },
-  { tag: "③ 帳號偵測", note: "持續監看", items: [
-      { label: "GuardDuty", sub: "威脅偵測", code: "GD", cat: "data" },
-      { label: "CloudTrail", sub: "稽核軌跡", code: "CT", cat: "sec" },
-    ] },
-  { tag: "④ 機密加密", note: "零信任存取", items: [
-      { label: "Secrets Manager", sub: "憑證託管", code: "SM", cat: "stor" },
-      { label: "KMS", sub: "金鑰加密", code: "KMS", cat: "ai" },
-      { label: "IAM", sub: "最小權限", code: "IAM", cat: "sec" },
+  { tag: "規劃中", note: "尚未部署", tone: C.amber, items: [
+      { label: "AWS WAF", sub: "L7 規則過濾", code: "WAF", cat: "net", evid: "目前 0 個 WebACL" },
+      { label: "GuardDuty", sub: "威脅偵測", code: "GD", cat: "data", evid: "本帳號 AccessDenied, 開不了" },
+      { label: "Secrets Manager", sub: "憑證託管", code: "SM", cat: "stor", evid: "目前 0 個 secret" },
+      { label: "KMS CMK", sub: "自管金鑰", code: "KMS", cat: "ai", evid: "現用 AWS 託管預設金鑰" },
     ] },
 ];
-const secTop = 2.25, secBandH = 0.86, secPitch = 1.01;
-secLayers.forEach((L, i) => {
-  const bx = M + i * 0.28, bw = CW - i * 0.56, by = secTop + i * secPitch;
-  s.addShape(pptx.ShapeType.roundRect, { x: bx, y: by, w: bw, h: secBandH, fill: { color: C.navy, transparency: 18 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.1 });
-  s.addText(L.tag, { x: bx + 0.18, y: by + 0.1, w: 1.55, h: 0.34, valign: "middle", fontFace: HEAD, fontSize: 13, bold: true, color: C.seafoam, margin: 0 });
-  s.addText(L.note, { x: bx + 0.18, y: by + 0.46, w: 1.55, h: 0.3, valign: "middle", fontFace: BODY, fontSize: 9, color: C.dim, margin: 0 });
-  const czx = bx + 1.86, czw = bw - 2.04, n = L.items.length, gap = 0.16;
-  const cw = (czw - gap * (n - 1)) / n, ch = 0.6, cy = by + (secBandH - ch) / 2;
-  const edges = [];
-  L.items.forEach((it, j) => {
-    const cx = czx + j * (cw + gap);
-    svcCardH(s, cx, cy, cw, ch, { label: it.label, sub: it.sub, code: it.code, cat: it.cat, fill: C.navy2, fs: 11, tr: 2 });
-    edges.push([cx, cx + cw]);
+const zTop = 2.3, zH = 1.92, zPitch = 2.06;
+secZones.forEach((Z, i) => {
+  const by = zTop + i * zPitch;
+  s.addShape(pptx.ShapeType.roundRect, { x: M, y: by, w: CW, h: zH, fill: { color: C.navy, transparency: 18 }, line: { color: i === 0 ? C.seafoam : C.amber, width: 1 }, rectRadius: 0.1 });
+  s.addText(Z.tag, { x: M + 0.22, y: by + 0.12, w: 2.0, h: 0.32, valign: "middle", fontFace: HEAD, fontSize: 14, bold: true, color: Z.tone, margin: 0 });
+  s.addText(Z.note, { x: M + 1.5, y: by + 0.12, w: 2.4, h: 0.32, valign: "middle", fontFace: BODY, fontSize: 9.5, color: C.dim, margin: 0 });
+  const n = Z.items.length, gap = 0.15, cw = (CW - 0.44 - gap * (n - 1)) / n, ch = 0.62, cy = by + 0.52;
+  Z.items.forEach((it, j) => {
+    const cx = M + 0.22 + j * (cw + gap);
+    svcCardH(s, cx, cy, cw, ch, { label: it.label, sub: it.sub, code: it.code, cat: it.cat, fill: C.navy2, fs: 10.5, tr: 2 });
+    s.addText(it.evid, { x: cx + 0.04, y: cy + ch + 0.08, w: cw - 0.08, h: 0.5, fontFace: BODY, fontSize: 8, color: C.dim, lineSpacingMultiple: 1.05, margin: 0 });
   });
-  if (L.flow && edges.length === 2) {
-    s.addShape(pptx.ShapeType.line, { x: edges[0][1] + 0.02, y: cy + ch / 2, w: gap - 0.04, h: 0, line: { color: C.amber, width: 1.75, endArrowType: "triangle" } });
-  }
 });
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: 6.3, w: CW, h: 0.7, fill: { color: C.navy2, transparency: 4 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.08 });
 s.addText([
-  { text: "◆ 縱深防禦　", options: { bold: true, color: C.amber } },
-  { text: "邊緣擋量、VPC 隔離、帳號偵測、加密兜底 — 攻擊者要連過四關；憑證進 Secrets Manager、資料以 KMS 加密、操作全入 CloudTrail，IAM 全程最小權限。", options: { color: C.white } },
+  { text: "◆ 誠實盤點　", options: { bold: true, color: C.amber } },
+  { text: "今天真正擋得住的是入口：SG 只放行 ALB，直打 task 公網 IP 已 timeout。IAM 動作已收斂、SNS 綁單一 topic ARN，但 Bedrock 與 SES 仍是 Resource *，不宣稱「全程最小權限」。GuardDuty 受本帳號權限阻擋，WAF / Secrets Manager 是下一步。", options: { color: C.white } },
 ], { x: M + 0.3, y: 6.3, w: CW - 0.6, h: 0.7, valign: "middle", fontFace: BODY, fontSize: 11.5, lineSpacingMultiple: 1.05, margin: 0 });
-s.addNotes("資安採縱深防禦：① 邊緣 Shield 擋 DDoS + WAF 過濾 L7；② VPC 隔離 — ALB 放公有子網當唯一入口、ECS 放私有子網無公網 IP；③ 帳號級 GuardDuty 威脅偵測 + CloudTrail 稽核；④ 機密與加密 — Secrets Manager 託管憑證、KMS 金鑰加密、IAM 最小權限。逐層收斂攻擊面，任一層被突破下一層仍在。");
+s.addNotes("資安採縱深防禦：① 邊緣 Shield 擋 DDoS + WAF 過濾 L7；② VPC 收斂 — ALB 是唯一對外入口，ECS task 的 SG 只放行 ALB SG 的 8080（實測：直打 task 公網 IP 已 timeout，走 ALB 仍 200）。誠實補充：兩個子網都是公有、task 仍有公網 IP（無 NAT 要拉 ECR），收口靠的是 SG 不是子網；③ 帳號級 GuardDuty 威脅偵測 + CloudTrail 稽核；④ 機密與加密 — Secrets Manager 託管憑證、KMS 金鑰加密、IAM 職責分離（execution role 拉 ECR/寫 log、task role 只有 Bedrock/SNS/SES；動作已收斂，SNS 綁單一 topic ARN，Bedrock 與 SES 仍為 Resource *）。");
 
 /* ======= Slide 10 — 多區域 Active-Active + 災備 (multi-region.jpg) ======= */
 s = pptx.addSlide();
@@ -573,7 +568,7 @@ function regionPanel(px, title, sub) {
   const half = (regW - 0.55) / 2, rh = 0.52;
   const ry1 = regY + 0.62;
   svcCardH(s, px + 0.18, ry1, half, rh, { label: "ALB", sub: "區域入口", code: "ALB", cat: "net", fill: C.navy, fs: 11, tr: 2 });
-  svcCardH(s, px + 0.18 + half + 0.19, ry1, half, rh, { label: "ECS", sub: "私有子網", code: "ECS", cat: "comp", fill: C.navy, fs: 11, tr: 2 });
+  svcCardH(s, px + 0.18 + half + 0.19, ry1, half, rh, { label: "ECS", sub: "SG 收口", code: "ECS", cat: "comp", fill: C.navy, fs: 11, tr: 2 });
   s.addShape(pptx.ShapeType.line, { x: px + 0.18 + half + 0.02, y: ry1 + rh / 2, w: 0.15, h: 0, line: { color: C.teal, width: 1.5, endArrowType: "triangle" } });
   const ry2 = ry1 + rh + 0.12;
   svcCardH(s, px + 0.18, ry2, half, rh, { label: "DynamoDB", sub: "Global Table", code: "DDB", cat: "data", fill: C.navy, fs: 11, tr: 2 });
