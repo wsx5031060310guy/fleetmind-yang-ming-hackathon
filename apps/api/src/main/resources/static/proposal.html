@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FleetMind · AWS 架構簡報</title>
-  <meta name="description" content="FleetMind AWS 架構簡報 15 頁網頁版，含逐頁導讀與章節導覽：現行部署、五種上雲方案、資安與多區域 Active-Active。可鍵盤/縮圖/自動播放/全螢幕，下載 PPTX。">
+  <title>FleetMind · 提案簡報</title>
+  <meta name="description" content="FleetMind 提案簡報 16 頁網頁版：8 分鐘 pitch 講稿（1–11 頁）＋ Q&A 備援（12–16 頁）。附逐頁講者稿與時間軸，可排練計時、鍵盤/縮圖/自動播放/全螢幕，下載 PPTX。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232FB09A'/%3E%3Cpath d='M6 20c3 2 5 2 8 0s5-2 8 0 5 2 6 1' fill='none' stroke='%23052029' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 6l5 9H11z' fill='%23052029'/%3E%3C/svg%3E">
   <style>
     :root{
@@ -38,9 +38,14 @@
     .head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
     .head .k{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--seafoam);margin:0}
     .head h1{margin:4px 0 0;font-size:clamp(19px,2.6vw,26px);font-weight:800;letter-spacing:-.02em}
+    .head .sub{margin:7px 0 0;font-size:12.5px;color:var(--muted);line-height:1.6;max-width:64ch}
+    .head .sub a{color:var(--ink-dim);text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(148,183,214,.4);border-radius:4px}
+    .head .sub a:hover{color:var(--seafoam);text-decoration-color:var(--seafoam)}
+    .head .sub a:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
     .dl{display:inline-flex;align-items:center;gap:7px;padding:10px 15px;border-radius:11px;border:1px solid var(--line);color:var(--ink-dim);text-decoration:none;font-size:13px;font-weight:700;background:rgba(6,17,30,.5);backdrop-filter:blur(6px);transition:background .2s,border-color .2s,transform .1s}
     .dl:hover{background:rgba(47,176,154,.16);border-color:rgba(47,176,154,.45);color:var(--ink)}
     .dl:active{transform:translateY(1px)}
+    .dl:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
 
     .chapters{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:thin}
     .chapters button{flex:none;appearance:none;border:1px solid var(--line);background:rgba(6,17,30,.42);color:var(--muted);cursor:pointer;
@@ -76,32 +81,51 @@
       padding:20px 20px 22px;display:flex;flex-direction:column;gap:12px;min-height:100%}
     .notepane .np-k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--seafoam);margin:0}
     .notepane .np-num{font-family:var(--mono);font-size:12px;color:var(--muted)}
+    .np-cue{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;font-family:var(--mono);font-size:12px;font-weight:700;
+      padding:5px 10px;border-radius:8px;background:rgba(59,160,196,.16);border:1px solid rgba(59,160,196,.4);color:#8FD3EA}
+    .np-cue.is-none{background:rgba(148,183,214,.1);border-color:var(--line);color:var(--muted);font-weight:600}
+    .np-cue svg{width:12px;height:12px}
+    .notepane .np-kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--muted);margin:0;text-transform:uppercase}
     .notepane .np-title{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em;line-height:1.35;transition:opacity .3s}
     .notepane .np-body{margin:0;font-size:14px;line-height:1.75;color:var(--ink-dim);text-wrap:pretty;transition:opacity .3s}
+    .notepane .np-body.is-empty{color:var(--muted);font-style:italic}
     .notepane .np-chapter{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);font-family:var(--mono)}
     .fade{opacity:0}
 
-    .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;
+    .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;
       padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(6,17,30,.42);backdrop-filter:blur(8px)}
     .ctrl{appearance:none;border:1px solid var(--line);background:rgba(6,17,30,.5);color:var(--ink-dim);cursor:pointer;
       width:40px;height:40px;border-radius:10px;display:grid;place-items:center;transition:background .2s,color .2s,transform .1s}
     .ctrl:hover{background:rgba(47,176,154,.16);color:var(--ink)}
     .ctrl:active{transform:scale(.94)}
     .ctrl:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
+    .ctrl[aria-pressed="true"]{background:rgba(47,176,154,.2);border-color:rgba(55,192,166,.5);color:var(--seafoam)}
     .ctrl svg{width:18px;height:18px}
+    .clock{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;color:var(--ink-dim);
+      padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(6,17,30,.5)}
+    .clock b{color:var(--ink);font-size:14px;letter-spacing:.02em}
+    .clock .sep{color:var(--muted)}
+    .pace{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;
+      background:rgba(148,183,214,.12);color:var(--muted)}
+    .pace.ok{background:rgba(55,192,166,.18);color:var(--seafoam)}
+    .pace.ahead{background:rgba(59,160,196,.18);color:#8FD3EA}
+    .pace.behind{background:rgba(244,167,43,.18);color:var(--amber)}
     .counter{font-family:var(--mono);font-size:13px;color:var(--ink-dim);min-width:64px;text-align:center}
     .counter b{color:var(--seafoam)}
     .dotbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:min(46vw,380px)}
     .dot{width:8px;height:8px;border-radius:50%;background:rgba(148,183,214,.28);border:0;padding:0;cursor:pointer;transition:background .2s,transform .2s}
     .dot:hover{background:rgba(148,183,214,.6)}
+    .dot.qa{background:rgba(244,167,43,.3)}
     .dot[aria-current="true"]{background:var(--seafoam);transform:scale(1.35);box-shadow:0 0 8px rgba(55,192,166,.7)}
+    .dot.qa[aria-current="true"]{background:var(--amber);box-shadow:0 0 8px rgba(244,167,43,.7)}
     .dot:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
 
     .thumbs{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 10px;scrollbar-width:thin}
-    .thumbs button{flex:none;width:118px;aspect-ratio:16/9;border-radius:9px;overflow:hidden;border:2px solid transparent;background:#08182a;cursor:pointer;padding:0;opacity:.5;transition:opacity .2s,border-color .2s,transform .2s}
+    .thumbs button{flex:none;width:118px;aspect-ratio:16/9;border-radius:9px;overflow:hidden;border:2px solid transparent;background:#08182a;cursor:pointer;padding:0;opacity:.5;transition:opacity .2s,border-color .2s,transform .2s;position:relative}
     .thumbs button img{width:100%;height:100%;object-fit:cover;display:block}
     .thumbs button:hover{opacity:.85;transform:translateY(-2px)}
     .thumbs button[aria-current="true"]{opacity:1;border-color:var(--seafoam);transform:translateY(-3px);box-shadow:0 8px 20px -8px rgba(55,192,166,.6)}
+    .thumbs button.qa[aria-current="true"]{border-color:var(--amber);box-shadow:0 8px 20px -8px rgba(244,167,43,.6)}
     .thumbs button:focus-visible{outline:2px solid var(--seafoam);outline-offset:1px}
 
     .hint{font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono)}
@@ -111,7 +135,7 @@
   </style>
 </head>
 <body>
-  <p class="sr-only">FleetMind AWS 架構簡報，15 頁，含逐頁導讀與章節導覽，可用左右鍵、縮圖、圓點或自動播放切換，支援全螢幕。</p>
+  <p class="sr-only">FleetMind 提案簡報，16 頁：第 1 至 11 頁為 8 分鐘 pitch 講稿，第 12 至 16 頁為 Q&amp;A 備援頁。含逐頁講者稿、時間提示與排練計時，可用左右鍵、縮圖、圓點或自動播放切換，支援全螢幕。此為提案簡報，與 AWS 架構簡報為不同兩份。</p>
 
   <nav class="fm-topnav" aria-label="主選單">
     <a class="fm-brand" href="/"><svg viewBox="0 0 32 32" fill="none"><path d="M4 21c3 2.2 5.2 2.2 8 0s5.2-2.2 8 0 5.2 2.2 8 0" stroke="#2FB09A" stroke-width="2.6" stroke-linecap="round"/><path d="M16 4l6 11H10z" fill="#2FB09A"/></svg>Fleet<b>Mind</b></a>
@@ -121,8 +145,8 @@
       <a href="/voyage.html">航程 Demo</a>
       <a href="/map.html">地圖</a>
       <a href="/architecture.html">AWS 架構</a>
-      <a href="/deck.html" aria-current="page">架構簡報</a>
-      <a href="/proposal.html">提案簡報</a>
+      <a href="/deck.html">架構簡報</a>
+      <a href="/proposal.html" aria-current="page">提案簡報</a>
       <a href="/admin.html">後台</a>
     </div>
   </nav>
@@ -130,10 +154,15 @@
   <div class="stage-wrap">
     <div class="head">
       <div>
-        <p class="k">AWS Architecture · 15 slides · 逐頁導讀</p>
-        <h1>FleetMind AWS 架構簡報</h1>
+        <p class="k">Proposal Pitch · 8 分鐘 · 16 slides</p>
+        <h1>FleetMind · 提案簡報</h1>
+        <p class="sub">
+          AWS Summit Taipei × 陽明海運黑客松的 <b>8 分鐘提案簡報</b>：第 1–11 頁為講稿頁（0:00–8:00），第 12–16 頁為 Q&amp;A 備援頁。
+          講者稿與時間提示直接取自 PPTX 講者備忘稿。
+          找技術架構請看另一份 <a href="/deck.html">架構簡報</a>。
+        </p>
       </div>
-      <a class="dl" href="/deck/fleetmind-aws-architecture.pptx" download>
+      <a class="dl" href="/proposal/fleetmind-proposal-deck.pptx" download>
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         下載 PPTX
       </a>
@@ -145,7 +174,7 @@
       <div class="perspective">
         <div class="stage" id="stage">
           <div class="progress"><i id="prog"></i></div>
-          <div class="layer show" id="layerA"><img id="imgA" src="/deck/slide-01.jpg" alt="投影片 1"></div>
+          <div class="layer show" id="layerA"><img id="imgA" src="/proposal/slide-01.jpg" alt="提案簡報投影片 1"></div>
           <div class="layer" id="layerB"><img id="imgB" src="" alt=""></div>
           <div class="sheen" aria-hidden="true"></div>
           <button class="nav-btn prev" id="prev" type="button" aria-label="上一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -154,9 +183,11 @@
       </div>
       <aside class="notepane" aria-live="polite">
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
-          <p class="np-k">導讀 · Narration</p>
-          <span class="np-num" id="npNum">01 / 15</span>
+          <p class="np-k">講者稿 · Narration</p>
+          <span class="np-num" id="npNum">01 / 16</span>
         </div>
+        <span class="np-cue" id="npCue"></span>
+        <p class="np-kicker" id="npKicker"></p>
         <h2 class="np-title" id="npTitle"></h2>
         <p class="np-body" id="npBody"></p>
         <p class="np-chapter" id="npChapter"></p>
@@ -164,56 +195,80 @@
     </div>
 
     <div class="controls">
-      <button class="ctrl" id="play" type="button" aria-label="自動播放"><svg id="playicon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
-      <span class="counter"><b id="cur">1</b> / <span id="total">15</span></span>
+      <button class="ctrl" id="play" type="button" aria-label="依講稿時間自動播放" aria-pressed="false"><svg id="playicon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+      <button class="ctrl" id="stopwatch" type="button" aria-label="排練碼錶：自己講、自己翻頁，計時對照講稿進度" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></button>
+      <button class="ctrl" id="reset" type="button" aria-label="計時歸零"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+      <span class="clock">
+        <b id="clkNow">00:00</b><span class="sep">/</span><span id="clkTotal">08:00</span>
+        <span class="pace" id="pace">未計時</span>
+      </span>
+      <span class="counter"><b id="cur">1</b> / <span id="total">16</span></span>
       <div class="dotbar" id="dots" role="tablist" aria-label="投影片"></div>
       <button class="ctrl" id="fs" type="button" aria-label="全螢幕"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
 
     <div class="thumbs" id="thumbs" role="tablist" aria-label="投影片縮圖"></div>
-    <p class="hint">← → 或空白鍵切換 · 點章節/縮圖/圓點跳頁 · ▶ 自動播放 · ⛶ 全螢幕 · 滑過投影片有立體視差</p>
+    <p class="hint">← → 或空白鍵切換 · 點章節/縮圖/圓點跳頁 · ▶ 依講稿時間自動播放 · ⏱ 排練碼錶（自己翻頁、對照進度）· ↺ 歸零 · ⛶ 全螢幕</p>
   </div>
 
   <script>
     (function () {
-      var TOTAL = 15, i = 0, showA = true, playing = false, timer = null;
-      var NOTES = [
-        {t:"封面 · AWS 架構藍圖與五種上雲路徑", n:"同一套「Speed Loss 節能決策系統」，可以落在很不同的 AWS 形狀上。這份簡報先講已上線的架構，再攤開五種替代方案的取捨。信念：數字來自計算，語言來自 AI，決策留給人。"},
-        {t:"一頁看懂：一個命題、一套現行架構、五種方案", n:"命題是從 15 艘船 × 5 年正午報表偵測船體污損造成的 Speed Loss。一套現行架構已上線，五種方案各有適用情境——這頁先給全貌。"},
-        {t:"現行架構：ECS Fargate + ALB 單服務容器", n:"單一 Spring Boot 服務同時吐 dashboard 與 REST API，掛在 ALB 拿到永不變的網址；指標離線由 core-calc 算好烤進映像，AI 走 Bedrock，門檻告警走 SNS。三天賽程最省心、風險最低。"},
-        {t:"方案 A · 現行強化（Fargate + ALB + Bedrock + SNS）", n:"維持現行架構但收斂為正式的 ECS Service + ALB，健康檢查失敗自動重拉。可交付性最高、demo 最穩，是出賽基準線。"},
-        {t:"方案 B · 全 Serverless", n:"API Gateway + Lambda + DynamoDB + S3 + EventBridge 排程重算。閒置零成本、天生資料驅動；代價是 Java 冷啟動與元件變多、除錯較分散。"},
-        {t:"方案 C · App Runner（最省管理）", n:"用同一顆容器映像零 infra 托管，內建 HTTPS 與自動伸縮。但本 workshop 帳號對 App Runner 回 AccessDenied，故列為對照方案。"},
-        {t:"方案 D · EC2 + Docker（最省最可控）", n:"一台 EC2 跑 Docker、綁 Elastic IP。穩定負載下單位成本最低，是托管服務受阻時一定跑得起來的保底路線；代價是自管 OS 與單點風險。"},
-        {t:"方案 E · 完整資料分析管線（未來式）", n:"S3 資料湖 → Glue/Lambda ETL → Athena/Timestream → App + QuickSight BI + 預測 + IoT 即時遙測。企業級終局，對三天賽程過度設計，但畫出成長路線。"},
-        {t:"資安：VPC 隔離 + GuardDuty 縱深防禦", n:"VPC 私有子網隔離（ECS 無公網 IP）、邊緣 Shield/WAF、帳號級 GuardDuty 威脅偵測、Secrets Manager/KMS 加密、CloudTrail 稽核、IAM 最小權限。船務資料敏感，安全是底線不是加分。"},
-        {t:"多區域 Active-Active + 即時告警與災備", n:"船隊分佈不同國家，Route 53 依地理/延遲路由到最近區域；亞洲與歐美兩區雙活，DynamoDB Global Tables 雙向複製、跨區 EventBridge 即時告警、S3 CRR 備份；一區故障自動切換，RPO≈0、資料不丟、服務不中斷。"},
-        {t:"五案比較：現行 A 為出賽基準線", n:"運算／入口／閒置成本／維運／冷啟／黑客松適配一表看懂。現行 ECS Fargate 在三天賽程的可交付性與 demo 穩定度綜合最優；EC2 保底、Serverless 與資料管線是願景。"},
-        {t:"未來路線圖 · Phase 0–3", n:"從 15 艘 demo 到全艦隊營運平台：先穩上線，再走資料驅動、多區域韌性、BI/預測與系統介接。落地三扇門：系統介接、檔案上傳、後台設定。"},
-        {t:"決策級聯：正常 → 注意 → 行動", n:"系統不只給數字，而是狀態＋建議：正常持續觀察 → 注意排 UWILD 檢查 → 行動先檢查再規劃清洗。把 ISO 19030 的速度損失變成可執行的下一步。"},
-        {t:"Live Demo 導覽：一個穩定 URL、多個入口", n:"首頁沈浸開場、決策看板、航程 Demo、AWS 架構——同一個 ALB 靜態網址，現場就能點著走。"},
-        {t:"結尾 · 穩穩 demo，也留得住未來", n:"現行架構已上線可交付，資安與多區域畫出正式營運的韌性路線。數字來自計算，語言來自 AI，決策留給人。"}
-      ];
+      /* NOTES:BEGIN — 由 presentation/fleetmind-proposal-deck.pptx 的講者備忘稿產生，請勿手改。
+         第 12–16 頁為 Q&A 備援頁，pptx 內未附講者稿（n 為空字串），故不杜撰。 */
+var NOTES = [
+        {k:"FLEETMIND",t:"AI 船舶效能分析與節能決策支援系統",cue:"0:00–0:30",from:0,to:30,n:"開場：船舶推進效率隨時間衰退、油耗上升；養護能恢復但決策靠經驗。FleetMind 把它變成可計算、可解釋、人可拍板的決策支援。一句話定位：數字來自計算，語言來自 AI，決策留給人。"},
+        {k:"THE PROBLEM",t:"船殼污損每天在偷油——但何時該清，全靠經驗",cue:"0:30–1:10",from:30,to:70,n:"點出痛點：污損偷油、養護決策靠經驗。用真資料規模帶出我們有本錢做量化。"},
+        {k:"OUR SOLUTION",t:"兩條主線，直攻 55% 硬分數",cue:"1:10–1:50",from:70,to:110,n:"兩個產出對應 30%+25% 硬分數；其餘三維度靠多耗油量估算、單服務架構、AI guardrail。"},
+        {k:"DATA & METHOD",t:"從噪音日報到可比的效能指標",cue:"1:50–2:35",from:110,to:155,n:"方法核心：k=FOC/STW³ 把速度與洋流正規化，只在同速帶比 k，減速不會被誤記成污損。"},
+        {k:"官方必含 ①　SPEED LOSS DASHBOARD",t:"船隊即時盤點：誰在漏油，先看誰",cue:"2:35–3:35",from:155,to:215,n:"Demo（最長，實機操作）：真資料 15 船，點 S11（最嚴重、692 天沒清）看趨勢；再點 S23 看歸因。強調數字全來自 core-calc 確定性計算。"},
+        {k:"官方必含 ②A　效能歸因",t:"污損是船殼還是螺旋槳？—— 分開才好排養護",cue:"3:35–4:25",from:215,to:265,n:"這頁是誠信亮點。把物理先驗（模型時鐘不重置）和統計實測（dashboard 顯示雜訊）分開，準備好回答『你模型說 UWI 不改善但圖上有變化』。"},
+        {k:"官方必含 ②B + ④　油耗預測模型",t:"在只給部分特徵下，還原被遮蔽的油耗",cue:"4:25–5:25",from:265,to:325,n:"誠實：baseline 勝出。強調防漏驗證的嚴謹（模擬真實遮蔽），這是評審會追問的點。"},
+        {k:"官方必含（商務價值 20%）",t:"同一個模型回答：污損正在多燒多少油？",cue:"5:25–6:20",from:325,to:380,n:"主打 S23（HIGH 信心、船殼 96%）：同航速下每天多耗約 16.4 MT。S11 是極端案例。刻意不出金額——貴司工程師講明成本是別部門的事，我們只負責發現問題、通知該清洗；油價每港每次都不同，要換算自行乘上當期油價即可。強調人在迴路、數字可回溯。"},
+        {k:"官方必含 ③　未盡之處與資料價值",t:"誠實說限制，明確說要什麼",cue:"6:20–6:55",from:380,to:415,n:"主動揭露限制 = 誠信分。同時把『要什麼資料』講清楚，回應官方必含第 3 項與商務價值。"},
+        {k:"官方必含 ④ 架構 + ⑤ AI 角色",t:"單服務同源 · AI 只翻譯不發明",cue:"6:55–7:35",from:415,to:455,n:"架構一句話：單服務同源、AWS-only、AI 有 guardrail 不亂編。回應官方第 4、5 項。"},
+        {k:"FLEETMIND",t:"把船隊的效能衰退，變成可計算、可歸因、人可拍板的節能決策",cue:"7:35–8:00",from:455,to:480,n:"收尾：三個交付一句話帶過，回到定位句，進 Q&A。"},
+        {k:"Q&A BACKUP",t:"資料與方法",cue:null,from:null,to:null,n:""},
+        {k:"Q&A BACKUP",t:"預測模型",cue:null,from:null,to:null,n:""},
+        {k:"Q&A BACKUP",t:"Speed Loss / ISO 19030",cue:null,from:null,to:null,n:""},
+        {k:"Q&A BACKUP",t:"UWI 判讀 · 商務價值",cue:null,from:null,to:null,n:""},
+        {k:"Q&A BACKUP",t:"AI · AWS · 限制",cue:null,from:null,to:null,n:""}
+      ];      /* NOTES:END */
+
       var CHAPTERS = [
-        {label:"概覽", s:0}, {label:"現行架構", s:2}, {label:"替代方案", s:4},
-        {label:"資安與韌性", s:8}, {label:"比較與路線", s:10}, {label:"決策與 Demo", s:12}, {label:"結尾", s:14}
+        {label:"開場 · 問題", s:0}, {label:"解法 · 方法", s:2}, {label:"Demo · 歸因", s:4},
+        {label:"模型 · 價值", s:6}, {label:"限制 · 架構", s:8}, {label:"收尾", s:10}, {label:"Q&A 備援", s:11}
       ];
+      var TOTAL = NOTES.length, i = 0, showA = true;
+      // 講稿總長由講稿頁自己的時間提示推得（目前為 8:00），不寫死。
+      var TALK_END = NOTES.reduce(function(m,n){ return n.to != null && n.to > m ? n.to : m; }, 0);
+
       var layerA=document.getElementById('layerA'), layerB=document.getElementById('layerB');
       var imgA=document.getElementById('imgA'), imgB=document.getElementById('imgB');
-      var prog=document.getElementById('prog'), cur=document.getElementById('cur');
+      var prog=document.getElementById('prog'), cur=document.getElementById('cur'), stage=document.getElementById('stage');
       var thumbs=document.getElementById('thumbs'), dots=document.getElementById('dots'), chaptersEl=document.getElementById('chapters');
-      var npTitle=document.getElementById('npTitle'), npBody=document.getElementById('npBody'), npNum=document.getElementById('npNum'), npChapter=document.getElementById('npChapter');
+      var npTitle=document.getElementById('npTitle'), npBody=document.getElementById('npBody'), npNum=document.getElementById('npNum');
+      var npChapter=document.getElementById('npChapter'), npCue=document.getElementById('npCue'), npKicker=document.getElementById('npKicker');
       var playBtn=document.getElementById('play'), playIcon=document.getElementById('playicon');
+      var swBtn=document.getElementById('stopwatch'), clkNow=document.getElementById('clkNow'), paceEl=document.getElementById('pace');
+
       function pad(n){ return (n<10?'0':'')+n; }
-      function src(n){ return '/deck/slide-'+pad(n)+'.jpg'; }
+      function src(n){ return '/proposal/slide-'+pad(n)+'.jpg'; }
+      function fmt(s){ s=Math.max(0,Math.floor(s)); return pad(Math.floor(s/60))+':'+pad(s%60); }
+      document.getElementById('total').textContent = TOTAL;
+      document.getElementById('clkTotal').textContent = fmt(TALK_END);
+
       for (var p=1;p<=TOTAL;p++){ var pi=new Image(); pi.src=src(p); }
+
       var thumbBtns=[], dotBtns=[], chapBtns=[];
       for (var n=1;n<=TOTAL;n++){
         (function(n){
-          var b=document.createElement('button'); b.type='button'; b.setAttribute('role','tab'); b.setAttribute('aria-label','投影片 '+n);
+          var isQA = NOTES[n-1].from == null;
+          var label = '投影片 '+n+(isQA?'（Q&A 備援）':'（'+NOTES[n-1].cue+'）');
+          var b=document.createElement('button'); b.type='button'; b.setAttribute('role','tab'); b.setAttribute('aria-label',label);
+          if (isQA) b.className='qa';
           var im=document.createElement('img'); im.src=src(n); im.alt='投影片 '+n+' 縮圖'; im.loading='lazy'; b.appendChild(im);
           b.addEventListener('click', function(){ go(n-1,true); }); thumbs.appendChild(b); thumbBtns.push(b);
-          var d=document.createElement('button'); d.className='dot'; d.type='button'; d.setAttribute('role','tab'); d.setAttribute('aria-label','投影片 '+n);
+          var d=document.createElement('button'); d.className='dot'+(isQA?' qa':''); d.type='button'; d.setAttribute('role','tab'); d.setAttribute('aria-label',label);
           d.addEventListener('click', function(){ go(n-1,true); }); dots.appendChild(d); dotBtns.push(d);
         })(n);
       }
@@ -222,43 +277,111 @@
         b.addEventListener('click', function(){ go(c.s,true); }); chaptersEl.appendChild(b); chapBtns.push(b);
       });
       function chapterOf(idx){ var ci=0; for (var k=0;k<CHAPTERS.length;k++){ if (idx>=CHAPTERS[k].s) ci=k; } return ci; }
+
+      /* ---- 排練計時 ---- */
+      var timerOn=false, autoOn=false, t0=0, base=0, tick=null;
+      function elapsed(){ return timerOn ? base + (Date.now()-t0)/1000 : base; }
+      function slideAtTime(t){
+        if (t >= TALK_END) return null;
+        for (var k=0;k<NOTES.length;k++){ if (NOTES[k].from != null && t >= NOTES[k].from && t < NOTES[k].to) return k; }
+        return null;
+      }
+      function paint(){
+        var e = elapsed();
+        clkNow.textContent = fmt(e);
+        var note = NOTES[i];
+        if (!timerOn && base === 0){ paceEl.textContent='未計時'; paceEl.className='pace'; }
+        else if (note.from == null){ paceEl.textContent='備援頁'; paceEl.className='pace'; }
+        else if (e < note.from - 3){ paceEl.textContent='超前 '+fmt(note.from-e); paceEl.className='pace ahead'; }
+        else if (e > note.to + 3){ paceEl.textContent='落後 '+fmt(e-note.to); paceEl.className='pace behind'; }
+        else { paceEl.textContent='準時'; paceEl.className='pace ok'; }
+        if (autoOn){
+          var target = slideAtTime(e);
+          if (target === null){ pauseAuto(); stopTimer(); }
+          else if (target !== i){ i = target; render(); }
+        }
+      }
+      function startTimer(){
+        if (timerOn) return;
+        t0 = Date.now(); timerOn = true;
+        swBtn.setAttribute('aria-pressed','true');
+        clearInterval(tick); tick = setInterval(paint, 250); paint();
+      }
+      function stopTimer(){
+        if (!timerOn) return;
+        base = elapsed(); timerOn = false;
+        swBtn.setAttribute('aria-pressed','false');
+        clearInterval(tick); paint();
+      }
+      function resetTimer(){ pauseAuto(); stopTimer(); base = 0; paint(); }
+      function playAuto(){
+        // ▶ = 從本頁開始，照講稿時間跑。備援頁不在計時範圍內，故從第 1 頁起跑。
+        if (NOTES[i].from == null){ i = 0; render(); }
+        base = NOTES[i].from; autoOn = true;
+        playIcon.innerHTML = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+        playBtn.setAttribute('aria-label','暫停自動播放'); playBtn.setAttribute('aria-pressed','true');
+        timerOn = false; startTimer();
+      }
+      function pauseAuto(){
+        autoOn = false;
+        playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+        playBtn.setAttribute('aria-label','依講稿時間自動播放'); playBtn.setAttribute('aria-pressed','false');
+      }
+
       function render(){
         var incoming = showA?layerB:layerA, incomingImg = showA?imgB:imgA, outgoing = showA?layerA:layerB;
-        incomingImg.src=src(i+1); incomingImg.alt='投影片 '+(i+1);
+        incomingImg.src=src(i+1); incomingImg.alt='提案簡報投影片 '+(i+1);
         incoming.classList.add('show'); outgoing.classList.remove('show'); showA=!showA;
         prog.style.width=((i+1)/TOTAL*100)+'%'; cur.textContent=(i+1);
-        var note=NOTES[i]||{t:'',n:''};
+        var note=NOTES[i];
         npTitle.classList.add('fade'); npBody.classList.add('fade');
-        setTimeout(function(){ npTitle.textContent=note.t; npBody.textContent=note.n; npNum.textContent=pad(i+1)+' / '+TOTAL;
-          npTitle.classList.remove('fade'); npBody.classList.remove('fade'); }, 160);
+        setTimeout(function(){
+          npKicker.textContent = note.k;
+          npTitle.textContent = note.t;
+          if (note.n){
+            npBody.textContent = note.n; npBody.className='np-body';
+            npCue.className='np-cue';
+            npCue.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+              + note.cue + ' · ' + (note.to-note.from) + ' 秒';
+          } else {
+            // pptx 講者備忘稿為空 → 據實顯示，不杜撰講稿。
+            npBody.textContent = '此頁為 Q&A 備援，不在 8 分鐘講稿內；PPTX 內未附講者備忘稿。';
+            npBody.className='np-body is-empty';
+            npCue.className='np-cue is-none'; npCue.textContent='不計時 · Q&A 時段使用';
+          }
+          npNum.textContent=pad(i+1)+' / '+TOTAL;
+          npTitle.classList.remove('fade'); npBody.classList.remove('fade');
+        }, 160);
         var ci=chapterOf(i);
         npChapter.textContent='章節 '+(ci+1)+'／'+CHAPTERS.length+' · '+CHAPTERS[ci].label;
         thumbBtns.forEach(function(b,idx){ b.setAttribute('aria-current', idx===i?'true':'false'); });
         dotBtns.forEach(function(d,idx){ d.setAttribute('aria-current', idx===i?'true':'false'); });
         chapBtns.forEach(function(b,idx){ b.setAttribute('aria-current', idx===ci?'true':'false'); });
         var t=thumbBtns[i]; if (t&&t.scrollIntoView) t.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+        paint();
       }
-      function go(n,stop){ if (stop) pause(); i=(n+TOTAL)%TOTAL; render(); }
-      function play(){ playing=true; playIcon.innerHTML='<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'; playBtn.setAttribute('aria-label','暫停'); clearInterval(timer); timer=setInterval(function(){ i=(i+1)%TOTAL; render(); }, 6500); }
-      function pause(){ playing=false; playIcon.innerHTML='<path d="M8 5v14l11-7z"/>'; playBtn.setAttribute('aria-label','自動播放'); clearInterval(timer); }
-      playBtn.addEventListener('click', function(){ playing?pause():play(); });
+      // 手動翻頁只停自動播放；碼錶繼續跑（排練時本來就是自己翻頁）。
+      function go(n,stop){ if (stop) pauseAuto(); i=(n+TOTAL)%TOTAL; render(); }
+
+      playBtn.addEventListener('click', function(){ autoOn?(pauseAuto(),stopTimer()):playAuto(); });
+      swBtn.addEventListener('click', function(){ if (timerOn){ stopTimer(); } else { pauseAuto(); startTimer(); } });
+      document.getElementById('reset').addEventListener('click', resetTimer);
       document.getElementById('prev').addEventListener('click', function(){ go(i-1,true); });
       document.getElementById('next').addEventListener('click', function(){ go(i+1,true); });
       layerA.addEventListener('click', function(){ go(i+1,true); });
       layerB.addEventListener('click', function(){ go(i+1,true); });
       document.getElementById('fs').addEventListener('click', function(){
-        var s=document.getElementById('stage');
         if (document.fullscreenElement) document.exitFullscreen();
-        else if (s.requestFullscreen) s.requestFullscreen();
+        else if (stage.requestFullscreen) stage.requestFullscreen();
       });
       document.addEventListener('keydown', function(e){
         if (e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); go(i+1,true); }
         else if (e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); go(i-1,true); }
         else if (e.key==='Home'){ go(0,true); } else if (e.key==='End'){ go(TOTAL-1,true); }
         else if (e.key.toLowerCase()==='f'){ document.getElementById('fs').click(); }
+        else if (e.key.toLowerCase()==='t'){ swBtn.click(); }
       });
       var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      var stage=document.getElementById('stage');
       if (!reduce && window.matchMedia('(hover: hover)').matches){
         var frame=null;
         stage.parentElement.addEventListener('mousemove', function(e){
