@@ -179,7 +179,9 @@
   .bp-cap { margin: 15px 2px 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: var(--muted); }
   .bp-cap b { color: var(--ink-dim); font-weight: 700; }
   .bp-cap .warn { color: var(--amber); font-weight: 700; }
-  #blueprint code { font-family: var(--mono); font-size: 0.94em; color: var(--ink-dim); background: var(--band); border: 1px solid var(--line-soft); border-radius: 5px; padding: 1px 5px; }
+  #blueprint code, .rationale code { font-family: var(--mono); font-size: 0.94em; color: var(--ink-dim); background: var(--band); border: 1px solid var(--line-soft); border-radius: 5px; padding: 1px 5px; }
+  /* long ARNs / IPs must not push the tile past a 390px viewport */
+  .rationale code { overflow-wrap: anywhere; }
 
   /* fullscreen reader */
   .bp-modal { padding: 0; border: 0; width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; background: var(--bg-2); color: var(--ink); overflow: hidden; }
@@ -225,16 +227,33 @@
   .whenrec { margin-top: 20px; padding: 14px 18px; border-radius: 12px; border: 1px solid var(--line); background: linear-gradient(100deg, var(--band), transparent); font-size: 14px; color: var(--ink-dim); }
   .whenrec b { color: var(--ink); }
 
+  /* The one design decision that explains the rest of the page (no data store in the request path),
+     so it gets a weight between a card and a section — flagged by the current-colour left rule. */
+  .rationale { margin-top: 24px; padding: 20px clamp(16px, 2.2vw, 24px); border: 1px solid var(--line);
+    border-left: 3px solid var(--current); border-radius: 12px; background: linear-gradient(105deg, var(--band), transparent 70%); }
+  .rationale .r-k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 7px; }
+  .rationale h3 { margin: 0 0 12px; font-size: clamp(15px, 1.9vw, 17.5px); letter-spacing: -0.015em; color: var(--ink); }
+  .rationale p { margin: 0 0 11px; font-size: 14px; line-height: 1.78; color: var(--ink-dim); max-width: 78ch; }
+  .rationale p:last-child { margin-bottom: 0; }
+  .rationale b { color: var(--ink); }
+  /* in-prose cross-links: without this they render as default browser blue on the navy palette */
+  .rationale a, .sec-lede a { color: var(--current); text-decoration: underline; text-underline-offset: 2px; }
+  .rationale a:hover, .sec-lede a:hover { color: var(--ink); }
+  .rationale a:focus-visible, .sec-lede a:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; border-radius: 3px; }
+
   /* comparison table */
   .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 760px; background: var(--surface); }
+  /* 8 columns now; 760 squeezed 「狀態放哪 · 怎麼更新」 into one character per line */
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 960px; background: var(--surface); }
   th, td { padding: 13px 15px; text-align: left; border-bottom: 1px solid var(--line-soft); }
   thead th { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; background: var(--surface-2); position: sticky; top: 0; }
   tbody th { font-weight: 700; color: var(--ink); }
   td.num, th.num { font-variant-numeric: tabular-nums; }
   tr.is-current { background: color-mix(in srgb, var(--current) 9%, transparent); }
   tr.is-current th { color: var(--current); }
-  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; font-family: var(--mono); }
+  /* nowrap: CJK has no spaces to break on, so 「近零」/「常駐」/「極低」 stacked one char per line
+     once the 8th column squeezed these cells */
+  .pill { display: inline-block; white-space: nowrap; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; font-family: var(--mono); }
   .pill.hi { background: color-mix(in srgb, var(--seafoam) 18%, transparent); color: var(--seafoam); }
   .pill.mid { background: color-mix(in srgb, var(--amber) 18%, transparent); color: var(--amber); }
   .pill.lo { background: color-mix(in srgb, var(--coral) 16%, transparent); color: var(--coral); }
@@ -290,7 +309,7 @@
   <header class="hero">
     <p class="eyebrow">AWS Architecture Blueprint</p>
     <h1>FleetMind 雲端架構<span class="thin"> — 現行部署與方案比較</span></h1>
-    <p class="lede">同一套「Speed Loss 節能決策支援系統」，可以落在很不同的 AWS 形狀上。這份報告先精確描述已上線的架構，再攤開五種替代方案的服務組成、資料流與取捨——讓「為什麼選這條路」有圖有據。</p>
+    <p class="lede">同一套「Speed Loss 節能決策支援系統」，可以落在很不同的 AWS 形狀上。這份報告先精確描述已上線的架構，再攤開四種替代方案的服務組成、資料流與取捨——讓「為什麼選這條路」有圖有據。</p>
     <div class="meta-row">
       <span class="chip">帳號 <b>516665228894</b></span>
       <span class="chip">Region <b>us-east-1</b></span>
@@ -305,7 +324,7 @@
     <div class="sec-head">
       <p class="sec-kicker"><span class="tag cur">現行・已上線</span> Deployed today</p>
       <h2><span class="num">現行</span>ECS Fargate ＋ ALB ＋ Bedrock ＋ SNS/SES</h2>
-      <p class="sec-lede">單一 Spring Boot 服務同時吐 dashboard 與 REST API，跑在 Fargate 上、掛在 ALB 後面拿到永不變的網址。指標離線由 core-calc 算好、烤進映像；AI 解讀走 Bedrock，門檻告警走 SNS。</p>
+      <p class="sec-lede">單一 Spring Boot 服務同時吐 dashboard 與 16 個 REST 端點，跑在 Fargate 上、掛在 ALB 後面拿到永不變的網址。指標離線由 core-calc 算好、烤進映像；AI 解讀走 Bedrock，門檻告警同時發 SNS 與 SES。</p>
     </div>
 
     <div class="diagram">
@@ -315,12 +334,20 @@
           <span class="bp-hint">⤢ 點擊放大閱讀</span>
         </button>
       </div>
-      <div class="dcap">使用者 → ALB:80 → Fargate 任務 → Bedrock / SNS + SES；ECR 那條虛線是部署路徑，real-metrics.json 在 build 時就烘進映像，請求路徑上沒有任何資料存放層。圖中組態 2026-07-15 自帳號 516665228894 讀回。</div>
+      <div class="dcap">使用者 → ALB:80 → Fargate 任務 → Bedrock / SNS + SES；ECR 那條虛線是部署路徑，real-metrics.json 在 build 時就烘進映像，請求路徑上沒有任何資料存放層。圖中組態 2026-07-15 自帳號 516665228894 讀回；標〔推導〕〔非讀回〕者除外——那是由讀回值推得或出自原始碼，依據寫在圖上該處。</div>
+    </div>
+
+    <div class="rationale">
+      <p class="r-k">Design decision</p>
+      <h3>這套架構最不尋常的一點：請求路徑上沒有資料庫</h3>
+      <p>指標不是執行期算的，也不是從資料庫撈的——<code>real-metrics.json</code> 在 build 時就烤進映像，執行期 <code>RealDataService</code> 直接讀映像裡的檔案。這不是「資料庫還沒接」：帳號今天實際 list 過，<b>S3 0 個 bucket（全帳號）、DynamoDB 0 張表</b>，Java 原始碼裡對這兩者是零引用，pom 內唯一的 AWS SDK 相依只有 <code>bedrockruntime</code>、<code>sns</code>、<code>sesv2</code>。<b>ALB → 任務 → 讀檔，一條請求就走完了</b>，中間沒有資料庫、沒有物件儲存、沒有快取層可以慢、可以壞。</p>
+      <p><b>這個取捨成立的前提，是資料集有界而且靜態。</b>15 艘船、2021–2025 的正午報表、每艘每天一筆——這批資料交付後就不會再長。指標離線用 <code>k = FOC / STW³</code>（ISO 19030）算完就定版：S11 Speed Loss 21.8%（539 個有效日、距上次清洗 692 天）、S23 8.9%、告警門檻 10%。輸入既然不動，執行期就沒有東西需要重算或重查。換到的是：冷啟即有真資料、沒有連線池要暖、少一整類資料層故障模式，而且映像即資料版本——同一個 image 永遠吐同一組數字，部署完全可重現。</p>
+      <p><b>代價也很具體，而且會傳染到後面幾段。</b>資料要更新就得重建映像 + 滾動部署，不是寫一筆 row（所以它不是即時系統）；更關鍵的是——<b>沒有狀態，就沒有東西可以「跨區複製」</b>。多區域 Active-Active 的前提是先把狀態外置到資料層，這正是<a href="#activeactive">多區域那一段</a>今天走不了的第二個理由（第一個是帳號權限）。方案 B 與 E 之所以要引入 DynamoDB / S3，換的也正是這件事。</p>
     </div>
 
     <div class="grid2">
       <div class="card pros"><h3>◆ 為什麼現在選它</h3><ul>
-        <li>單服務、單一部署單位，賽程三天最省心</li>
+        <li>單服務、單一部署單位，導入與維運最省心</li>
         <li>ALB 給永久網址，redeploy 網址不變、還自動健康接手</li>
         <li>Fargate 免管機器，ARM64 便宜；1 task 就夠 demo</li>
         <li>指標離線算好烤進映像 → 執行期零重算、冷啟即服務</li>
@@ -332,11 +359,15 @@
         <li>單服務放大到全船隊即時遙測時需再拆</li>
       </ul></div>
     </div>
+    <!-- These tiles are the "go check me" row: every value is a literal identifier read back from
+         the account on 2026-07-15, not a rating. Cost/ops ratings live in the compare table. -->
     <div class="facts">
-      <div class="fact"><div class="k">運算</div><div class="v">Fargate ARM64 · 1 task</div></div>
-      <div class="fact"><div class="k">入口</div><div class="v">ALB 靜態 DNS</div></div>
-      <div class="fact"><div class="k">成本層級</div><div class="v">低～中（常駐）</div></div>
-      <div class="fact"><div class="k">維運負擔</div><div class="v">低</div></div>
+      <div class="fact"><div class="k">任務定義</div><div class="v">fleetmind-api:5</div></div>
+      <div class="fact"><div class="k">規格</div><div class="v">512 CPU · 1024 MiB · ARM64</div></div>
+      <div class="fact"><div class="k">目標群組</div><div class="v">fleetmind-tg · healthy</div></div>
+      <div class="fact"><div class="k">註冊目標</div><div class="v">172.31.65.255:8080</div></div>
+      <div class="fact"><div class="k">ALB 監聽器</div><div class="v">HTTP:80 · 無 TLS</div></div>
+      <div class="fact"><div class="k">資料集</div><div class="v">15 艘 × 2021–2025 · 在映像內</div></div>
     </div>
   </section>
 
@@ -345,7 +376,7 @@
     <div class="sec-head">
       <p class="sec-kicker"><span class="tag cur">實測・讀自帳號</span> Verified blueprints</p>
       <h2><span class="num">圖</span>兩張實測藍圖 — 權限與資料流</h2>
-      <p class="sec-lede">這兩張圖不是為了簡報好看畫的：每個框、每條 ARN 都是從帳號 <b>516665228894</b> 讀回來、再逐條對照過的（同一套讀法畫出的系統架構圖，就是上面「現行架構」那張）。包含不好看的部分——兩個子網都是 public、任務帶 public IP、SNS topic 沒有訂閱者、Bedrock 與 SES 的 policy 是 <code>Resource: *</code>。點任一張放大到 100% 以上，ARN 與 policy 可以逐行讀。</p>
+      <p class="sec-lede">這兩張圖不是為了簡報好看畫的：每個框、每條 ARN 都是從帳號 <b>516665228894</b> 讀回來、再逐條對照過的（同一套讀法畫出的系統架構圖，就是上面「現行架構」那張）。少數由讀回值推得、或出自原始碼而非帳號組態的標註，圖上寫成〔推導〕〔非讀回〕並附依據——這條界線我們刻意守著。包含不好看的部分——兩個子網都是 public、任務帶 public IP、SNS topic 沒有訂閱者、Bedrock 與 SES 的 policy 是 <code>Resource: *</code>。點任一張放大到 100% 以上，ARN 與 policy 可以逐行讀。</p>
     </div>
 
     <div class="bp" id="bpViewer">
@@ -477,7 +508,7 @@
         <img src="/img/diagrams/sec-opte.svg" width="1600" height="900" alt="方案 E 完整資料分析管線候選方案架構圖，尚未部署：船端 IoT Core 即時遙測與 S3 資料湖為來源，Glue 與 Lambda 做 ETL、Step Functions 編排，Timestream 與 Athena 提供查詢，供給 ECS 決策應用、QuickSight BI 與 SageMaker 或 Bedrock 預測。圖中 11 個 AWS 節點裡，只有 ECS 決策應用與 Amazon Bedrock 已上線，其餘 9 項皆為提案。">
         <span class="bp-hint">⤢ 點擊放大閱讀</span>
       </button>
-    </div><div class="dcap">規模化終局：即時 + BI + 預測 · 對三天賽程是過度設計，但畫出成長路線。</div></div>
+    </div><div class="dcap">規模化終局：即時 + BI + 預測 · 對當前需求是過度設計，但畫出成長路線。</div></div>
     <div class="grid2">
       <div class="card pros"><h3>◆ 優點</h3><ul>
         <li>撐得住全船隊、即時遙測與多年歷史</li>
@@ -516,8 +547,9 @@
       <div class="card cons"><h3>◆ 誠實盤點 · 下一步</h3><ul>
         <li><b>不是私有子網</b>：兩個子網皆 <code>mapPublicIpOnLaunch=true</code>，任務仍有公網 IP（無 NAT 時拉 ECR 需要）——收口靠 SG，不是子網隔離</li>
         <li><b>不宣稱「全面最小權限」</b>：<code>bedrock:InvokeModel</code> 與 <code>ses:SendEmail</code> 仍是 <code>Resource: *</code></li>
+        <li><b>連線沒有加密</b>：ALB 只有一個 <code>HTTP:80</code> listener——<code>curl -k https://…</code> 逾時（000），<code>curl http://…</code> 才 200。收口擋的是「誰能連進來」，不是「連線內容看不看得到」。帳號內 Route 53 hosted zone 為 0，要上 TLS 得先有網域與憑證</li>
         <li>WAF 與 Secrets Manager 尚未部署；GuardDuty 受本 workshop 帳號權限阻擋，我們開不了</li>
-        <li>下一步：任務移入私有子網＋NAT／VPC Endpoint、對外入口加 WAF、Bedrock/SES 收斂資源範圍</li>
+        <li>下一步：ALB 加 TLS listener（需先備網域與憑證）、任務移入私有子網＋NAT／VPC Endpoint、對外入口加 WAF、Bedrock/SES 收斂資源範圍</li>
       </ul></div>
     </div>
   </section>
@@ -545,7 +577,7 @@
       <div class="card cons"><h3>◆ 為什麼今天沒有它</h3><ul>
         <li><b>比賽帳號不允許</b>：ap-northeast-1 的 ECS / ECR 回 AccessDenied，跨區這條路在此帳號上不通</li>
         <li><b>要先有資料層</b>：現行把 real-metrics.json 烤進映像、請求路徑上沒有任何資料存放層——沒有東西可以「跨區複製」。多區域的前提是先把狀態外置到 DynamoDB</li>
-        <li>成本較單區高，且 3 天的黑客松時程內無法驗證 failover 真的會動；未經演練的災備等於沒有</li>
+        <li>成本較單區高，且現階段尚未演練驗證 failover 真的會動；未經演練的災備等於沒有</li>
         <li>落地順序：先狀態外置 → 單區多 AZ（ALB 已跨 1d/1f）→ 再談雙區</li>
       </ul></div>
     </div>
@@ -556,23 +588,23 @@
     <div class="sec-head">
       <p class="sec-kicker">One glance</p>
       <h2><span class="num">＝</span>五案一表看懂</h2>
-      <p class="sec-lede">同一套邏輯，不同形狀的取捨。現行方案（highlight）在「三天賽程」這個情境下綜合最優。</p>
+      <p class="sec-lede">同一套邏輯，不同形狀的取捨。現行方案（highlight）在「現在就要能穩定運行」這個情境下綜合最優。「狀態放哪」是這張表真正的分水嶺：它一併決定了資料多快能更新、以及<a href="#activeactive">能不能做多區域</a>。<b>只有第一列是今天真的在跑的東西</b>，其餘四列是候選設計。</p>
     </div>
     <div class="tablewrap">
       <table>
         <thead><tr>
-          <th>方案</th><th>運算</th><th>入口 / 網址</th><th class="num">閒置成本</th><th class="num">維運負擔</th><th class="num">冷啟</th><th>黑客松適配</th>
+          <th>方案</th><th>運算</th><th>入口 / 網址</th><th>狀態放哪 · 怎麼更新</th><th class="num">閒置成本</th><th class="num">維運負擔</th><th>本帳號現況</th><th>落地可行性</th>
         </tr></thead>
         <tbody>
-          <tr class="is-current"><th>現行 · ECS Fargate</th><td>Fargate ARM64</td><td>ALB 靜態 DNS</td><td class="num"><span class="pill mid">中</span></td><td class="num"><span class="pill hi">低</span></td><td class="num"><span class="pill hi">快</span></td><td><span class="pill hi">最佳</span></td></tr>
-          <tr><th>B · Serverless</th><td>Lambda</td><td>API GW + CloudFront</td><td class="num"><span class="pill hi">近零</span></td><td class="num"><span class="pill hi">低</span></td><td class="num"><span class="pill lo">慢(Java)</span></td><td><span class="pill mid">佳</span></td></tr>
-          <tr><th>C · App Runner</th><td>托管容器</td><td>內建 HTTPS</td><td class="num"><span class="pill mid">中</span></td><td class="num"><span class="pill hi">極低</span></td><td class="num"><span class="pill mid">中</span></td><td><span class="pill mid">佳*</span></td></tr>
-          <tr><th>D · EC2 + Docker</th><td>EC2 自管</td><td>Elastic IP</td><td class="num"><span class="pill lo">常駐</span></td><td class="num"><span class="pill lo">高</span></td><td class="num"><span class="pill hi">快</span></td><td><span class="pill lo">一般</span></td></tr>
-          <tr><th>E · 資料管線</th><td>混合(ECS+ETL+ML)</td><td>多入口</td><td class="num"><span class="pill lo">高</span></td><td class="num"><span class="pill lo">高</span></td><td class="num">—</td><td><span class="pill lo">過度</span></td></tr>
+          <tr class="is-current"><th>現行 · ECS Fargate</th><td>Fargate ARM64 · 1 task</td><td>ALB 靜態 DNS · HTTP:80（無 TLS）</td><td>烤進映像 · 重建映像才更新</td><td class="num"><span class="pill mid">中</span></td><td class="num"><span class="pill hi">低</span></td><td><span class="pill hi">已部署</span></td><td><span class="pill hi">最佳</span></td></tr>
+          <tr><th>B · Serverless</th><td>Lambda（Java 冷啟）</td><td>API GW + CloudFront</td><td>DynamoDB · 每晚 EventBridge 重算</td><td class="num"><span class="pill hi">近零</span></td><td class="num"><span class="pill hi">低</span></td><td>未部署</td><td><span class="pill mid">佳</span></td></tr>
+          <tr><th>C · App Runner</th><td>托管容器（同一映像）</td><td>內建 HTTPS</td><td>同現行 · 重建映像才更新</td><td class="num"><span class="pill mid">中</span></td><td class="num"><span class="pill hi">極低</span></td><td><span class="pill lo">建立被拒</span></td><td><span class="pill mid">佳*</span></td></tr>
+          <tr><th>D · EC2 + Docker</th><td>EC2 自管（同一映像）</td><td>Elastic IP</td><td>同現行 · 重建映像才更新</td><td class="num"><span class="pill lo">常駐</span></td><td class="num"><span class="pill lo">高</span></td><td>未部署</td><td><span class="pill lo">一般</span></td></tr>
+          <tr><th>E · 資料管線</th><td>混合(ECS+ETL+ML)</td><td>多入口</td><td>S3 資料湖 + Timestream · 串流／ETL 持續更新</td><td class="num"><span class="pill lo">高</span></td><td class="num"><span class="pill lo">高</span></td><td>未部署（僅 ECS + Bedrock 已在跑）</td><td><span class="pill lo">過度</span></td></tr>
         </tbody>
       </table>
     </div>
-    <p class="sec-lede" style="margin-top:14px; font-size:13px; color:var(--muted)">* App Runner 在本 workshop 帳號回 AccessDenied，故正式部署改走 ECS Fargate。</p>
+    <p class="sec-lede" style="margin-top:14px; font-size:13px; color:var(--muted)">* App Runner 在本 workshop 帳號回 AccessDenied（<code>apprunner list_services</code>），故正式部署改走 ECS Fargate——它在紙上是最合適的形狀，但這個帳號不給。「本帳號現況」欄只有「已部署」與「建立被拒」兩格是帳號實際讀回的結果；「未部署」表示我們沒有建，未進一步探測該帳號是否給建。</p>
   </section>
 
   <footer>

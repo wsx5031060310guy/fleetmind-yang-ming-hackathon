@@ -47,6 +47,17 @@
     .dl:active{transform:translateY(1px)}
     .dl:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
 
+    .head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .fsbtn{display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:11px;cursor:pointer;
+      border:1px solid rgba(55,192,166,.5);background:rgba(47,176,154,.18);color:var(--ink);
+      font:inherit;font-size:13px;font-weight:700;backdrop-filter:blur(6px);transition:background .2s,border-color .2s,transform .1s}
+    .fsbtn:hover{background:rgba(47,176,154,.32);border-color:var(--seafoam)}
+    .fsbtn:active{transform:translateY(1px)}
+    .fsbtn:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
+    .fsbtn svg{width:15px;height:15px}
+    .fsbtn kbd{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--muted);
+      border:1px solid var(--line);border-radius:4px;padding:1px 5px;background:rgba(6,17,30,.5)}
+
     .chapters{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:thin}
     .chapters button{flex:none;appearance:none;border:1px solid var(--line);background:rgba(6,17,30,.42);color:var(--muted);cursor:pointer;
       font:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:999px;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}
@@ -129,7 +140,19 @@
     .thumbs button:focus-visible{outline:2px solid var(--seafoam);outline-offset:1px}
 
     .hint{font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono)}
-    :fullscreen .stage{border-radius:0;height:100vh;aspect-ratio:auto}
+
+    /* 離開全螢幕：只在全螢幕時出現（控制列不在 stage 內，全螢幕時看不到） */
+    .fs-exit{position:absolute;top:14px;right:14px;z-index:6;display:none;align-items:center;gap:8px;
+      padding:9px 13px;border-radius:10px;cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;
+      border:1px solid rgba(148,183,214,.34);background:rgba(6,17,30,.72);backdrop-filter:blur(8px);color:var(--ink);
+      opacity:.55;transition:opacity .2s,background .2s,border-color .2s}
+    .fs-exit:hover{opacity:1;background:rgba(47,176,154,.34);border-color:var(--seafoam)}
+    .fs-exit:focus-visible{opacity:1;outline:2px solid var(--seafoam);outline-offset:2px}
+    .fs-exit svg{width:14px;height:14px}
+    .fs-exit kbd{font-family:var(--mono);font-size:10.5px;font-weight:700;
+      border:1px solid rgba(148,183,214,.4);border-radius:4px;padding:1px 5px;color:var(--ink-dim)}
+    .stage:fullscreen{border-radius:0;height:100vh;aspect-ratio:auto}
+    .stage:fullscreen .fs-exit{display:inline-flex}
     @media(prefers-reduced-motion:reduce){*{transition:none!important}.layer{transform:none}.stage{transform:none!important}}
     @media(max-width:640px){.nav-btn{width:42px;height:42px}.thumbs button{width:92px}.dotbar{display:none}}
   </style>
@@ -162,10 +185,16 @@
           找技術架構請看另一份 <a href="/deck.html">架構簡報</a>。
         </p>
       </div>
-      <a class="dl" href="/proposal/fleetmind-proposal-deck.pptx" download>
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        下載 PPTX
-      </a>
+      <div class="head-actions">
+        <button class="fsbtn" id="fs" type="button" aria-label="全螢幕播放">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          全螢幕<kbd>F</kbd>
+        </button>
+        <a class="dl" href="/proposal/fleetmind-proposal-deck.pptx" download>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          下載 PPTX
+        </a>
+      </div>
     </div>
 
     <div class="chapters" id="chapters" role="tablist" aria-label="章節"></div>
@@ -179,6 +208,10 @@
           <div class="sheen" aria-hidden="true"></div>
           <button class="nav-btn prev" id="prev" type="button" aria-label="上一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <button class="nav-btn next" id="next" type="button" aria-label="下一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="fs-exit" id="fsExit" type="button" aria-label="離開全螢幕">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+            離開全螢幕<kbd>Esc</kbd>
+          </button>
         </div>
       </div>
       <aside class="notepane" aria-live="polite">
@@ -204,11 +237,10 @@
       </span>
       <span class="counter"><b id="cur">1</b> / <span id="total">16</span></span>
       <div class="dotbar" id="dots" role="tablist" aria-label="投影片"></div>
-      <button class="ctrl" id="fs" type="button" aria-label="全螢幕"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
 
     <div class="thumbs" id="thumbs" role="tablist" aria-label="投影片縮圖"></div>
-    <p class="hint">← → 或空白鍵切換 · 點章節/縮圖/圓點跳頁 · ▶ 依講稿時間自動播放 · ⏱ 排練碼錶（自己翻頁、對照進度）· ↺ 歸零 · ⛶ 全螢幕</p>
+    <p class="hint">← → 或空白鍵切換 · 點章節/縮圖/圓點跳頁 · ▶ 依講稿時間自動播放 · ⏱ 排練碼錶（自己翻頁、對照進度）· ↺ 歸零 · ⛶ 全螢幕（F 鍵，Esc 離開）</p>
   </div>
 
   <script>
@@ -218,13 +250,13 @@
 var NOTES = [
         {k:"FLEETMIND",t:"AI 船舶效能分析與節能決策支援系統",cue:"0:00–0:30",from:0,to:30,n:"開場：船舶推進效率隨時間衰退、油耗上升；養護能恢復但決策靠經驗。FleetMind 把它變成可計算、可解釋、人可拍板的決策支援。一句話定位：數字來自計算，語言來自 AI，決策留給人。"},
         {k:"THE PROBLEM",t:"船殼污損每天在偷油——但何時該清，全靠經驗",cue:"0:30–1:10",from:30,to:70,n:"點出痛點：污損偷油、養護決策靠經驗。用真資料規模帶出我們有本錢做量化。"},
-        {k:"OUR SOLUTION",t:"兩條主線，直攻 55% 硬分數",cue:"1:10–1:50",from:70,to:110,n:"兩個產出對應 30%+25% 硬分數；其餘三維度靠多耗油量估算、單服務架構、AI guardrail。"},
+        {k:"OUR SOLUTION",t:"兩條主線：看得見衰退，算得出代價",cue:"1:10–1:50",from:70,to:110,n:"兩個產出：Dashboard 讓衰退看得見，預測模型讓代價算得出。兩者共用同一套確定性計算 —— 多耗油量估算、單服務架構、AI guardrail 都是從這個核心延伸出去的。"},
         {k:"DATA & METHOD",t:"從噪音日報到可比的效能指標",cue:"1:50–2:35",from:110,to:155,n:"方法核心：k=FOC/STW³ 把速度與洋流正規化，只在同速帶比 k，減速不會被誤記成污損。"},
         {k:"官方必含 ①　SPEED LOSS DASHBOARD",t:"船隊即時盤點：誰在漏油，先看誰",cue:"2:35–3:35",from:155,to:215,n:"Demo（最長，實機操作）：真資料 15 船，點 S11（最嚴重、692 天沒清）看趨勢；再點 S23 看歸因。強調數字全來自 core-calc 確定性計算。"},
         {k:"官方必含 ②A　效能歸因",t:"污損是船殼還是螺旋槳？—— 分開才好排養護",cue:"3:35–4:25",from:215,to:265,n:"這頁是誠信亮點。把物理先驗（模型時鐘不重置）和統計實測（dashboard 顯示雜訊）分開，準備好回答『你模型說 UWI 不改善但圖上有變化』。"},
         {k:"官方必含 ②B + ④　油耗預測模型",t:"在只給部分特徵下，還原被遮蔽的油耗",cue:"4:25–5:25",from:265,to:325,n:"誠實：baseline 勝出。強調防漏驗證的嚴謹（模擬真實遮蔽），這是評審會追問的點。"},
-        {k:"官方必含（商務價值 20%）",t:"同一個模型回答：污損正在多燒多少油？",cue:"5:25–6:20",from:325,to:380,n:"主打 S23（HIGH 信心、船殼 96%）：同航速下每天多耗約 16.4 MT。S11 是極端案例。刻意不出金額——貴司工程師講明成本是別部門的事，我們只負責發現問題、通知該清洗；油價每港每次都不同，要換算自行乘上當期油價即可。強調人在迴路、數字可回溯。"},
-        {k:"官方必含 ③　未盡之處與資料價值",t:"誠實說限制，明確說要什麼",cue:"6:20–6:55",from:380,to:415,n:"主動揭露限制 = 誠信分。同時把『要什麼資料』講清楚，回應官方必含第 3 項與商務價值。"},
+        {k:"商務決策價值",t:"同一個模型回答：污損正在多燒多少油？",cue:"5:25–6:20",from:325,to:380,n:"主打 S23（HIGH 信心、船殼 96%）：同航速下每天多耗約 16.4 MT。S11 是極端案例。刻意不出金額——貴司工程師講明成本是別部門的事，我們只負責發現問題、通知該清洗；油價每港每次都不同，要換算自行乘上當期油價即可。強調人在迴路、數字可回溯。"},
+        {k:"官方必含 ③　未盡之處與資料價值",t:"誠實說限制，明確說要什麼",cue:"6:20–6:55",from:380,to:415,n:"主動揭露限制是讓結論可信的前提。同時把『要什麼資料』講清楚：框架不變，餵更好的量測就能直接升級。"},
         {k:"官方必含 ④ 架構 + ⑤ AI 角色",t:"單服務同源 · AI 只翻譯不發明",cue:"6:55–7:35",from:415,to:455,n:"架構一句話：單服務同源、AWS-only、AI 有 guardrail 不亂編。回應官方第 4、5 項。"},
         {k:"FLEETMIND",t:"把船隊的效能衰退，變成可計算、可歸因、人可拍板的節能決策",cue:"7:35–8:00",from:455,to:480,n:"收尾：三個交付一句話帶過，回到定位句，進 Q&A。"},
         {k:"Q&A BACKUP",t:"資料與方法",cue:null,from:null,to:null,n:""},
@@ -370,10 +402,12 @@ var NOTES = [
       document.getElementById('next').addEventListener('click', function(){ go(i+1,true); });
       layerA.addEventListener('click', function(){ go(i+1,true); });
       layerB.addEventListener('click', function(){ go(i+1,true); });
-      document.getElementById('fs').addEventListener('click', function(){
+      function toggleFs(){
         if (document.fullscreenElement) document.exitFullscreen();
         else if (stage.requestFullscreen) stage.requestFullscreen();
-      });
+      }
+      document.getElementById('fs').addEventListener('click', toggleFs);
+      document.getElementById('fsExit').addEventListener('click', toggleFs);
       document.addEventListener('keydown', function(e){
         if (e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); go(i+1,true); }
         else if (e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); go(i-1,true); }

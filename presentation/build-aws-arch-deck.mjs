@@ -210,11 +210,11 @@ function whenBand(s, txt) {
   ], { x: M + 0.28, y: 6.45, w: CW - 0.5, h: 0.6, valign: "middle", fontFace: BODY, fontSize: 11.5, lineSpacingMultiple: 1.0, margin: 0 });
 }
 
-// 右上 成本 / 適配 徽章
+// 右上 成本 / 落地 徽章
 function tierBadges(s, cost, fit, fitColor = C.seafoam) {
   const lightFit = fitColor === C.amberT || fitColor === C.coralT || fitColor === C.seafoamT;
   chip(s, W - M - 4.55, 0.62, 2.15, "成本 " + cost, C.navy2, C.white, 10.5);
-  chip(s, W - M - 2.3, 0.62, 2.3, "黑客松 " + fit, fitColor, lightFit ? C.ink : C.white, 10.5);
+  chip(s, W - M - 2.3, 0.62, 2.3, "落地 " + fit, fitColor, lightFit ? C.ink : C.white, 10.5);
 }
 
 /* ========================= Slide 1 — 封面 (hero-dawn.jpg) ========================= */
@@ -359,7 +359,7 @@ s.addText([
   "Bedrock + SNS 已實測打通，Email 告警與可調門檻需求已滿足",
   "ARM64 Fargate 成本低、免管 EC2 / OS patch",
 ].map((p, j, a) => ({ text: p, options: { bullet: { code: "2022", indent: 12 }, color: C.white, breakLine: j < a.length - 1, paraSpaceAfter: 5 } })), { x: rx + 0.25, y: y1 + 0.52, w: colW - 0.45, h: 1.75, fontFace: BODY, fontSize: 11, lineSpacingMultiple: 1.02, margin: 0 });
-s.addNotes("現行架構 Day1 已實測上線：Spring Boot 單服務同時服務 vanilla-JS 看板與 REST API，資料 build 時烤進映像，跑在 ECS Fargate(ARM64)，前置 ALB 給穩定 URL，Bedrock 出 AI 簡報並過 guardrail，SNS 發告警。選它的理由是 3 天黑客松下 demo 風險最低、可交付性最高。");
+s.addNotes("現行架構 Day1 已實測上線：Spring Boot 單服務同時服務 vanilla-JS 看板與 REST API，資料 build 時烤進映像，跑在 ECS Fargate(ARM64)，前置 ALB 給穩定 URL，Bedrock 出 AI 簡報並過 guardrail，SNS 發告警。選它的理由是導入風險最低、可交付性最高：單一部署單元、資料零外部相依，今天就已經穩定在跑。");
 
 /* ====== Slides 4 / 5 / 12 — AWS 官方符號原圖 (深色簡報上的白色文件) ====== */
 // 三張 3200×1800 的 AWS light/white 官方風格原圖, 已逐行對過真實帳號 —— 不重上色、不裁切、
@@ -439,7 +439,7 @@ optionSlide({
   eyebrow: "方案 A · 現行強化版",
   title: "維持 Fargate + ALB + Bedrock + SNS",
   cost: "低", fit: "★ 最高", fitColor: C.seafoam,
-  summary: "沿用現行單服務容器，把 demo 臨時做法收斂為正式 ECS Service（desiredCount 維持、健檢失敗自動重拉）。評審計分板上可交付性最高、demo 風險最低的基準線。",
+  summary: "沿用現行單服務容器，把 demo 臨時做法收斂為正式 ECS Service（desiredCount 維持、健檢失敗自動重拉）。五案之中可交付性最高、導入風險最低的基準線。",
   services: [
     { label: "ECS Service\n+ Fargate", sub: "常駐 · 自動重拉", code: "F", cat: "comp", fs: 10.5 },
     { label: "ALB", sub: "靜態 URL", code: "ALB", cat: "net" },
@@ -449,9 +449,9 @@ optionSlide({
     { label: "CloudWatch\nAlarms", sub: "日誌 + 健康", code: "CW", cat: "sec", fs: 10.5 },
   ],
   pros: ["與已上線架構一致，Day3 重跑成本最低、最可靠", "單 codebase 好維護、好彩排", "ALB 靜態 URL 解決臨時 IP 問題", "Bedrock / SNS 已實測，Email + 門檻需求即刻滿足"],
-  cons: ["非資料驅動，更新資料要重 build / 重部署", "無 BI 自助分析層", "VPC / ALB / 雙 IAM 設定較多，臨時憑證到期需重跑", "架構創新度普通，技術 / 創意分不突出"],
+  cons: ["非資料驅動，更新資料要重 build / 重部署", "無 BI 自助分析層", "VPC / ALB / 雙 IAM 設定較多，臨時憑證到期需重跑", "架構保守：未含資料層與自助分析，長期擴展需再演進"],
   whenToChoose: "首要目標是穩穩 demo、時間有限、要把工程師的 Email／告警／可調門檻需求確定交付時的預設選擇。",
-  notes: "方案 A 是現行架構的正式化：把 demo 臨時做法收斂為 ECS Service 常駐 + 健檢自動重拉。它與已上線一致、可靠度最高，是安全出賽的基準線。代價是非資料驅動、無 BI、創新分普通。",
+  notes: "方案 A 是現行架構的正式化：把 demo 臨時做法收斂為 ECS Service 常駐 + 健檢自動重拉。它與已上線一致、可靠度最高，是導入風險最低的基準線。代價是非資料驅動、無 BI、架構保守，長期擴展要再往 B/E 演進。",
 }, 6);
 
 // 方案 B
@@ -473,7 +473,7 @@ optionSlide({
   pros: ["天生資料驅動：新報表進 S3 自動重算，命中 15→97 艘敘事", "按呼叫計費、零閒置成本、自動擴縮", "EventBridge 排程 + SES Email 直接命中告警需求", "各 handler 解耦，單點改動不動全局"],
   cons: ["monolith 拆多 Lambda + IaC，3 天工作量與整合風險大增", "Java Lambda 冷啟延遲可能拖慢 demo 首打", "本機難完整重現 APIGW+Lambda+DynamoDB，除錯較難", "元件變多，臨時憑證下佈署面更廣、易出錯"],
   whenToChoose: "要強調資料驅動、自動擴縮與『15→97 艘同架構』，且團隊有把握在時限內完成拆分與整合時。",
-  notes: "方案 B 最雲原生：拆成 API Gateway + Lambda + DynamoDB + S3 + EventBridge，天生資料驅動、零閒置成本，擴展敘事最強。但 3 天拆分工作量大、Java Lambda 冷啟風險、本機難重現，適合有餘力衝技術分時。",
+  notes: "方案 B 最雲原生：拆成 API Gateway + Lambda + DynamoDB + S3 + EventBridge，天生資料驅動、零閒置成本，擴展性最強。但拆分工作量大、Java Lambda 冷啟風險、本機難重現，適合有工程餘裕、要一次把資料驅動做到位時。",
 }, 7);
 
 // 方案 C
@@ -533,9 +533,9 @@ optionSlide({
     { label: "Bedrock /\nSageMaker", sub: "簡報 + 預測", code: "ML", cat: "ai", fs: 10.5 },
     { label: "IoT Core", sub: "未來遙測", code: "IoT", cat: "net" },
   ],
-  pros: ["最完整企業級藍圖，命中『企業資料應用說明』與 15→97 艘擴展敘事", "資料驅動 + BI 自助分析 + 預測 + 即時遙測，商用與願景分最高", "S3 單一資料源、分層清晰，符合資料治理與封存要求", "Athena/Timestream/QuickSight 全託管，長期可營運"],
-  cons: ["元件最多、整合最重，3 天內不可能全做完，只能藍圖 + 局部 PoC", "SageMaker / IoT Core 屬 stretch，現場跑真流程風險高", "多查詢 / BI 層學習與設定成本高，易在時限內卡住", "過度工程對 hackathon 反而稀釋 demo 焦點"],
-  whenToChoose: "要在簡報中展示從 hackathon demo 到全艦隊營運平台的完整演進路線圖、拿商用價值與願景分，而非現場實跑時。",
+  pros: ["最完整企業級藍圖，涵蓋企業資料應用與 15→97 艘擴展", "資料驅動 + BI 自助分析 + 預測 + 即時遙測，長期營運價值最高", "S3 單一資料源、分層清晰，符合資料治理與封存要求", "Athena/Timestream/QuickSight 全託管，長期可營運"],
+  cons: ["元件最多、整合最重，導入期最長，只能分階段落地 + 局部 PoC", "SageMaker / IoT Core 屬 stretch，需船端遙測到位才有價值", "多查詢 / BI 層學習與設定成本高，需專責維運人力", "相對當前需求過度工程，先期投入短期難回收"],
+  whenToChoose: "要展示從 15 艘試點到全艦隊營運平台的完整演進路線圖、規劃中長期資料資產布局，而非近期就要落地時。",
   notes: "方案 E 是企業級願景藍圖：S3 data lake + Glue ETL + Athena/Timestream + QuickSight BI + Bedrock/SageMaker 預測 + 未來 IoT Core 遙測。它不宜當 Day3 實跑主線，但作為架構故事線與企業資料應用說明極具說服力。",
 }, 10);
 
@@ -677,13 +677,13 @@ s.addNotes("開場先講清楚：這一頁是設計，不是現況——全部�
 s = pptx.addSlide();
 photoBg(s, "ocean-deep.jpg", { scrim: 42 });
 pageMark(s, 14);
-head(s, "Side-by-Side", "五案比較 — 現行方案 A 為出賽基準線");
+head(s, "Side-by-Side", "五案比較 — 現行方案 A 為導入基準線");
 const thO = { fill: C.navy, color: C.white, bold: true, align: "center", valign: "middle", fontSize: 11.5, fontFace: HEAD };
 // 每一格都給不透明底 (照片不能透進表格) — 文字一律淺色
 const cel = (t, opt = {}) => ({ text: t, options: { fill: C.navy2, fontFace: BODY, fontSize: 10.5, color: C.dim, valign: "middle", align: "center", margin: 2, ...opt } });
 const hi = { fill: C.navy3 };
 const rows = [
-  [{ text: "方案", options: thO }, { text: "運算", options: thO }, { text: "入口 / URL", options: thO }, { text: "閒置成本", options: thO }, { text: "維運", options: thO }, { text: "冷啟", options: thO }, { text: "黑客松適配", options: thO }],
+  [{ text: "方案", options: thO }, { text: "運算", options: thO }, { text: "入口 / URL", options: thO }, { text: "閒置成本", options: thO }, { text: "維運", options: thO }, { text: "冷啟", options: thO }, { text: "落地可行性", options: thO }],
   [cel("A 現行 ★", { bold: true, color: C.white, ...hi }), cel("ECS Fargate 容器常駐", hi), cel("ALB 靜態 URL", hi), cel("低（小時費）", hi), cel("中（VPC/IAM）", hi), cel("無冷啟（常駐）", hi), cel("★ 最高 · 已上線", { bold: true, color: C.seafoam, ...hi })],
   [cel("B Serverless", { bold: true, color: C.white }), cel("Lambda 按呼叫"), cel("API Gateway"), cel("極低（近零）", { color: C.seafoam }), cel("中（元件多）"), cel("冷（Java Lambda）", { color: C.coral }), cel("中", { color: C.amber })],
   [cel("C App Runner", { bold: true, color: C.white }), cel("全託管容器"), cel("App Runner HTTPS"), cel("低-中"), cel("最低（免 ALB/VPC）", { color: C.seafoam }), cel("無冷啟"), cel("低 · 帳號受阻", { color: C.coral, bold: true })],
@@ -707,15 +707,15 @@ leg.forEach((l, i) => {
 card(s, M, 6.0, CW, 1.0, C.navy, 0.09, 4);
 s.addText([
   { text: "判讀　", options: { bold: true, color: C.seafoam } },
-  { text: "3 天黑客松以 ", options: { color: C.white } },
+  { text: "近期以 ", options: { color: C.white } },
   { text: "A（現行強化）", options: { bold: true, color: C.amber } },
-  { text: " 為主線出賽（已上線、風險最低）；", options: { color: C.white } },
+  { text: " 為主線（已上線、導入風險最低）；", options: { color: C.white } },
   { text: "D（EC2）", options: { bold: true, color: C.amber } },
   { text: " 為托管服務受阻時的保底；", options: { color: C.white } },
   { text: "B / E", options: { bold: true, color: C.amber } },
-  { text: " 作為資料驅動與全艦隊願景的演進方向寫進簡報。C 因帳號 AccessDenied 暫不採用。", options: { color: C.white } },
+  { text: " 為資料驅動與全艦隊營運的演進方向。C 因帳號 AccessDenied 暫不採用。", options: { color: C.white } },
 ], { x: M + 0.35, y: 6.0, w: CW - 0.65, h: 1.0, valign: "middle", fontFace: BODY, fontSize: 12, lineSpacingMultiple: 1.15, margin: 0 });
-s.addNotes("比較表沿六個維度（運算 / 入口 / 閒置成本 / 維運 / 冷啟 / 黑客松適配）排列五案，highlight 現行方案 A。結論：A 為主線、D 為保底、B/E 為演進方向、C 受阻。");
+s.addNotes("比較表沿六個維度（運算 / 入口 / 閒置成本 / 維運 / 冷啟 / 落地可行性）排列五案，highlight 現行方案 A。結論：A 為主線、D 為保底、B/E 為演進方向、C 受阻。");
 
 /* ================= Slide 15 — 未來延伸路線圖 (horizon-journey.jpg) ================= */
 s = pptx.addSlide();
@@ -836,7 +836,7 @@ ping(s, 11.6, 2.7, 1.05, C.teal, C.navy3);
 s.addShape(pptx.ShapeType.roundRect, { x: 0.5, y: 1.2, w: 8.9, h: 3.75, fill: { color: C.navy, transparency: 18 }, line: { type: "none" }, rectRadius: 0.12, shadow: { type: "outer", color: "04101B", opacity: 0.5, blur: 14, offset: 4, angle: 90 } });
 s.addText("一個命題，五種上雲路徑", { x: M, y: 1.5, w: 8.3, h: 0.5, fontFace: BODY, fontSize: 15, color: C.seafoam, bold: true, charSpacing: 2, margin: 0 });
 s.addText("穩穩 demo，\n也留得住未來", { x: M, y: 2.0, w: 8.3, h: 1.7, fontFace: HEAD, fontSize: 40, color: C.white, bold: true, lineSpacingMultiple: 1.0, margin: 0 });
-s.addText("以已上線的 Fargate + ALB 為基準線穩定出賽，用 EC2 保底、用 Serverless 與資料分析管線描繪從 15 艘到全艦隊的營運藍圖 — 讓數字站得住、決策留給人。", { x: M, y: 3.9, w: 8.3, h: 1.0, fontFace: BODY, fontSize: 15, color: C.dim, lineSpacingMultiple: 1.25, margin: 0 });
+s.addText("以已上線的 Fargate + ALB 為基準線穩定營運，用 EC2 保底、用 Serverless 與資料分析管線描繪從 15 艘到全艦隊的營運藍圖 — 讓數字站得住、決策留給人。", { x: M, y: 3.9, w: 8.3, h: 1.0, fontFace: BODY, fontSize: 15, color: C.dim, lineSpacingMultiple: 1.25, margin: 0 });
 card(s, M, 5.15, CW, 0.95, C.navy2, 0.09, 4);
 s.addText([
   { text: "Live Demo　", options: { bold: true, color: C.amber } },
@@ -844,7 +844,7 @@ s.addText([
 ], { x: M + 0.35, y: 5.15, w: CW - 0.7, h: 0.95, valign: "middle", fontFace: BODY, fontSize: 15, margin: 0 });
 s.addText("帳號 516665228894 · us-east-1 · ECS Fargate (ARM64) + ALB + ECR + Bedrock (Claude Haiku) + SNS", { x: M, y: 6.25, w: 11.5, h: 0.4, fontFace: BODY, fontSize: 12, color: C.dim, margin: 0 });
 s.addText("FleetMind　數字來自計算　語言來自 AI　決策留給人", { x: M, y: 6.65, w: 11.5, h: 0.4, fontFace: HEAD, fontSize: 14, color: C.seafoam, margin: 0 });
-s.addNotes("收尾：現行 Fargate + ALB 是穩定出賽基準線；EC2 保底、Serverless 與資料分析管線是未來營運藍圖。Live URL 可現場打開。一句話願景：讓數字站得住、決策留給人。");
+s.addNotes("收尾：現行 Fargate + ALB 是穩定的導入基準線；EC2 保底、Serverless 與資料分析管線是未來營運藍圖。Live URL 可現場打開。一句話願景：讓數字站得住、決策留給人。");
 
 /* ================= 輸出 ================= */
 const out = path.join(__dirname, "fleetmind-aws-architecture.pptx");

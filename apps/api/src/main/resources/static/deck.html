@@ -42,6 +42,17 @@
     .dl:hover{background:rgba(47,176,154,.16);border-color:rgba(47,176,154,.45);color:var(--ink)}
     .dl:active{transform:translateY(1px)}
 
+    .head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .fsbtn{display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:11px;cursor:pointer;
+      border:1px solid rgba(55,192,166,.5);background:rgba(47,176,154,.18);color:var(--ink);
+      font:inherit;font-size:13px;font-weight:700;backdrop-filter:blur(6px);transition:background .2s,border-color .2s,transform .1s}
+    .fsbtn:hover{background:rgba(47,176,154,.32);border-color:var(--seafoam)}
+    .fsbtn:active{transform:translateY(1px)}
+    .fsbtn:focus-visible{outline:2px solid var(--seafoam);outline-offset:2px}
+    .fsbtn svg{width:15px;height:15px}
+    .fsbtn kbd{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--muted);
+      border:1px solid var(--line);border-radius:4px;padding:1px 5px;background:rgba(6,17,30,.5)}
+
     .chapters{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:thin}
     .chapters button{flex:none;appearance:none;border:1px solid var(--line);background:rgba(6,17,30,.42);color:var(--muted);cursor:pointer;
       font:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:999px;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}
@@ -105,7 +116,19 @@
     .thumbs button:focus-visible{outline:2px solid var(--seafoam);outline-offset:1px}
 
     .hint{font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono)}
-    :fullscreen .stage{border-radius:0;height:100vh;aspect-ratio:auto}
+
+    /* 離開全螢幕：只在全螢幕時出現（控制列不在 stage 內，全螢幕時看不到） */
+    .fs-exit{position:absolute;top:14px;right:14px;z-index:6;display:none;align-items:center;gap:8px;
+      padding:9px 13px;border-radius:10px;cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;
+      border:1px solid rgba(148,183,214,.34);background:rgba(6,17,30,.72);backdrop-filter:blur(8px);color:var(--ink);
+      opacity:.55;transition:opacity .2s,background .2s,border-color .2s}
+    .fs-exit:hover{opacity:1;background:rgba(47,176,154,.34);border-color:var(--seafoam)}
+    .fs-exit:focus-visible{opacity:1;outline:2px solid var(--seafoam);outline-offset:2px}
+    .fs-exit svg{width:14px;height:14px}
+    .fs-exit kbd{font-family:var(--mono);font-size:10.5px;font-weight:700;
+      border:1px solid rgba(148,183,214,.4);border-radius:4px;padding:1px 5px;color:var(--ink-dim)}
+    .stage:fullscreen{border-radius:0;height:100vh;aspect-ratio:auto}
+    .stage:fullscreen .fs-exit{display:inline-flex}
     @media(prefers-reduced-motion:reduce){*{transition:none!important}.layer{transform:none}.stage{transform:none!important}}
     @media(max-width:640px){.nav-btn{width:42px;height:42px}.thumbs button{width:92px}.dotbar{display:none}}
   </style>
@@ -133,10 +156,16 @@
         <p class="k">AWS Architecture · 18 slides · 逐頁導讀</p>
         <h1>FleetMind AWS 架構簡報</h1>
       </div>
-      <a class="dl" href="/deck/fleetmind-aws-architecture.pptx" download>
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        下載 PPTX
-      </a>
+      <div class="head-actions">
+        <button class="fsbtn" id="fs" type="button" aria-label="全螢幕播放">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          全螢幕<kbd>F</kbd>
+        </button>
+        <a class="dl" href="/deck/fleetmind-aws-architecture.pptx" download>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          下載 PPTX
+        </a>
+      </div>
     </div>
 
     <div class="chapters" id="chapters" role="tablist" aria-label="章節"></div>
@@ -150,6 +179,10 @@
           <div class="sheen" aria-hidden="true"></div>
           <button class="nav-btn prev" id="prev" type="button" aria-label="上一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <button class="nav-btn next" id="next" type="button" aria-label="下一頁"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="fs-exit" id="fsExit" type="button" aria-label="離開全螢幕">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+            離開全螢幕<kbd>Esc</kbd>
+          </button>
         </div>
       </div>
       <aside class="notepane" aria-live="polite">
@@ -167,11 +200,10 @@
       <button class="ctrl" id="play" type="button" aria-label="自動播放"><svg id="playicon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
       <span class="counter"><b id="cur">1</b> / <span id="total">18</span></span>
       <div class="dotbar" id="dots" role="tablist" aria-label="投影片"></div>
-      <button class="ctrl" id="fs" type="button" aria-label="全螢幕"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
 
     <div class="thumbs" id="thumbs" role="tablist" aria-label="投影片縮圖"></div>
-    <p class="hint">← → 或空白鍵切換 · 點章節/縮圖/圓點跳頁 · ▶ 自動播放 · ⛶ 全螢幕 · 滑過投影片有立體視差</p>
+    <p class="hint">← → 或空白鍵切換 · 點章節/縮圖/圓點跳頁 · ▶ 自動播放 · ⛶ 全螢幕（F 鍵，Esc 離開）· 滑過投影片有立體視差</p>
   </div>
 
   <script>
@@ -180,18 +212,18 @@
       var NOTES = [
         {t:"封面 · AWS 架構藍圖與五種上雲路徑", n:"同一套「Speed Loss 節能決策系統」，可以落在很不同的 AWS 形狀上。這份簡報先講已上線的架構，再攤開五種替代方案的取捨。信念：數字來自計算，語言來自 AI，決策留給人。"},
         {t:"一頁看懂：一個命題、一套現行架構、五種方案", n:"命題是從 15 艘船 × 5 年正午報表偵測船體污損造成的 Speed Loss。一套現行架構已上線，五種方案各有適用情境——這頁先給全貌。"},
-        {t:"現行架構：ECS Fargate + ALB 單服務容器", n:"單一 Spring Boot 服務同時吐 dashboard 與 REST API，掛在 ALB 拿到永不變的網址；指標離線由 core-calc 算好烤進映像，AI 走 Bedrock，門檻告警走 SNS。三天賽程最省心、風險最低。"},
+        {t:"現行架構：ECS Fargate + ALB 單服務容器", n:"單一 Spring Boot 服務同時吐 dashboard 與 REST API，掛在 ALB 拿到永不變的網址；指標離線由 core-calc 算好烤進映像，AI 走 Bedrock，門檻告警走 SNS。導入風險最低：單一部署單元、資料零外部相依，今天就已經穩定在跑。"},
         {t:"AWS 官方符號版：現行架構逐項對過真實帳號", n:"同一套架構換 AWS 自己的畫法再講一次：圖中資源組態與端點狀態都在 2026-07-15 以 boto3 / curl 從帳號 516665228894、us-east-1 實際讀回。誠實標在圖上：請求路徑中沒有任何資料存放（S3 / DynamoDB 都沒用到）、SNS 目前 0 個訂閱、兩個子網都是公有，收口靠的是 security group 只放行 ALB SG。"},
         {t:"即時資料流：三條路徑與 AI 的降級階梯", n:"讀取路徑直接從映像內讀 real-metrics.json，無資料庫、無快取層；AI 路徑 Bedrock Converse 回來一定過 AiBriefGuardrail，失敗就退回 last-good、再不行走決定性 fallback；告警路徑 S11 的 21.8% 超過門檻 10% 就打 /api/alerts/notify。SNS 目前 0 訂閱，今天真正送到收件匣的是 SES。"},
-        {t:"方案 A · 現行強化（Fargate + ALB + Bedrock + SNS）", n:"維持現行架構但收斂為正式的 ECS Service + ALB，健康檢查失敗自動重拉。可交付性最高、demo 最穩，是出賽基準線。"},
+        {t:"方案 A · 現行強化（Fargate + ALB + Bedrock + SNS）", n:"維持現行架構但收斂為正式的 ECS Service + ALB，健康檢查失敗自動重拉。可交付性最高、demo 最穩，是導入基準線。代價是非資料驅動、無 BI，長期擴展要再往 B/E 演進。"},
         {t:"方案 B · 全 Serverless", n:"API Gateway + Lambda + DynamoDB + S3 + EventBridge 排程重算。閒置零成本、天生資料驅動；代價是 Java 冷啟動與元件變多、除錯較分散。"},
         {t:"方案 C · App Runner（最省管理）", n:"用同一顆容器映像零 infra 托管，內建 HTTPS 與自動伸縮。但本 workshop 帳號對 App Runner 回 AccessDenied，故列為對照方案。"},
         {t:"方案 D · EC2 + Docker（最省最可控）", n:"一台 EC2 跑 Docker、綁 Elastic IP。穩定負載下單位成本最低，是托管服務受阻時一定跑得起來的保底路線；代價是自管 OS 與單點風險。"},
-        {t:"方案 E · 完整資料分析管線（未來式）", n:"S3 資料湖 → Glue/Lambda ETL → Athena/Timestream → App + QuickSight BI + 預測 + IoT 即時遙測。企業級終局，對三天賽程過度設計，但畫出成長路線。"},
+        {t:"方案 E · 完整資料分析管線（未來式）", n:"S3 資料湖 → Glue/Lambda ETL → Athena/Timestream → App + QuickSight BI + 預測 + IoT 即時遙測。企業級終局，相對當前需求過度工程、導入期最長，但畫出成長路線。"},
         {t:"資安：已收口的入口 + 規劃中的縱深", n:"縱深防禦是目標，這頁把「已經在跑的」和「還沒做的」分開講。已實作：ALB 是唯一對外入口 —— fleetmind-sg 只放行 ALB SG 的 8080，直打 task 公網 IP 已 timeout、走 ALB 仍 200；IAM 兩角色分離；CloudWatch Logs；Shield Standard 在 ALB 自動生效。誠實補充：兩個子網都是公有、task 仍有公網 IP（無 NAT 要拉 ECR），收口靠的是 SG 不是子網隔離。規劃中：WAF 目前 0 個 WebACL、Secrets Manager 0 個 secret、GuardDuty 受本 workshop 帳號權限阻擋開不了。旁邊就是 live URL，寫得比實際好只會被 curl 拆穿。"},
         {t:"權限邊界：誰能拉映像、誰能呼叫 Bedrock", n:"執行角色 fleetmind-ecs-exec 拉 ECR、寫 log，應用程式拿不到；任務角色 fleetmind-ecs-task 只有 Bedrock / SNS / SES 三條 inline 政策。角色分離是真的；但只有 SNS 那條把 Resource 釘死到單一 topic ARN，Bedrock 與 SES 仍是萬用字元 —— 動作已收斂，不宣稱最小權限。"},
         {t:"多區域 Active-Active：設計，不是現況", n:"先講清楚：這一頁全部還沒有蓋。實查帳號 Route 53 hosted zone 0、DynamoDB 0 張表、EventBridge 0 條規則、S3 0 個 bucket；而且本次 workshop 帳號連跨區都不允許——ap-northeast-1 的 ECS 與 ECR 直接回 AccessDenied。設計本身：Route 53 依地理/延遲把各國船務端路由到最近區域，兩區雙活、DynamoDB Global Tables 雙向複製、跨區 EventBridge 匯總告警、S3 CRR 備份，健康檢查自動 failover，RPO≈0。為什麼今天沒有它：現行把 real-metrics.json 烤進映像、請求路徑上沒有資料存放層，沒有東西可以跨區複製——前提是先把狀態外置到 DynamoDB；且 3 天內無法演練 failover，未經演練的災備等於沒有。落地順序：狀態外置 → 單區多 AZ（ALB 已跨 1d/1f）→ 再談雙區。"},
-        {t:"五案比較：現行 A 為出賽基準線", n:"運算／入口／閒置成本／維運／冷啟／黑客松適配一表看懂。現行 ECS Fargate 在三天賽程的可交付性與 demo 穩定度綜合最優；EC2 保底、Serverless 與資料管線是願景。"},
+        {t:"五案比較：現行 A 為導入基準線", n:"運算／入口／閒置成本／維運／冷啟／落地可行性一表看懂。現行 ECS Fargate 的可交付性與穩定度綜合最優；EC2 保底、Serverless 與資料管線是演進方向。"},
         {t:"未來路線圖 · Phase 0–3", n:"從 15 艘 demo 到全艦隊營運平台：先穩上線，再走資料驅動、多區域韌性、BI/預測與系統介接。落地三扇門：系統介接、檔案上傳、後台設定。"},
         {t:"決策級聯：正常 → 注意 → 行動", n:"系統不只給數字，而是狀態＋建議：正常持續觀察 → 注意排 UWILD 檢查 → 行動先檢查再規劃清洗。把 ISO 19030 的速度損失變成可執行的下一步。"},
         {t:"Live Demo 導覽：一個穩定 URL、多個入口", n:"首頁沈浸開場、決策看板、航程 Demo、AWS 架構——同一個 ALB 靜態網址，現場就能點著走。"},
@@ -249,11 +281,13 @@
       document.getElementById('next').addEventListener('click', function(){ go(i+1,true); });
       layerA.addEventListener('click', function(){ go(i+1,true); });
       layerB.addEventListener('click', function(){ go(i+1,true); });
-      document.getElementById('fs').addEventListener('click', function(){
+      function toggleFs(){
         var s=document.getElementById('stage');
         if (document.fullscreenElement) document.exitFullscreen();
         else if (s.requestFullscreen) s.requestFullscreen();
-      });
+      }
+      document.getElementById('fs').addEventListener('click', toggleFs);
+      document.getElementById('fsExit').addEventListener('click', toggleFs);
       document.addEventListener('keydown', function(e){
         if (e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); go(i+1,true); }
         else if (e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); go(i-1,true); }

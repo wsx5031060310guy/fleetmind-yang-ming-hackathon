@@ -77,7 +77,7 @@ const probStats = [
   { n: "21,282", u: "日報列", d: "＋ 77 筆水下養護事件", c: C.teal },
   // fs 22: 這串 11 字在 30pt 下 ≈2.84" > 卡片內寬 2.38" → 會折兩行撞到下面的 u 標籤。
   { n: "-12% ~ +22%", u: "Speed Loss 全隊範圍", d: "從剛養護到重度污損", c: C.coral, fs: 22 },
-  { n: "102", u: "格待預測油耗", d: "官方客觀評分標的", c: C.amber },
+  { n: "102", u: "格待預測油耗", d: "S21–S23 養護後遮蔽窗格", c: C.amber },
 ];
 probStats.forEach((p, i) => {
   const x = M + i * ((W - 2 * M - 0.4 * 3) / 4 + 0.4), w = (W - 2 * M - 0.4 * 3) / 4;
@@ -91,10 +91,10 @@ s.addNotes("[0:30–1:10] 點出痛點：污損偷油、養護決策靠經驗。
 
 // ---------- Slide 3: what we built (2 deliverables) ----------
 s = pptx.addSlide(); lightBg(s);
-head(s, "Our Solution", "兩條主線，直攻 55% 硬分數");
+head(s, "Our Solution", "兩條主線：看得見衰退，算得出代價");
 const deliv = [
-  { tag: "客觀評分 25%", tagc: C.amber, t: "油耗預測模型", pts: ["預測 102 格被遮蔽的全速油耗", "反事實推論：現在做 UWC/PP 能少燒多少油", "污損時鐘 + 跨姊妹船遷移學習"], foot: "predict/ · Python · sklearn" },
-  { tag: "專家品評 30%", tagc: C.seafoam, t: "Speed Loss Dashboard", pts: ["ISO 19030 框架下的效能衰退趨勢", "船殼 vs 螺旋槳歸因", "養護事件與效能恢復時序對比"], foot: "core-calc + apps/api · Java / Spring Boot" },
+  { tag: "反事實預測", tagc: C.amber, t: "油耗預測模型", pts: ["預測 102 格被遮蔽的全速油耗", "反事實推論：現在做 UWC/PP 能少燒多少油", "污損時鐘 + 跨姊妹船遷移學習"], foot: "predict/ · Python · sklearn" },
+  { tag: "效能診斷", tagc: C.seafoam, t: "Speed Loss Dashboard", pts: ["ISO 19030 框架下的效能衰退趨勢", "船殼 vs 螺旋槳歸因", "養護事件與效能恢復時序對比"], foot: "core-calc + apps/api · Java / Spring Boot" },
 ];
 deliv.forEach((d, i) => {
   const x = i === 0 ? M : W / 2 + 0.2, w = W / 2 - M - 0.2;
@@ -104,8 +104,8 @@ deliv.forEach((d, i) => {
   s.addText(d.pts.map((p, j) => ({ text: p, options: { bullet: { code: "2022", indent: 14 }, color: C.ink, breakLine: j < d.pts.length - 1, paraSpaceAfter: 8 } })), { x: x + 0.35, y: 3.3, w: w - 0.7, h: 1.5, fontFace: BODY, fontSize: 14, margin: 0 });
   s.addText(d.foot, { x: x + 0.35, y: 5.05, w: w - 0.7, h: 0.35, fontFace: BODY, fontSize: 11, italic: true, color: C.teal, bold: true, margin: 0 });
 });
-s.addText("＋ 20% 商務決策價值（多耗油量反事實）　＋ 15% 技術可行性　＋ 10% AI 協作創意", { x: M, y: 5.85, w: W - 2 * M, h: 0.4, align: "center", fontFace: BODY, fontSize: 13.5, bold: true, color: C.mute, margin: 0 });
-s.addNotes("[1:10–1:50] 兩個產出對應 30%+25% 硬分數；其餘三維度靠多耗油量估算、單服務架構、AI guardrail。");
+s.addText("兩者共用同一套確定性計算：多耗油量反事實、單服務可維運架構、AI 護欄，皆由此延伸", { x: M, y: 5.85, w: W - 2 * M, h: 0.4, align: "center", fontFace: BODY, fontSize: 13.5, bold: true, color: C.mute, margin: 0 });
+s.addNotes("[1:10–1:50] 兩個產出：Dashboard 讓衰退看得見，預測模型讓代價算得出。兩者共用同一套確定性計算 —— 多耗油量估算、單服務架構、AI guardrail 都是從這個核心延伸出去的。");
 
 // ---------- Slide 4: data & method ----------
 s = pptx.addSlide(); lightBg(s);
@@ -205,7 +205,11 @@ const mstats = [
   { n: "102/102", u: "格提交 1:1", c: C.seafoam },
 ];
 mstats.forEach((p, i) => {
-  const x = M + i * 2.55, w = 2.35;
+  // 2.55/2.35 put card 3 at 0.7 + 5.10 + 2.35 = 8.15, and the honesty panel starts at 8.05 —
+  // a 0.10" overlap. The panel is drawn after the cards, so it buried card 3's right rounded
+  // corner: two cards with round corners and a third squared off mid-air. 2.45/2.25 ends the
+  // row at 7.85 and gives the panel the same 0.20" gap the cards give each other.
+  const x = M + i * 2.45, w = 2.25;
   card(s, x, 1.85, w, 1.5);
   s.addText(p.n, { x: x + 0.15, y: 2.0, w: w - 0.3, h: 0.7, fontFace: HEAD, fontSize: 28, bold: true, color: p.c, margin: 0 });
   s.addText(p.u, { x: x + 0.15, y: 2.72, w: w - 0.3, h: 0.5, fontFace: BODY, fontSize: 12, bold: true, color: C.mute, margin: 0 });
@@ -235,7 +239,7 @@ s.addNotes("[4:25–5:25] 誠實：baseline 勝出。強調防漏驗證的嚴謹
 // 依 docs/27 工程師回饋第 9 點：成本由別部門管，他們只負責「發現問題、通知需要清洗」
 // → 主線移除金額與投資回收模型。第 10 點允許估「多耗燃油噸數（噸，不談金額）」但須明標粗估。
 s = pptx.addSlide(); darkBg(s);
-s.addText("官方必含（商務價值 20%）", { x: M, y: 0.5, w: 11, h: 0.3, fontFace: BODY, fontSize: 12, color: C.amber, bold: true, charSpacing: 2, margin: 0 });
+s.addText("商務決策價值", { x: M, y: 0.5, w: 11, h: 0.3, fontFace: BODY, fontSize: 12, color: C.amber, bold: true, charSpacing: 2, margin: 0 });
 s.addText("同一個模型回答：污損正在多燒多少油？", { x: M, y: 0.8, w: 11.8, h: 0.7, fontFace: HEAD, fontSize: 30, bold: true, color: C.white, margin: 0 });
 s.addText("反事實推論：把污損時鐘歸零重新預測，得到同航速下每天多耗的燃油噸數。只談噸數，不談金額。", { x: M, y: 1.65, w: 9.1, h: 0.5, fontFace: BODY, fontSize: 14, color: "AEC4D6", margin: 0 });
 chip(s, W - M - 2.7, 1.62, 2.7, "粗估 · 非正式數字", C.amber, C.navy);
@@ -285,7 +289,7 @@ gaps.forEach((g, i) => {
 card(s, 7.0, 1.75, W - M - 7.0, 4.65, C.navy);
 s.addText("給我們更多資料，能強化的決策價值", { x: 7.3, y: 2.0, w: 5.1, h: 0.4, fontFace: HEAD, fontSize: 15, bold: true, color: C.white, margin: 0 });
 s.addText(wants.map((w2, j) => ({ text: w2, options: { bullet: { code: "2022", indent: 14 }, color: "E6EEF5", breakLine: j < wants.length - 1, paraSpaceAfter: 12 } })), { x: 7.3, y: 2.6, w: 5.1, h: 3.4, fontFace: BODY, fontSize: 13, lineSpacingMultiple: 1.1, margin: 0 });
-s.addNotes("[6:20–6:55] 主動揭露限制 = 誠信分。同時把『要什麼資料』講清楚，回應官方必含第 3 項與商務價值。");
+s.addNotes("[6:20–6:55] 主動揭露限制是讓結論可信的前提。同時把『要什麼資料』講清楚：框架不變，餵更好的量測就能直接升級。");
 
 // ---------- Slide 10: architecture + AI role (official item 4 + 5) ----------
 s = pptx.addSlide(); lightBg(s);
@@ -310,7 +314,7 @@ card(s, M, 4.3, W - 2 * M, 2.05, C.panel);
 s.addText("AI 的角色：數字來自計算，語言來自 AI，決策留給人", { x: M + 0.35, y: 4.5, w: W - 2 * M - 0.7, h: 0.4, fontFace: HEAD, fontSize: 16, bold: true, color: C.navy, margin: 0 });
 s.addText([
   { text: "Bedrock(Claude) 只把已算好的指標改寫成營運語言；guardrail 逐一比對每個數字的引用來源，未引用或引錯即攔下——AI 無法發明數字。", options: { color: C.ink, breakLine: true, paraSpaceAfter: 6 } },
-  { text: "失敗降級：Bedrock 不可用 → 該船快取簡報 → deterministic 模板；dashboard 與 55% 硬分數不受影響。開發全程以 Kiro 為 AI 助手。", options: { color: C.ink } },
+  { text: "失敗降級：Bedrock 不可用 → 該船快取簡報 → deterministic 模板；dashboard 與所有計算數字完全不受影響。開發全程以 Kiro 為 AI 助手。", options: { color: C.ink } },
 ], { x: M + 0.35, y: 4.95, w: W - 2 * M - 0.7, h: 1.3, fontFace: BODY, fontSize: 12.5, lineSpacingMultiple: 1.15, margin: 0 });
 s.addNotes("[6:55–7:35] 架構一句話：單服務同源、AWS-only、AI 有 guardrail 不亂編。回應官方第 4、5 項。");
 
