@@ -1,0 +1,288 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="FleetMind 多區域 Active-Active 設計藍圖，尚未部署" font-family="system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif">
+  <title>FleetMind — 多區域 Active-Active：設計藍圖，尚未部署</title>
+  <desc>設計提案，非現況。帳號 516665228894 於 2026-07-15 讀回：Route 53 hosted zone 0、DynamoDB 資料表 0、EventBridge 規則 0、S3 bucket 0、ap-northeast-1 ALB 0，且 ap-northeast-1 的 ECS 與 ECR 回 AccessDenied。圖中僅 us-east-1 的 ALB fleetmind-alb、ECS 服務 fleetmind-svc、SNS topic fleetmind-alerts 與 SES 為今日已存在的單一區域資源，其餘皆為提案。未蓋的真正原因〔非讀回 · 依原始碼與部署紀錄〕：real-metrics.json 於 build time 烘入映像，請求路徑上沒有任何資料存放層，沒有東西可以跨區複製。ap-northeast-1 的 ECS / ECR 探測被拒，只能說本專案未在此區部署〔非讀回〕，不能宣稱帳號內不存在。</desc>
+
+  <defs>
+    <marker id="ah-aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#7D8998"/>
+    </marker>
+
+    <!-- glyphs, 24x24 base -->
+    <g id="g-aa-alb">
+      <path d="M12,5.5 V12 M4,12 H20 M4,12 V17.5 M12,12 V17.5 M20,12 V17.5" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+      <circle cx="12" cy="3.4" r="2.3" fill="#FFFFFF"/>
+      <circle cx="4" cy="19.6" r="2.3" fill="#FFFFFF"/>
+      <circle cx="12" cy="19.6" r="2.3" fill="#FFFFFF"/>
+      <circle cx="20" cy="19.6" r="2.3" fill="#FFFFFF"/>
+    </g>
+    <g id="g-aa-ecs" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linejoin="round">
+      <path d="M12,1.6 L22,7 L22,17 L12,22.4 L2,17 L2,7 Z"/>
+      <path d="M12,12 L22,7 M12,12 L2,7 M12,12 L12,22.4"/>
+    </g>
+    <g id="g-aa-ddb" fill="none" stroke="#FFFFFF" stroke-width="1.6">
+      <ellipse cx="12" cy="5.6" rx="8" ry="3.2"/>
+      <path d="M4,5.6 V18.4 a8,3.2 0 0 0 16,0 V5.6"/>
+      <path d="M4,12 a8,3.2 0 0 0 16,0"/>
+    </g>
+    <g id="g-aa-s3" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round">
+      <path d="M4.2,4.8 H19.8 L17.8,20.6 H6.2 Z"/>
+      <path d="M4.9,10.3 H19.1 M5.6,15.6 H18.4"/>
+    </g>
+    <g id="g-aa-r53">
+      <g fill="none" stroke="#FFFFFF" stroke-width="1.5">
+        <circle cx="12" cy="12" r="9"/>
+        <ellipse cx="12" cy="12" rx="4" ry="9"/>
+        <path d="M3.1,12 H20.9 M4.6,7 H19.4 M4.6,17 H19.4"/>
+      </g>
+    </g>
+    <g id="g-aa-users" fill="#FFFFFF">
+      <circle cx="8" cy="7" r="3.4"/>
+      <path d="M1.8,19.5 a6.2,6.2 0 0 1 12.4,0 Z"/>
+      <circle cx="17.2" cy="8.8" r="2.8"/>
+      <path d="M12.4,19.5 a4.9,4.9 0 0 1 9.8,0 Z"/>
+    </g>
+    <g id="g-aa-eb">
+      <rect x="10.6" y="2.5" width="2.8" height="19" rx="1.4" fill="#FFFFFF"/>
+      <g fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round">
+        <path d="M4.6,6.5 H9.2 M4.6,12 H9.2 M4.6,17.5 H9.2"/>
+        <path d="M14.8,8.6 H19.4 M14.8,15.4 H19.4"/>
+      </g>
+      <circle cx="3.6" cy="6.5" r="1.6" fill="#FFFFFF"/>
+      <circle cx="3.6" cy="12" r="1.6" fill="#FFFFFF"/>
+      <circle cx="3.6" cy="17.5" r="1.6" fill="#FFFFFF"/>
+      <circle cx="20.4" cy="8.6" r="1.6" fill="#FFFFFF"/>
+      <circle cx="20.4" cy="15.4" r="1.6" fill="#FFFFFF"/>
+    </g>
+    <g id="g-aa-sns">
+      <circle cx="12" cy="17.5" r="2.6" fill="#FFFFFF"/>
+      <g fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round">
+        <path d="M7.4,13.6 a6.5,6.5 0 0 1 9.2,0"/>
+        <path d="M4,10.2 a11.3,11.3 0 0 1 16,0"/>
+      </g>
+    </g>
+    <g id="g-aa-ses" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round">
+      <rect x="2.6" y="5.5" width="18.8" height="13" rx="1.6"/>
+      <path d="M2.6,7 L12,14.2 L21.4,7"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <!-- ===================== title ===================== -->
+  <text x="42" y="40" font-size="23" font-weight="700" fill="#232F3E">多區域 Active-Active — 設計藍圖，尚未部署</text>
+  <text x="42" y="62" font-size="12.5" fill="#5F6B7A">FleetMind · 帳號 516665228894 · 圖中資源存在與否於 2026-07-15 以 boto3 自實際帳號讀回；標〔推導〕〔非讀回〕者除外，依據見該處註記 —— 本圖不是現況：多區域一項都沒有蓋；只有標「今日已存在」者是現行單區 us-east-1 的既有資源</text>
+
+  <!-- ===================== framing banner ===================== -->
+  <rect x="42" y="76" width="1516" height="46" rx="5" fill="#FDECEE" stroke="#DD344C" stroke-width="1"/>
+  <rect x="42" y="76" width="3" height="46" fill="#DD344C"/>
+  <text x="58" y="96" font-size="11.5" font-weight="700" fill="#232F3E">本圖 100% 是設計提案：Active-Active 多區域在此帳號中一項都沒有蓋。真正的原因不是帳號權限——今日請求路徑上沒有任何資料存放層，沒有東西可以「跨區複製」。<tspan dx="8" font-size="8.5" font-weight="400" fill="#6E7B8B">〔非讀回 · 依原始碼與部署紀錄〕</tspan></text>
+  <text x="58" y="113" font-size="9.5" fill="#5F6B7A">2026-07-15 以 boto3 讀回：Route 53 hosted zone 0 · DynamoDB 資料表 0 · EventBridge 規則 0 · S3 bucket 0（全帳號）· ap-northeast-1 ALB 0；且 ap-northeast-1 的 ECS / ECR 回 AccessDenied —— 這個帳號連第二個區域都開不起來。</text>
+
+  <!-- ===================== proposal envelope ===================== -->
+  <rect x="42" y="136" width="1516" height="566" rx="6" fill="none" stroke="#DD344C" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="58" y="157" font-size="11.5" font-weight="700" fill="#DD344C">提案的目標狀態（尚未部署）<tspan font-weight="400" fill="#6E7B8B"> —— 除了標示「今日已存在」的方塊之外，本框內每一個節點、每一條線今天都沒有部署（依據見各方塊下方：讀回 0，或標〔非讀回〕）。虛線＝提案；實線＝今日已存在</tspan></text>
+
+  <!-- ===================== AWS Cloud boundary ===================== -->
+  <rect x="232" y="172" width="1314" height="516" rx="6" fill="none" stroke="#879196" stroke-width="1"/>
+  <rect x="241" y="181" width="25" height="25" rx="3" fill="#232F3E"/>
+  <text x="253.5" y="197.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="#FFFFFF">aws</text>
+  <text x="274" y="197" font-size="12" fill="#414D5C">AWS Cloud — 提案的目標狀態（不是現況）</text>
+
+  <!-- ===================== ship-ops users (OUTSIDE the cloud) ===================== -->
+  <rect x="123" y="266" width="44" height="44" rx="8" fill="#7D8998"/>
+  <use href="#g-aa-users" transform="translate(131.4,274.4) scale(1.1367)"/>
+  <text x="145" y="324" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">亞洲船務端</text>
+  <text x="145" y="336" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">日 / 台 / 韓 / 星</text>
+
+  <rect x="123" y="530" width="44" height="44" rx="8" fill="#7D8998"/>
+  <use href="#g-aa-users" transform="translate(131.4,538.4) scale(1.1367)"/>
+  <text x="145" y="588" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">歐美船務端</text>
+  <text x="145" y="600" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">EU / US</text>
+
+  <path d="M169,288 H196 V412 H296" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+  <path d="M169,552 H212 V428 H296" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+
+  <!-- ===================== Route 53 ===================== -->
+  <rect x="300" y="398" width="44" height="44" rx="8" fill="#8C4FFF"/>
+  <use href="#g-aa-r53" transform="translate(308.4,406.4) scale(1.1367)"/>
+  <circle cx="296" cy="394" r="11" fill="#232F3E"/>
+  <text x="296" y="398" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">1</text>
+  <text x="322" y="456" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Amazon Route 53</text>
+  <text x="322" y="468" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">地理／延遲路由（提案）</text>
+  <text x="322" y="480" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">健康檢查 → 自動 failover</text>
+  <text x="322" y="492" text-anchor="middle" font-size="9" font-style="italic" font-weight="600" fill="#DD344C">hosted zone 0 · 未部署</text>
+
+  <path d="M346,412 H412 V288 H488" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+  <path d="M346,428 H412 V552 H488" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+
+  <!-- ===================== REGION A · ap-northeast-1 ===================== -->
+  <rect x="430" y="214" width="750" height="200" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="444" y="234" font-size="11.5" font-weight="600" fill="#414D5C">區域 A · ap-northeast-1（提案）</text>
+  <rect x="656" y="220" width="272" height="18" rx="9" fill="#FBE3E7" stroke="#DD344C" stroke-width="0.8"/>
+  <text x="792" y="232.5" text-anchor="middle" font-size="8.5" font-weight="700" fill="#DD344C">ap-northeast-1：ALB 0 · ECS / ECR → AccessDenied</text>
+
+  <rect x="490" y="266" width="44" height="44" rx="8" fill="#8C4FFF"/>
+  <use href="#g-aa-alb" transform="translate(498.4,274.4) scale(1.1367)"/>
+  <circle cx="486" cy="262" r="11" fill="#232F3E"/>
+  <text x="486" y="266" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">2</text>
+  <text x="512" y="324" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Application Load Balancer</text>
+  <text x="512" y="336" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">此區的區域入口（提案）</text>
+  <text x="512" y="348" text-anchor="middle" font-size="9" font-style="italic" font-weight="600" fill="#DD344C">本帳號未部署</text>
+
+  <path d="M536,288 H646" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+
+  <rect x="648" y="266" width="44" height="44" rx="8" fill="#ED7100"/>
+  <use href="#g-aa-ecs" transform="translate(656.4,274.4) scale(1.1367)"/>
+  <text x="670" y="324" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">ECS on Fargate</text>
+  <text x="670" y="336" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">決策服務 · 與現行同一映像</text>
+  <text x="670" y="348" text-anchor="middle" font-size="9" font-style="italic" font-weight="600" fill="#DD344C">〔非讀回〕本專案未部署</text>
+
+  <path d="M694,288 H836" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+
+  <rect x="838" y="266" width="44" height="44" rx="8" fill="#527FFF"/>
+  <use href="#g-aa-ddb" transform="translate(846.4,274.4) scale(1.1367)"/>
+  <circle cx="834" cy="262" r="11" fill="#232F3E"/>
+  <text x="834" y="266" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">3</text>
+  <text x="860" y="324" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Amazon DynamoDB</text>
+  <text x="860" y="336" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">Global Tables · 狀態外置</text>
+  <text x="860" y="348" text-anchor="middle" font-size="9" font-style="italic" font-weight="600" fill="#DD344C">帳號內 0 張表 · 未部署</text>
+
+  <rect x="1038" y="266" width="44" height="44" rx="8" fill="#7AA116"/>
+  <use href="#g-aa-s3" transform="translate(1046.4,274.4) scale(1.1367)"/>
+  <circle cx="1034" cy="262" r="11" fill="#232F3E"/>
+  <text x="1034" y="266" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">4</text>
+  <text x="1060" y="324" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Amazon S3</text>
+  <text x="1060" y="336" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">報表備份 · 跨區複製 CRR</text>
+  <text x="1060" y="348" text-anchor="middle" font-size="9" font-style="italic" font-weight="600" fill="#DD344C">全帳號 0 bucket · 未部署</text>
+
+  <text x="444" y="372" font-size="9" font-style="italic" fill="#6E7B8B">ap-northeast-1 讀回：ALB 0。ECS / ECR 只回 AccessDenied —— 探測被拒不等於「帳號內不存在」。</text>
+  <text x="444" y="384" font-size="9" font-style="italic" fill="#6E7B8B">〔非讀回 · 依原始碼〕本專案未在此區部署；且此帳號無權在此區建立 ECS / ECR —— 第二個區域開不起來。</text>
+
+  <!-- ===================== replication corridors ===================== -->
+  <path d="M884,288 H950 V552 H886" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-start="url(#ah-aa)" marker-end="url(#ah-aa)"/>
+  <text x="958" y="436" font-size="9.5" font-weight="600" fill="#232F3E">DynamoDB Global Tables</text>
+  <text x="958" y="448" font-size="9" font-style="italic" fill="#6E7B8B">雙向複製（提案 · 未部署）</text>
+
+  <path d="M1084,288 H1150 V552 H1086" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-start="url(#ah-aa)" marker-end="url(#ah-aa)"/>
+  <text x="1158" y="436" font-size="9.5" font-weight="600" fill="#232F3E">S3 跨區複製 CRR</text>
+  <text x="1158" y="448" font-size="9" font-style="italic" fill="#6E7B8B">（提案 · 未部署）</text>
+
+  <!-- ===================== REGION B · us-east-1 ===================== -->
+  <rect x="430" y="478" width="750" height="200" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="444" y="498" font-size="11.5" font-weight="600" fill="#414D5C">區域 B · us-east-1（提案的另一半）</text>
+  <rect x="656" y="484" width="272" height="18" rx="9" fill="#EFF5E4" stroke="#7AA116" stroke-width="0.8"/>
+  <text x="792" y="496.5" text-anchor="middle" font-size="8.5" font-weight="700" fill="#5B7F16">us-east-1：今日唯一實際部署的區域（單區）</text>
+
+  <rect x="490" y="530" width="44" height="44" rx="8" fill="#8C4FFF"/>
+  <use href="#g-aa-alb" transform="translate(498.4,538.4) scale(1.1367)"/>
+  <text x="512" y="588" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Application Load Balancer</text>
+  <text x="512" y="600" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">fleetmind-alb · :80</text>
+  <text x="512" y="612" text-anchor="middle" font-size="9" font-style="italic" font-weight="600" fill="#5B7F16">今日已存在（單區部署）</text>
+
+  <path d="M536,552 H646" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-aa)"/>
+
+  <rect x="648" y="530" width="44" height="44" rx="8" fill="#ED7100"/>
+  <use href="#g-aa-ecs" transform="translate(656.4,538.4) scale(1.1367)"/>
+  <text x="670" y="588" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">ECS on Fargate</text>
+  <text x="670" y="600" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">服務 fleetmind-svc</text>
+  <text x="670" y="612" text-anchor="middle" font-size="9" font-style="italic" font-weight="600" fill="#5B7F16">今日已存在（單區部署）</text>
+
+  <path d="M694,552 H836" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+
+  <rect x="838" y="530" width="44" height="44" rx="8" fill="#527FFF"/>
+  <use href="#g-aa-ddb" transform="translate(846.4,538.4) scale(1.1367)"/>
+  <text x="860" y="588" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Amazon DynamoDB</text>
+  <text x="860" y="600" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">Global Tables · 狀態外置</text>
+  <text x="860" y="612" text-anchor="middle" font-size="9" font-style="italic" font-weight="600" fill="#DD344C">帳號內 0 張表 · 未部署</text>
+
+  <rect x="1038" y="530" width="44" height="44" rx="8" fill="#7AA116"/>
+  <use href="#g-aa-s3" transform="translate(1046.4,538.4) scale(1.1367)"/>
+  <text x="1060" y="588" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Amazon S3</text>
+  <text x="1060" y="600" text-anchor="middle" font-size="9" font-style="italic" fill="#6E7B8B">報表備份 · 跨區複製 CRR</text>
+  <text x="1060" y="612" text-anchor="middle" font-size="9" font-style="italic" font-weight="600" fill="#DD344C">全帳號 0 bucket · 未部署</text>
+
+  <text x="444" y="640" font-size="9" font-style="italic" fill="#6E7B8B">今日 us-east-1 確實有 fleetmind-alb + fleetmind-svc，但那是單一區域部署，不是 active-active 的一半；DynamoDB / S3 / Route 53 / EventBridge 都沒有。</text>
+
+  <!-- ===================== cross-region alerting ===================== -->
+  <path d="M1182,340 H1232 V282 H1288" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+  <text x="1188" y="333" font-size="8" fill="#6E7B8B">告警事件</text>
+  <path d="M1182,604 H1252 V294 H1288" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+  <text x="1188" y="597" font-size="8" fill="#6E7B8B">告警事件</text>
+
+  <rect x="1290" y="266" width="44" height="44" rx="8" fill="#E7157B"/>
+  <use href="#g-aa-eb" transform="translate(1298.4,274.4) scale(1.1367)"/>
+  <circle cx="1286" cy="262" r="11" fill="#232F3E"/>
+  <text x="1286" y="266" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">5</text>
+  <text x="1344" y="282" font-size="11" font-weight="600" fill="#232F3E">Amazon EventBridge</text>
+  <text x="1344" y="295" font-size="9" font-style="italic" fill="#6E7B8B">跨區告警匯總（提案）</text>
+  <text x="1344" y="307" font-size="9" font-style="italic" font-weight="600" fill="#DD344C">帳號內 0 條規則 · 未部署</text>
+
+  <path d="M1312,312 V408" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+  <path d="M1312,340 H1268 V552 H1288" fill="none" stroke="#7D8998" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-aa)"/>
+  <circle cx="1312" cy="340" r="2.6" fill="#7D8998"/>
+
+  <rect x="1290" y="410" width="44" height="44" rx="8" fill="#E7157B"/>
+  <use href="#g-aa-sns" transform="translate(1298.4,418.4) scale(1.1367)"/>
+  <text x="1344" y="426" font-size="11" font-weight="600" fill="#232F3E">Amazon SNS</text>
+  <text x="1344" y="439" font-size="9" font-style="italic" fill="#6E7B8B">topic fleetmind-alerts（今日已存在）</text>
+  <text x="1344" y="451" font-size="9" font-style="italic" font-weight="600" fill="#DD344C">今日 0 個訂閱者 → 扇出到沒有人</text>
+
+  <rect x="1290" y="530" width="44" height="44" rx="8" fill="#E7157B"/>
+  <use href="#g-aa-ses" transform="translate(1298.4,538.4) scale(1.1367)"/>
+  <text x="1344" y="546" font-size="11" font-weight="600" fill="#232F3E">Amazon SES v2</text>
+  <text x="1344" y="559" font-size="9" font-style="italic" fill="#6E7B8B">SendEmail · wsx5031060310guy@gmail.com</text>
+  <text x="1344" y="571" font-size="9" font-style="italic" font-weight="600" fill="#5B7F16">今日已存在 · 真正會送達的告警路徑</text>
+
+  <!-- ===================== panel L — what actually runs today ===================== -->
+  <rect x="42" y="714" width="728" height="158" rx="6" fill="#FFFFFF" stroke="#C6CDD3" stroke-width="1"/>
+  <text x="58" y="736" font-size="11.5" font-weight="700" fill="#232F3E">今日實況（已部署）· 單一區域 us-east-1</text>
+  <rect x="320" y="724" width="136" height="17" rx="8.5" fill="#EFF5E4" stroke="#7AA116" stroke-width="0.8"/>
+  <text x="388" y="736" text-anchor="middle" font-size="9" font-weight="700" fill="#5B7F16">2026-07-15 已驗證存在</text>
+
+  <rect x="60" y="756" width="46" height="34" rx="3" fill="#FFFFFF" stroke="#232F3E" stroke-width="1.4"/>
+  <path d="M60,765 H106" fill="none" stroke="#232F3E" stroke-width="1.2"/>
+  <circle cx="66" cy="760.5" r="1.5" fill="#879196"/>
+  <circle cx="71.5" cy="760.5" r="1.5" fill="#879196"/>
+  <circle cx="77" cy="760.5" r="1.5" fill="#879196"/>
+  <path d="M66,772 H92 M66,777.5 H86 M66,783 H96" fill="none" stroke="#879196" stroke-width="1.2"/>
+  <text x="83" y="804" text-anchor="middle" font-size="8" fill="#5A6470">使用者瀏覽器</text>
+
+  <path d="M110,773 H140" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-aa)"/>
+
+  <rect x="144" y="755" width="36" height="36" rx="7" fill="#8C4FFF"/>
+  <use href="#g-aa-alb" transform="translate(151,762) scale(0.9167)"/>
+  <text x="162" y="804" text-anchor="middle" font-size="8" fill="#5A6470">ALB :80</text>
+
+  <path d="M184,773 H214" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-aa)"/>
+
+  <rect x="218" y="755" width="36" height="36" rx="7" fill="#ED7100"/>
+  <use href="#g-aa-ecs" transform="translate(225,762) scale(0.9167)"/>
+  <text x="236" y="804" text-anchor="middle" font-size="8" fill="#5A6470">ECS Fargate</text>
+
+  <path d="M258,773 H286" fill="none" stroke="#B9BEC5" stroke-width="1" stroke-dasharray="3 2.5"/>
+
+  <rect x="290" y="755" width="36" height="36" rx="7" fill="#FFFFFF" stroke="#B9BEC5" stroke-width="1.3" stroke-dasharray="3 2.5"/>
+  <ellipse cx="308" cy="765" rx="7" ry="2.8" fill="none" stroke="#B9BEC5" stroke-width="1.3"/>
+  <path d="M301,765 V781 a7,2.8 0 0 0 14,0 V765" fill="none" stroke="#B9BEC5" stroke-width="1.3"/>
+  <path d="M293,789 L323,757" fill="none" stroke="#B9BEC5" stroke-width="1.5"/>
+  <text x="308" y="804" text-anchor="middle" font-size="8" fill="#879196">無資料層</text>
+  <text x="308" y="815" text-anchor="middle" font-size="8" fill="#879196">S3 0 · DDB 0</text>
+
+  <text x="350" y="764" font-size="9" fill="#5A6470">fleetmind-alb · internet-facing :80 → fleetmind-tg → 172.31.65.255:8080 · healthy</text>
+  <text x="350" y="778" font-size="9" fill="#5A6470">叢集 fleetmind · 服務 fleetmind-svc · Fargate ARM64 · desiredCount 1</text>
+  <text x="350" y="792" font-size="9" fill="#5A6470">ALB 已跨 us-east-1d / us-east-1f 兩個 AZ（單區多 AZ，這一步已經有了）</text>
+  <text x="350" y="806" font-size="9" fill="#5A6470">Bedrock / SNS / SES / CloudWatch Logs 全部在 us-east-1</text>
+
+  <text x="58" y="838" font-size="9" fill="#232F3E">RealDataService 直接讀映像內的 real-metrics.json（build time 烘入）—— 請求路徑上零資料存放區。<tspan dx="8" font-size="8" fill="#6E7B8B">〔非讀回 · 依原始碼與部署紀錄〕</tspan></text>
+  <text x="58" y="854" font-size="9" font-weight="600" fill="#DD344C">〔推導〕這就是上圖畫不出來的根本原因：沒有外置的狀態，就沒有東西可以跨區複製。</text>
+
+  <!-- ===================== panel R — why it is not built ===================== -->
+  <rect x="790" y="714" width="768" height="158" rx="6" fill="#F4F6F8" stroke="#D5DBE1" stroke-width="1"/>
+  <text x="806" y="736" font-size="11.5" font-weight="700" fill="#232F3E">為什麼今天沒有蓋 — 誠實的理由（依重要性排序）</text>
+  <text x="806" y="760" font-size="9.5" fill="#232F3E">① 沒有東西可以複製（真正的原因）。今日的設計把 real-metrics.json 在 build time 烘進映像，請求路徑上沒有任何資料存放層。<tspan dx="8" font-size="8" fill="#6E7B8B">〔非讀回 · 依原始碼〕</tspan></text>
+  <text x="820" y="774" font-size="9.5" fill="#5F6B7A">多區域 active-active 的前提，是先把狀態外置（例如 DynamoDB Global Tables）。這一步還沒做——上圖的雙向複製今天沒有資料可以流。</text>
+  <text x="806" y="796" font-size="9.5" fill="#232F3E">② 帳號層面（次要）：本 workshop 帳號 ap-northeast-1 的 ECS / ECR 回 AccessDenied — 第二個區域在這個帳號上根本開不起來。</text>
+  <text x="806" y="818" font-size="9.5" fill="#232F3E">③〔推導〕未經演練的災備等於沒有：3 天賽程內無法驗證 failover 真的會切；圖上的健康檢查 failover 只是設計，沒有演練過。</text>
+  <text x="806" y="840" font-size="9.5" fill="#5F6B7A">落地順序：① 狀態外置到資料層 → ② 單區多 AZ（ALB 已跨 us-east-1d / 1f，已經有了）→ ③ 再談雙區 active-active。</text>
+  <text x="806" y="858" font-size="9.5" fill="#5F6B7A">成本〔推導〕：雙區常態雙倍運算 + 跨區複製流量，明顯高於單區；在沒有可複製的狀態之前，這筆錢買不到可用性。</text>
+</svg>

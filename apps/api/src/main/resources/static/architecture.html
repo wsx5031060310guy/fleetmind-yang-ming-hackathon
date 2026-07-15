@@ -156,7 +156,6 @@
   /* diagram frame */
   .diagram { margin: 26px 0; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
   .diagram .scroll { overflow-x: auto; padding: 20px; }
-  .diagram svg { display: block; min-width: 720px; width: 100%; height: auto; }
   .dcap { padding: 12px 18px; border-top: 1px solid var(--line-soft); font-size: 12.5px; color: var(--muted); font-family: var(--mono); background: var(--surface-2); }
 
   /* ---- blueprint viewer: white AWS drawings presented as lit drawing sheets ---- */
@@ -208,24 +207,6 @@
   @keyframes bpIn { from { opacity: 0; transform: scale(.985); } }
   @keyframes bpFade { from { opacity: 0; } }
 
-  /* svg node styling (shared) */
-  .band-rect { fill: var(--band); }
-  /* was --muted-2, a de-emphasis token shared with h2 .num and .bp-tab .n: measured 3.26:1 in
-     dark and 2.72:1 in light, both under AA 4.5. These labels name the lanes of every diagram —
-     they carry meaning, so they get the readable token, and the decorative uses keep --muted-2. */
-  .band-label { fill: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
-  .node rect { fill: var(--node); stroke: var(--line); stroke-width: 1.2; }
-  .node.cur rect { fill: var(--node-cur); stroke: color-mix(in srgb, var(--current) 55%, transparent); stroke-width: 1.6; }
-  .node.hl rect { stroke: color-mix(in srgb, var(--alt) 60%, transparent); stroke-width: 1.6; }
-  .node .svc { fill: var(--ink); font-family: var(--sans); font-size: 13px; font-weight: 700; }
-  .node .role { fill: var(--muted); font-family: var(--sans); font-size: 11px; }
-  .node .ic { fill: var(--seafoam); font-family: var(--mono); font-size: 10px; font-weight: 700; }
-  .edge { stroke: var(--muted-2); stroke-width: 1.6; fill: none; }
-  .edge.strong { stroke: var(--seafoam); stroke-width: 2; }
-  .edge-label { fill: var(--muted); font-family: var(--mono); font-size: 10.5px; }
-  .flow-num { fill: var(--bg); font-family: var(--mono); font-size: 10px; font-weight: 700; }
-  .flow-badge { fill: var(--seafoam); }
-
   /* prose + cards */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
@@ -275,15 +256,7 @@
 <body>
 
 
-<p class="sr-only" role="doc-abstract">FleetMind AWS 架構報告：現行 ECS Fargate 部署架構，以及五個替代架構方案（Serverless、App Runner、EC2、完整資料分析管線）的比較。</p>
-
-<!-- shared arrow marker -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-    <path d="M0 0L10 5L0 10z" fill="var(--muted-2)"/></marker>
-  <marker id="arrowS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-    <path d="M0 0L10 5L0 10z" fill="var(--seafoam)"/></marker>
-</defs></svg>
+<p class="sr-only" role="doc-abstract">FleetMind AWS 架構報告：現行 ECS Fargate 部署架構，以及四個替代架構方案（Serverless、App Runner、EC2、完整資料分析管線）的比較。</p>
 
 <div class="topbar">
   <a class="brand" href="/" style="text-decoration:none;color:inherit" aria-label="返回決策看板">
@@ -337,49 +310,12 @@
 
     <div class="diagram">
       <div class="scroll">
-        <svg viewBox="0 0 960 400" role="img" aria-label="現行架構圖">
-          <title>FleetMind 現行 AWS 架構</title>
-          <desc>離線由 core-calc 產生 metrics 並烤入 Docker 映像推上 ECR；使用者經 HTTP 埠 80 的 ALB 進到 ECS Fargate 上的 Spring Boot 服務（ALB 目前只有 HTTP:80 listener，demo 未配置 TLS），服務呼叫 Bedrock 產生決策簡報，並在跨越門檻時同時呼叫 SNS Publish 與 SES SendEmail；SNS topic 目前 0 個訂閱，今天真正把信寄達收件匣的是 SES。</desc>
-          <!-- bands -->
-          <rect class="band-rect" x="8" y="44" width="300" height="330" rx="12"/>
-          <text class="band-label" x="24" y="66">離線建置 / Build</text>
-          <rect class="band-rect" x="322" y="44" width="342" height="330" rx="12"/>
-          <text class="band-label" x="338" y="66">執行 / Runtime (VPC)</text>
-          <rect class="band-rect" x="678" y="44" width="274" height="330" rx="12"/>
-          <text class="band-label" x="694" y="66">代管服務 / Managed</text>
-
-          <!-- build lane -->
-          <g class="node"><rect x="30" y="92" width="256" height="52" rx="10"/><text class="svc" x="46" y="118">正午報表 vt_fd + maintenance</text><text class="role" x="46" y="134">每日航速 / 油耗 / 天氣原始資料</text></g>
-          <g class="node"><rect x="30" y="164" width="256" height="52" rx="10"/><text class="svc" x="46" y="190">core-calc · MetricsExportCli</text><text class="role" x="46" y="206">ISO 19030 k=FOC/STW³ → metrics.json</text></g>
-          <g class="node"><rect x="30" y="236" width="256" height="52" rx="10"/><text class="svc" x="46" y="262">Docker build (ARM64)</text><text class="role" x="46" y="278">metrics.json 烤進映像</text></g>
-          <g class="node hl"><rect x="30" y="308" width="256" height="52" rx="10"/><text class="svc" x="46" y="334">Amazon ECR</text><text class="role" x="46" y="350">fleetmind-api:latest 映像倉</text></g>
-          <path class="edge" d="M158 144 V164" marker-end="url(#arrow)"/>
-          <path class="edge" d="M158 216 V236" marker-end="url(#arrow)"/>
-          <path class="edge" d="M158 288 V308" marker-end="url(#arrow)"/>
-
-          <!-- runtime lane -->
-          <g class="node hl"><rect x="344" y="150" width="300" height="52" rx="10"/><text class="svc" x="360" y="176">Application Load Balancer</text><text class="role" x="360" y="192">靜態 DNS · 健康檢查 · 自動接手</text></g>
-          <g class="node cur"><rect x="344" y="238" width="300" height="76" rx="10"/><text class="svc" x="360" y="266">ECS Fargate Service (fleetmind-svc)</text><text class="role" x="360" y="284">Spring Boot 4.1 · 同源服務 dashboard + REST</text><text class="role" x="360" y="300">RealDataService 讀 metrics · 決策/門檻/forecast</text></g>
-          <!-- ECR -> ECS -->
-          <path class="edge" d="M286 334 C 320 334, 494 334, 494 314" marker-end="url(#arrow)"/>
-          <text class="edge-label" x="300" y="330">pull image</text>
-
-          <!-- managed lane -->
-          <g class="node hl"><rect x="700" y="150" width="238" height="52" rx="10"/><text class="svc" x="716" y="176">Amazon Bedrock (Converse)</text><text class="role" x="716" y="192">Claude Haiku · 只解讀數字不產數字</text></g>
-          <g class="node hl"><rect x="700" y="238" width="238" height="52" rx="10"/><text class="svc" x="716" y="264">Amazon SNS ＋ SES v2</text><text class="role" x="716" y="280">SNS fleetmind-alerts（0 訂閱）· SES 實際寄達</text></g>
-          <g class="node"><rect x="700" y="308" width="238" height="52" rx="10"/><text class="svc" x="716" y="334">Task Role</text><text class="role" x="716" y="350">bedrock:Invoke · sns:Publish · ses:SendEmail</text></g>
-          <path class="edge strong" d="M644 264 H700" marker-end="url(#arrowS)"/>
-          <text class="edge-label" x="650" y="256">brief</text>
-          <path class="edge strong" d="M644 288 C 670 288, 686 264, 700 264" marker-end="url(#arrowS)"/>
-
-          <!-- user -->
-          <g class="node"><rect x="344" y="88" width="300" height="42" rx="10"/><text class="svc" x="360" y="113">陽明營運端 / 評審 (瀏覽器)</text></g>
-          <path class="edge strong" d="M494 130 V150" marker-end="url(#arrowS)"/>
-          <text class="edge-label" x="504" y="145">HTTP :80</text>
-          <path class="edge" d="M494 202 V238" marker-end="url(#arrow)"/>
-        </svg>
+        <button class="bp-open" type="button" data-src="/img/diagrams/architecture.svg" data-title="現行架構 · 系統雲端架構圖">
+          <img src="/img/diagrams/architecture.svg" width="1600" height="900" alt="FleetMind 系統雲端架構圖：VPC 內兩個公有子網、internet-facing ALB、ECS Fargate 任務，以及 Bedrock、SNS、SES、CloudWatch Logs 等代管服務。">
+          <span class="bp-hint">⤢ 點擊放大閱讀</span>
+        </button>
       </div>
-      <div class="dcap">資料流：正午報表 → core-calc 算 metrics → 烤映像 → ECR → ECS 拉取；使用者 → ALB → Fargate 服務 → Bedrock / SNS + SES。</div>
+      <div class="dcap">使用者 → ALB:80 → Fargate 任務 → Bedrock / SNS + SES；ECR 那條虛線是部署路徑，real-metrics.json 在 build 時就烘進映像，請求路徑上沒有任何資料存放層。圖中組態 2026-07-15 自帳號 516665228894 讀回。</div>
     </div>
 
     <div class="grid2">
@@ -408,36 +344,27 @@
   <section id="blueprint">
     <div class="sec-head">
       <p class="sec-kicker"><span class="tag cur">實測・讀自帳號</span> Verified blueprints</p>
-      <h2><span class="num">圖</span>三張實測藍圖 — 架構、權限、資料流</h2>
-      <p class="sec-lede">這三張圖不是為了簡報好看畫的：每個框、每條 ARN 都是從帳號 <b>516665228894</b> 讀回來、再逐條對照過的。包含不好看的部分——兩個子網都是 public、任務帶 public IP、SNS topic 沒有訂閱者、Bedrock 與 SES 的 policy 是 <code>Resource: *</code>。點任一張放大到 100% 以上，ARN 與 policy 可以逐行讀。</p>
+      <h2><span class="num">圖</span>兩張實測藍圖 — 權限與資料流</h2>
+      <p class="sec-lede">這兩張圖不是為了簡報好看畫的：每個框、每條 ARN 都是從帳號 <b>516665228894</b> 讀回來、再逐條對照過的（同一套讀法畫出的系統架構圖，就是上面「現行架構」那張）。包含不好看的部分——兩個子網都是 public、任務帶 public IP、SNS topic 沒有訂閱者、Bedrock 與 SES 的 policy 是 <code>Resource: *</code>。點任一張放大到 100% 以上，ARN 與 policy 可以逐行讀。</p>
     </div>
 
     <div class="bp" id="bpViewer">
       <div class="bp-rail" role="tablist" aria-label="藍圖切換">
-        <button class="bp-tab" role="tab" type="button" id="bpT1" aria-controls="bpP1" aria-selected="true"><span class="n">01</span>系統雲端架構</button>
-        <button class="bp-tab" role="tab" type="button" id="bpT2" aria-controls="bpP2" aria-selected="false"><span class="n">02</span>權限設定 · IAM</button>
-        <button class="bp-tab" role="tab" type="button" id="bpT3" aria-controls="bpP3" aria-selected="false"><span class="n">03</span>即時資料流</button>
+        <button class="bp-tab" role="tab" type="button" id="bpT1" aria-controls="bpP1" aria-selected="true"><span class="n">01</span>權限設定 · IAM</button>
+        <button class="bp-tab" role="tab" type="button" id="bpT2" aria-controls="bpP2" aria-selected="false"><span class="n">02</span>即時資料流</button>
       </div>
 
       <div class="bp-stage">
         <div class="bp-sheet" role="tabpanel" id="bpP1" aria-labelledby="bpT1" tabindex="0">
-          <button class="bp-open" type="button" data-src="/img/diagrams/architecture.svg" data-title="01 · 系統雲端架構圖">
-            <img src="/img/diagrams/architecture.svg" width="1600" height="900" alt="FleetMind 系統雲端架構圖：VPC 內兩個公有子網、internet-facing ALB、ECS Fargate 任務，以及 Bedrock、SNS、SES、CloudWatch Logs 等代管服務。">
-            <span class="bp-hint">⤢ 點擊放大閱讀</span>
-          </button>
-          <p class="bp-cap">VPC <b>vpc-0415efac81151722c</b>，兩個子網 <span class="warn">都是 public</span>（<code>mapPublicIpOnLaunch=true</code>），Fargate 任務<span class="warn">也帶 public IP</span>——這是為了不架 NAT gateway 也能從 ECR 拉映像。擋在外面的不是子網隔離，是 security group：<b>fleetmind-sg</b> 的 tcp/8080 只放行來自 ALB SG 的流量。</p>
-        </div>
-
-        <div class="bp-sheet" role="tabpanel" id="bpP2" aria-labelledby="bpT2" tabindex="0" hidden>
-          <button class="bp-open" type="button" data-src="/img/diagrams/iam.svg" data-title="02 · 權限設定：IAM 兩角色分離與網路權限邊界">
+          <button class="bp-open" type="button" data-src="/img/diagrams/iam.svg" data-title="01 · 權限設定：IAM 兩角色分離與網路權限邊界">
             <img src="/img/diagrams/iam.svg" width="1600" height="900" alt="FleetMind IAM 權限設定圖：task role 與 execution role 分離，列出各自的 inline policy、action 與 resource，以及 security group 構成的網路權限邊界。">
             <span class="bp-hint">⤢ 點擊放大閱讀</span>
           </button>
           <p class="bp-cap">兩個角色是分開的，這是真的最小權限收穫：<b>fleetmind-ecs-task</b> 只有 <code>bedrock:InvokeModel</code>、<code>sns:Publish</code>、<code>ses:SendEmail</code>；拉 ECR 映像與寫 log group 的權限在 <b>fleetmind-ecs-exec</b> 上——應用本身永遠碰不到。動作是窄的（只有 <code>InvokeModel</code>，不是 <code>bedrock:*</code>），SNS 綁死單一 topic ARN；但 <span class="warn">Bedrock 與 SES 是 <code>Resource: *</code></span>，圖上照實標，不寫「全面最小權限」。</p>
         </div>
 
-        <div class="bp-sheet" role="tabpanel" id="bpP3" aria-labelledby="bpT3" tabindex="0" hidden>
-          <button class="bp-open" type="button" data-src="/img/diagrams/dataflow.svg" data-title="03 · 即時資料流">
+        <div class="bp-sheet" role="tabpanel" id="bpP2" aria-labelledby="bpT2" tabindex="0" hidden>
+          <button class="bp-open" type="button" data-src="/img/diagrams/dataflow.svg" data-title="02 · 即時資料流">
             <img src="/img/diagrams/dataflow.svg" width="1600" height="900" alt="FleetMind 即時資料流圖：瀏覽器經 ALB 進入 Fargate 任務，RealDataService 讀取映像內的 real-metrics.json，ai-brief 走 Bedrock Converse 與 guardrail 驗證，門檻越線時發出 SNS 與 SES 告警，日誌進 CloudWatch。">
             <span class="bp-hint">⤢ 點擊放大閱讀</span>
           </button>
@@ -462,26 +389,10 @@
       <p class="sec-lede">前端純靜態放 S3/CloudFront，API 走 API Gateway → Lambda，指標存 DynamoDB；每晚 EventBridge 觸發 Lambda 從 S3 重算指標。閒置零成本、隨流量自動伸縮。</p>
     </div>
     <div class="diagram"><div class="scroll">
-      <svg viewBox="0 0 960 340" role="img" aria-label="Serverless 架構圖">
-        <title>方案 B — 全 Serverless</title>
-        <desc>CloudFront + S3 提供靜態前端，API Gateway 觸發 Lambda，資料存 DynamoDB，EventBridge 排程重算，Bedrock 與 SES/SNS 負責 AI 與告警。</desc>
-        <g class="node"><rect x="24" y="130" width="150" height="60" rx="10"/><text class="svc" x="40" y="156">CloudFront</text><text class="role" x="40" y="172">+ S3 靜態前端</text></g>
-        <g class="node hl"><rect x="210" y="130" width="150" height="60" rx="10"/><text class="svc" x="226" y="156">API Gateway</text><text class="role" x="226" y="172">HTTP API</text></g>
-        <g class="node cur"><rect x="396" y="120" width="164" height="80" rx="10"/><text class="svc" x="412" y="146">AWS Lambda</text><text class="role" x="412" y="162">決策/門檻/forecast 邏輯</text><text class="role" x="412" y="178">core-calc 打包為函式</text></g>
-        <g class="node"><rect x="600" y="60" width="164" height="56" rx="10"/><text class="svc" x="616" y="86">DynamoDB</text><text class="role" x="616" y="102">metrics / 設定</text></g>
-        <g class="node hl"><rect x="600" y="128" width="164" height="56" rx="10"/><text class="svc" x="616" y="154">Bedrock</text><text class="role" x="616" y="170">AI brief</text></g>
-        <g class="node hl"><rect x="600" y="196" width="164" height="56" rx="10"/><text class="svc" x="616" y="222">SES / SNS</text><text class="role" x="616" y="238">Email 告警</text></g>
-        <g class="node"><rect x="24" y="238" width="150" height="60" rx="10"/><text class="svc" x="40" y="264">EventBridge</text><text class="role" x="40" y="280">每晚排程</text></g>
-        <g class="node"><rect x="210" y="238" width="150" height="60" rx="10"/><text class="svc" x="226" y="264">S3 noon reports</text><text class="role" x="226" y="280">原始資料湖</text></g>
-        <path class="edge" d="M174 160 H210" marker-end="url(#arrow)"/>
-        <path class="edge strong" d="M360 160 H396" marker-end="url(#arrowS)"/>
-        <path class="edge" d="M560 150 H600" marker-end="url(#arrow)"/>
-        <path class="edge" d="M560 140 C 580 120, 585 100, 600 92" marker-end="url(#arrow)"/>
-        <path class="edge" d="M560 180 C 580 200, 585 214, 600 220" marker-end="url(#arrow)"/>
-        <path class="edge" d="M174 268 H210" marker-end="url(#arrow)"/>
-        <path class="edge" d="M285 238 C 320 210, 420 210, 460 200" marker-end="url(#arrow)"/>
-        <text class="edge-label" x="330" y="222">重算 metrics</text>
-      </svg>
+      <button class="bp-open" type="button" data-src="/img/diagrams/sec-optb.svg" data-title="方案 B · 全 Serverless（候選架構，尚未部署）">
+        <img src="/img/diagrams/sec-optb.svg" width="1600" height="900" alt="方案 B 全 Serverless 候選架構圖，尚未部署：CloudFront 加 S3 靜態前端、API Gateway、Lambda、DynamoDB、EventBridge 皆為提案，目前皆未建立；Bedrock、SNS、SES 已實際存在於帳號 516665228894，圖中畫的是它們在此候選方案中的角色。">
+        <span class="bp-hint">⤢ 點擊放大閱讀</span>
+      </button>
     </div><div class="dcap">閒置零成本 · 冷啟動是 Java Lambda 的主要取捨 · 重算受 15 分鐘函式上限約束。</div></div>
     <div class="grid2">
       <div class="card pros"><h3>◆ 優點</h3><ul>
@@ -506,19 +417,10 @@
       <p class="sec-lede">同一個容器映像，交給 App Runner 全托管：內建 HTTPS 網域、自動伸縮、免碰 ALB / VPC / 叢集。程式碼零改動即可上線。</p>
     </div>
     <div class="diagram"><div class="scroll">
-      <svg viewBox="0 0 900 240" role="img" aria-label="App Runner 架構圖">
-        <title>方案 C — App Runner</title>
-        <desc>ECR 映像交由 App Runner 全托管服務，內建 HTTPS 與自動伸縮，呼叫 Bedrock 與 SNS。</desc>
-        <g class="node"><rect x="30" y="90" width="150" height="60" rx="10"/><text class="svc" x="46" y="116">瀏覽器</text><text class="role" x="46" y="132">內建 HTTPS 網域</text></g>
-        <g class="node"><rect x="220" y="90" width="150" height="60" rx="10"/><text class="svc" x="236" y="116">Amazon ECR</text><text class="role" x="236" y="132">同一映像</text></g>
-        <g class="node cur"><rect x="410" y="80" width="180" height="80" rx="10"/><text class="svc" x="426" y="106">AWS App Runner</text><text class="role" x="426" y="122">自動伸縮 · 免管叢集</text><text class="role" x="426" y="138">HTTPS / 憑證內建</text></g>
-        <g class="node hl"><rect x="640" y="56" width="220" height="52" rx="10"/><text class="svc" x="656" y="82">Amazon Bedrock</text><text class="role" x="656" y="98">AI brief</text></g>
-        <g class="node hl"><rect x="640" y="132" width="220" height="52" rx="10"/><text class="svc" x="656" y="158">Amazon SNS / SES</text><text class="role" x="656" y="174">Email 告警</text></g>
-        <path class="edge strong" d="M180 120 H410" marker-end="url(#arrowS)"/>
-        <path class="edge" d="M370 120 H410" marker-end="url(#arrow)"/>
-        <path class="edge" d="M590 108 C 615 100, 625 90, 640 84" marker-end="url(#arrow)"/>
-        <path class="edge" d="M590 132 C 615 140, 625 150, 640 156" marker-end="url(#arrow)"/>
-      </svg>
+      <button class="bp-open" type="button" data-src="/img/diagrams/sec-optc.svg" data-title="方案 C · App Runner（候選架構 · 本帳號無法部署）">
+        <img src="/img/diagrams/sec-optc.svg" width="1600" height="900" alt="方案 C App Runner 候選架構圖，本帳號無法部署：同一份 ECR 容器映像交給 App Runner 全託管，免 ALB、免 VPC、免 ECS 叢集，使用內建的 HTTPS 網域與自動伸縮；App Runner 節點與連線皆以虛線標為候選，在帳號 516665228894 建立時回 AccessDenied。右欄的 ECR、Bedrock、SNS、SES、CloudWatch Logs 確實存在，但今天是被現行的 ECS 任務呼叫。">
+        <span class="bp-hint">⤢ 點擊放大閱讀</span>
+      </button>
     </div><div class="dcap">程式零改動 · 本 workshop 帳號對 App Runner 回 AccessDenied，故正式選了 ECS。</div></div>
     <div class="grid2">
       <div class="card pros"><h3>◆ 優點</h3><ul>
@@ -543,22 +445,10 @@
       <p class="sec-lede">一台 EC2 跑 Docker Compose + Nginx，綁 Elastic IP 拿固定入口。穩定負載下單位成本最低，代價是修補、監控、擴縮都自己扛。</p>
     </div>
     <div class="diagram"><div class="scroll">
-      <svg viewBox="0 0 900 250" role="img" aria-label="EC2 架構圖">
-        <title>方案 D — EC2 + Docker</title>
-        <desc>使用者經 Elastic IP 進到 EC2 上的 Nginx 反向代理與 Docker 容器，容器呼叫 Bedrock 與 SNS，資料存於 EBS。</desc>
-        <g class="node"><rect x="30" y="96" width="140" height="58" rx="10"/><text class="svc" x="46" y="122">瀏覽器</text><text class="role" x="46" y="138">Elastic IP 固定</text></g>
-        <g class="node cur"><rect x="210" y="70" width="330" height="120" rx="10"/><text class="svc" x="226" y="98">EC2 執行個體</text>
-          <rect x="230" y="110" width="140" height="64" rx="8" fill="var(--surface-2)" stroke="var(--line)"/><text class="svc" x="244" y="132" font-size="12">Nginx</text><text class="role" x="244" y="148">反向代理 / TLS</text>
-          <rect x="384" y="110" width="140" height="64" rx="8" fill="var(--surface-2)" stroke="var(--line)"/><text class="svc" x="398" y="132" font-size="12">Docker</text><text class="role" x="398" y="148">Spring Boot 容器</text>
-        </g>
-        <g class="node"><rect x="580" y="46" width="150" height="52" rx="10"/><text class="svc" x="596" y="72">EBS 磁碟</text><text class="role" x="596" y="88">metrics / 日誌</text></g>
-        <g class="node hl"><rect x="580" y="112" width="150" height="52" rx="10"/><text class="svc" x="596" y="138">Bedrock</text><text class="role" x="596" y="154">AI brief</text></g>
-        <g class="node hl"><rect x="580" y="178" width="150" height="52" rx="10"/><text class="svc" x="596" y="204">SNS / SES</text><text class="role" x="596" y="220">Email 告警</text></g>
-        <path class="edge strong" d="M170 124 H210" marker-end="url(#arrowS)"/>
-        <path class="edge" d="M540 138 H580" marker-end="url(#arrow)"/>
-        <path class="edge" d="M540 130 C 560 100, 565 84, 580 74" marker-end="url(#arrow)"/>
-        <path class="edge" d="M540 150 C 560 180, 565 194, 580 200" marker-end="url(#arrow)"/>
-      </svg>
+      <button class="bp-open" type="button" data-src="/img/diagrams/sec-optd.svg" data-title="方案 D · EC2 + Docker（候選方案，未部署）">
+        <img src="/img/diagrams/sec-optd.svg" width="1600" height="900" alt="方案 D EC2 加 Docker 候選方案架構圖，未部署：單台 EC2 綁 Elastic IP，機上跑 Nginx 反向代理與同一個 fleetmind-api Docker 容器，根磁碟區為 EBS，映像自 ECR 拉取，容器呼叫帳號內已存在的 Bedrock、SNS、SES v2 與 CloudWatch Logs。單台、單一 AZ、單一 Elastic IP 即為本方案的單點故障。">
+        <span class="bp-hint">⤢ 點擊放大閱讀</span>
+      </button>
     </div><div class="dcap">單位成本最低 · 單台為單點風險，正式上線需自建監控與備援。</div></div>
     <div class="grid2">
       <div class="card pros"><h3>◆ 優點</h3><ul>
@@ -583,29 +473,10 @@
       <p class="sec-lede">把眼光放到「不只 15 艘、不只正午一筆」：船端 IoT 即時遙測進 S3 資料湖，Glue/Lambda ETL，Timestream/Athena 查詢，QuickSight 給決策者 BI，SageMaker/Bedrock 做預測。這是規模化的終局形狀。</p>
     </div>
     <div class="diagram"><div class="scroll">
-      <svg viewBox="0 0 960 330" role="img" aria-label="完整資料分析管線架構圖">
-        <title>方案 E — 完整資料分析管線</title>
-        <desc>IoT Core 即時船端遙測與 S3 資料湖為來源，Glue/Lambda ETL 清洗，Timestream/Athena 查詢，供給 ECS 應用、QuickSight BI 與 SageMaker/Bedrock 預測，Step Functions 編排。</desc>
-        <rect class="band-rect" x="8" y="40" width="220" height="270" rx="12"/><text class="band-label" x="24" y="62">來源 / Ingest</text>
-        <rect class="band-rect" x="242" y="40" width="230" height="270" rx="12"/><text class="band-label" x="258" y="62">處理 / ETL</text>
-        <rect class="band-rect" x="486" y="40" width="210" height="270" rx="12"/><text class="band-label" x="502" y="62">查詢 / Store</text>
-        <rect class="band-rect" x="710" y="40" width="242" height="270" rx="12"/><text class="band-label" x="726" y="62">消費 / Serve</text>
-
-        <g class="node"><rect x="24" y="86" width="196" height="56" rx="10"/><text class="svc" x="40" y="112">IoT Core</text><text class="role" x="40" y="128">即時船端遙測</text></g>
-        <g class="node"><rect x="24" y="158" width="196" height="56" rx="10"/><text class="svc" x="40" y="184">S3 資料湖</text><text class="role" x="40" y="200">5 年正午報表原始</text></g>
-        <g class="node hl"><rect x="258" y="120" width="198" height="60" rx="10"/><text class="svc" x="274" y="146">Glue / Lambda ETL</text><text class="role" x="274" y="162">清洗 · 篩選旗標 · 正規化</text></g>
-        <g class="node"><rect x="258" y="200" width="198" height="56" rx="10"/><text class="svc" x="274" y="226">Step Functions</text><text class="role" x="274" y="242">管線編排</text></g>
-        <g class="node hl"><rect x="502" y="120" width="178" height="60" rx="10"/><text class="svc" x="518" y="146">Timestream / Athena</text><text class="role" x="518" y="162">時序查詢 · SQL on S3</text></g>
-        <g class="node cur"><rect x="726" y="80" width="210" height="52" rx="10"/><text class="svc" x="742" y="106">ECS 決策應用</text><text class="role" x="742" y="122">FleetMind dashboard</text></g>
-        <g class="node hl"><rect x="726" y="146" width="210" height="52" rx="10"/><text class="svc" x="742" y="172">QuickSight</text><text class="role" x="742" y="188">決策者 BI 報表</text></g>
-        <g class="node hl"><rect x="726" y="212" width="210" height="52" rx="10"/><text class="svc" x="742" y="252">SageMaker / Bedrock</text><text class="role" x="742" y="248"> </text></g>
-        <path class="edge" d="M220 114 C 240 120, 245 140, 258 144" marker-end="url(#arrow)"/>
-        <path class="edge" d="M220 186 C 240 180, 245 160, 258 156" marker-end="url(#arrow)"/>
-        <path class="edge strong" d="M456 150 H502" marker-end="url(#arrowS)"/>
-        <path class="edge" d="M680 140 C 700 120, 705 110, 726 106" marker-end="url(#arrow)"/>
-        <path class="edge" d="M680 152 C 700 160, 705 168, 726 172" marker-end="url(#arrow)"/>
-        <path class="edge" d="M680 168 C 700 200, 705 226, 726 234" marker-end="url(#arrow)"/>
-      </svg>
+      <button class="bp-open" type="button" data-src="/img/diagrams/sec-opte.svg" data-title="方案 E · 完整資料分析管線（候選方案，尚未部署）">
+        <img src="/img/diagrams/sec-opte.svg" width="1600" height="900" alt="方案 E 完整資料分析管線候選方案架構圖，尚未部署：船端 IoT Core 即時遙測與 S3 資料湖為來源，Glue 與 Lambda 做 ETL、Step Functions 編排，Timestream 與 Athena 提供查詢，供給 ECS 決策應用、QuickSight BI 與 SageMaker 或 Bedrock 預測。圖中 11 個 AWS 節點裡，只有 ECS 決策應用與 Amazon Bedrock 已上線，其餘 9 項皆為提案。">
+        <span class="bp-hint">⤢ 點擊放大閱讀</span>
+      </button>
     </div><div class="dcap">規模化終局：即時 + BI + 預測 · 對三天賽程是過度設計，但畫出成長路線。</div></div>
     <div class="grid2">
       <div class="card pros"><h3>◆ 優點</h3><ul>
@@ -630,28 +501,11 @@
       <p class="sec-lede">縱深防禦是目標，但這頁把「已經在跑的」和「還沒做的」分開講——旁邊就是 live URL，寫得比實際好只會被 curl 拆穿。<b>今天真正擋得住的是入口</b>：Security Group 只放行 ALB，直打 task 公網 IP 已 timeout。其餘是下一步。</p>
     </div>
     <div class="diagram"><div class="scroll">
-      <svg viewBox="0 0 960 300" role="img" aria-label="資安現況：已實作與規劃中">
-        <title>資安：已實作 vs 規劃中</title>
-        <desc>已實作：ALB 為唯一對外入口、任務 Security Group 只放行 ALB 的 SG、IAM 兩角色分離、CloudWatch Logs、Shield Standard 自動生效。規劃中：AWS WAF（目前 0 個 WebACL）、GuardDuty（本帳號 AccessDenied 開不了）、Secrets Manager（目前 0 個 secret）、KMS 自管金鑰（現用 AWS 託管預設金鑰）。兩個子網皆為公有、任務仍有公網 IP，收口靠的是 Security Group 而非子網隔離。</desc>
-
-        <rect class="band-rect" x="16" y="24" width="928" height="120" rx="12"/>
-        <text class="band-label" x="32" y="46">已實作 · 可當場驗證</text>
-        <g class="node"><rect x="34" y="60" width="140" height="66" rx="9"/><text class="svc" x="48" y="84">網際網路</text><text class="role" x="48" y="102">0.0.0.0/0</text></g>
-        <g class="node hl"><rect x="200" y="60" width="172" height="66" rx="9"/><text class="svc" x="214" y="84">ALB · 公有子網</text><text class="role" x="214" y="102">唯一對外入口 · tcp/80</text></g>
-        <g class="node cur"><rect x="398" y="60" width="186" height="66" rx="9"/><text class="svc" x="412" y="84">ECS Fargate · 公有子網</text><text class="role" x="412" y="102">SG 只放行 ALB SG 的 8080</text></g>
-        <g class="node"><rect x="610" y="60" width="152" height="66" rx="9"/><text class="svc" x="624" y="84">IAM 兩角色分離</text><text class="role" x="624" y="102">task / execution role</text></g>
-        <g class="node"><rect x="788" y="60" width="140" height="66" rx="9"/><text class="svc" x="802" y="84">CloudWatch Logs</text><text class="role" x="802" y="102">/fleetmind/api</text></g>
-        <path class="edge" d="M174 93 H200" marker-end="url(#arrow)"/>
-        <path class="edge strong" d="M372 93 H398" marker-end="url(#arrowS)"/>
-
-        <rect class="band-rect" x="16" y="164" width="928" height="120" rx="12"/>
-        <text class="band-label" x="32" y="186">規劃中 · 尚未部署</text>
-        <g class="node"><rect x="34" y="200" width="212" height="66" rx="9"/><text class="svc" x="48" y="224">AWS WAF</text><text class="role" x="48" y="242">目前 0 個 WebACL</text></g>
-        <g class="node"><rect x="270" y="200" width="212" height="66" rx="9"/><text class="svc" x="284" y="224">GuardDuty</text><text class="role" x="284" y="242">本帳號 AccessDenied，開不了</text></g>
-        <g class="node"><rect x="506" y="200" width="200" height="66" rx="9"/><text class="svc" x="520" y="224">Secrets Manager</text><text class="role" x="520" y="242">目前 0 個 secret</text></g>
-        <g class="node"><rect x="730" y="200" width="198" height="66" rx="9"/><text class="svc" x="744" y="224">KMS 自管金鑰</text><text class="role" x="744" y="242">現用 AWS 託管預設金鑰</text></g>
-      </svg>
-    </div><div class="dcap">上排每一項都可當場驗；下排每一項都標了為何還沒有。Shield Standard 在任何 ALB 上自動生效（AWS 預設，非我們部署）。</div></div>
+      <button class="bp-open" type="button" data-src="/img/diagrams/sec-security.svg" data-title="資安 · 已實作 vs 規劃中">
+        <img src="/img/diagrams/sec-security.svg" width="1600" height="900" alt="FleetMind 資安圖，已實作與規劃中分開標示。上半部已實作：ALB 為唯一對外入口、Security Group fleetmind-sg 只放行 ALB SG 的 tcp/8080（直打任務公網 IP 98.92.30.118:8080 已 timeout）、IAM 兩角色分離、CloudWatch Logs 群組 /fleetmind/api，以及 AWS 於所有 ALB 預設生效的 Shield Standard。下半部規劃中：AWS WAF（帳號內 0 個 WebACL）、GuardDuty（list_detectors 回 AccessDenied）、Secrets Manager（帳號內 0 個 secret）、KMS 客戶自管金鑰（現用 AWS 託管預設金鑰）。兩個子網皆為公有子網、任務仍有公網 IP，收口靠的是 Security Group 而非子網隔離。">
+        <span class="bp-hint">⤢ 點擊放大閱讀</span>
+      </button>
+    </div><div class="dcap">上半部除了標〔非讀回〕的 Shield Standard（AWS 於所有 ALB 預設自動生效，非我們部署）之外，每一項都附了當場可驗的證據；下半部四項都標了為何還沒有。</div></div>
     <div class="grid2">
       <div class="card pros"><h3>◆ 已實作（可驗證）</h3><ul>
         <li><b>ALB 是唯一對外入口</b>：<code>fleetmind-sg</code> 只放行 ALB SG 的 8080——直打 task 公網 IP <code>:8080</code> 已 timeout，走 ALB 仍 200</li>
@@ -676,33 +530,11 @@
       <p class="sec-lede"><b>先說清楚：這一段全部還沒有蓋。</b>現況是單一區域 us-east-1、一個 ALB、一個 ECS 服務、desiredCount 1；帳號裡 Route 53 hosted zone 0、DynamoDB 0 張表、EventBridge 0 條規則、S3 0 個 bucket。而且本次 workshop 帳號<b>連跨區都不允許</b>——ap-northeast-1 的 ECS 與 ECR 直接回 AccessDenied，這條路在比賽帳號上走不了。<br>但船隊本來就分佈在不同國家，這是貴司自有帳號上該長的樣子，所以照樣把它畫出來、講清楚取捨。</p>
     </div>
     <div class="diagram"><div class="scroll">
-      <svg viewBox="0 0 960 400" role="img" aria-label="多區域 Active-Active 架構圖">
-        <title>多區域 Active-Active 與災難備援（設計藍圖，尚未部署）</title>
-        <desc>設計藍圖，尚未部署：現況為單一區域 us-east-1、一個 ALB、一個 ECS 服務；帳號內 Route 53、DynamoDB、EventBridge、S3 皆為 0，且 ap-northeast-1 的 ECS 與 ECR 回 AccessDenied。以下為提案的目標狀態：不同國家船務端經 Route 53 地理或延遲路由到最近區域；ap-northeast-1 與 us-east-1 兩區同時服務；DynamoDB Global Tables 雙向複製、S3 跨區複製備份、跨區 EventBridge 匯總即時告警；健康檢查自動 failover。</desc>
-        <g class="node"><rect x="14" y="78" width="152" height="52" rx="10"/><text class="svc" x="30" y="99">亞洲船務端</text><text class="role" x="30" y="117">日 / 台 / 韓 / 星</text></g>
-        <g class="node"><rect x="14" y="270" width="152" height="52" rx="10"/><text class="svc" x="30" y="291">歐美船務端</text><text class="role" x="30" y="309">EU / US</text></g>
-        <g class="node hl"><rect x="198" y="162" width="150" height="78" rx="10"/><text class="svc" x="214" y="188">Route 53</text><text class="role" x="214" y="206">地理／延遲路由</text><text class="role" x="214" y="223">健康檢查 failover</text></g>
-        <rect class="band-rect" x="392" y="44" width="256" height="150" rx="12"/>
-        <text class="band-label" x="408" y="66">區域 A · ap-northeast-1</text>
-        <g class="node cur"><rect x="410" y="80" width="108" height="48" rx="8"/><text class="svc" x="422" y="100">ALB → ECS</text><text class="role" x="422" y="117">決策服務</text></g>
-        <g class="node hl"><rect x="530" y="80" width="102" height="48" rx="8"/><text class="svc" x="542" y="100">DynamoDB</text><text class="role" x="542" y="117">Global Table</text></g>
-        <g class="node"><rect x="410" y="138" width="108" height="44" rx="8"/><text class="svc" x="422" y="158">S3 報表/備份</text><text class="role" x="422" y="174">跨區複製</text></g>
-        <rect class="band-rect" x="392" y="214" width="256" height="150" rx="12"/>
-        <text class="band-label" x="408" y="236">區域 B · us-east-1</text>
-        <g class="node cur"><rect x="410" y="250" width="108" height="48" rx="8"/><text class="svc" x="422" y="270">ALB → ECS</text><text class="role" x="422" y="287">決策服務</text></g>
-        <g class="node hl"><rect x="530" y="250" width="102" height="48" rx="8"/><text class="svc" x="542" y="270">DynamoDB</text><text class="role" x="542" y="287">Global Table</text></g>
-        <g class="node"><rect x="410" y="308" width="108" height="44" rx="8"/><text class="svc" x="422" y="328">S3 報表/備份</text><text class="role" x="422" y="344">跨區複製</text></g>
-        <g class="node hl"><rect x="700" y="164" width="150" height="74" rx="10"/><text class="svc" x="716" y="190">EventBridge</text><text class="role" x="716" y="208">跨區告警匯總</text><text class="role" x="716" y="225">→ SNS / SES</text></g>
-        <path class="edge" d="M166 104 C 182 130, 190 150, 198 166" marker-end="url(#arrow)"/>
-        <path class="edge" d="M166 296 C 182 270, 190 250, 198 236" marker-end="url(#arrow)"/>
-        <path class="edge strong" d="M348 184 C 372 140, 384 118, 410 104" marker-end="url(#arrowS)"/>
-        <path class="edge strong" d="M348 216 C 372 260, 384 282, 410 274" marker-end="url(#arrowS)"/>
-        <path class="edge strong" d="M581 128 V250" marker-start="url(#arrowS)" marker-end="url(#arrowS)"/>
-        <text class="edge-label" x="588" y="194">雙向複製</text>
-        <path class="edge" d="M700 190 C 668 150, 650 130, 632 120" marker-end="url(#arrow)"/>
-        <path class="edge" d="M700 212 C 668 252, 650 272, 632 282" marker-end="url(#arrow)"/>
-      </svg>
-    </div><div class="dcap">目標狀態（尚未部署）：兩區域同時服務、資料雙向複製；一區故障 Route 53 自動切換，另一區承接全量——無單一區域單點。今天的實況是圖左下那一塊的單區版本。</div></div>
+      <button class="bp-open" type="button" data-src="/img/diagrams/sec-activeactive.svg" data-title="多區域 Active-Active · 設計藍圖，尚未部署">
+        <img src="/img/diagrams/sec-activeactive.svg" width="1600" height="900" alt="FleetMind 多區域 Active-Active 設計藍圖，尚未部署：Route 53 依地理或延遲路由到 ap-northeast-1 與 us-east-1 兩區，DynamoDB Global Tables 雙向複製、S3 跨區複製、EventBridge 跨區告警匯總，皆以虛線標為提案。帳號 516665228894 讀回 Route 53 hosted zone 0、DynamoDB 資料表 0、EventBridge 規則 0、S3 bucket 0，且 ap-northeast-1 的 ECS 與 ECR 回 AccessDenied。圖下另附今日實況：單一區域 us-east-1 的 ALB fleetmind-alb 與 ECS 服務 fleetmind-svc，請求路徑上沒有資料存放層。">
+        <span class="bp-hint">⤢ 點擊放大閱讀</span>
+      </button>
+    </div><div class="dcap">目標狀態（尚未部署）：兩區域同時服務、資料雙向複製；一區故障 Route 53 自動切換，另一區承接全量——無單一區域單點。圖下方「今日實況（已部署）· 單一區域 us-east-1」那一條，才是現在真的在跑的東西。</div></div>
     <div class="grid2">
       <div class="card pros"><h3>◆ 設計目標（提案）</h3><ul>
         <li>Active-Active：兩區域皆服務，非冷備援</li>
@@ -814,7 +646,7 @@
     var title = document.getElementById('bpModalTitle');
     var scroll = document.getElementById('bpScroll');
     var zbtns = Array.prototype.slice.call(dlg.querySelectorAll('.bp-btn[data-z]'));
-    var NATURAL = 1600; // all three drawings are authored at 1600x900
+    var NATURAL = 1600; // every drawing on this page is authored at 1600x900
     var mode = 'fit';
 
     function applyZoom(z, keepCentre) {
@@ -832,7 +664,9 @@
       scroll.scrollTop = cy * scroll.scrollHeight - scroll.clientHeight / 2;
     }
 
-    Array.prototype.slice.call(viewer.querySelectorAll('.bp-open')).forEach(function (b) {
+    // Every drawing on the page opens in this reader, not just the two blueprint sheets:
+    // the section diagrams are the same white 1600x900 AWS sheets and need the same zoom to be legible.
+    Array.prototype.slice.call(document.querySelectorAll('.bp-open')).forEach(function (b) {
       b.addEventListener('click', function () {
         img.src = b.dataset.src;
         img.alt = b.querySelector('img').alt;

@@ -23,14 +23,14 @@
       .t-bul   { font-size: 9.5px; font-weight: 400; fill: #4E5B6B; }
       .t-bulh  { font-size: 11px; font-weight: 700; fill: #232F3E; }
       .bdg     { font-size: 11px; font-weight: 700; fill: #FFFFFF; text-anchor: middle; }
-      .arrow   { fill: none; stroke: #879196; stroke-width: 1; marker-end: url(#ah); }
+      .arrow   { fill: none; stroke: #879196; stroke-width: 1; marker-end: url(#ah-iam); }
       .grpbox  { fill: none; stroke: #A7AFB7; stroke-width: 1; stroke-dasharray: 5 4; }
       /* modifiers must follow .grpbox: equal specificity, later rule wins.
          A CSS rule outranks a presentation attribute, so these cannot be set per-element. */
       .cloudbox { stroke: #879196; stroke-dasharray: none; }
       .netbox   { stroke: #DD344C; }
     </style>
-    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <marker id="ah-iam" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M0,1 L9,5 L0,9 Z" fill="#879196"/>
     </marker>
 

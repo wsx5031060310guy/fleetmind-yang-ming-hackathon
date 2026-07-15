@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" font-family="system-ui, -apple-system, 'Helvetica Neue', 'PingFang TC', 'Noto Sans TC', sans-serif">
   <defs>
-    <marker id="ah" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <marker id="ah-arch" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M0 0 L10 5 L0 10 z" fill="#7D8998"/>
     </marker>
   </defs>
@@ -56,7 +56,7 @@
   <text x="614" y="318" text-anchor="middle" font-size="8.5" font-style="italic" fill="#6B7885">目標群組 fleetmind-tg → 172.31.65.255:8080 · 狀態 healthy</text>
 
   <!-- Flow 1: browser → ALB -->
-  <path d="M185 254 H590" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah)"/>
+  <path d="M185 254 H590" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah-arch)"/>
   <circle cx="400" cy="254" r="11" fill="#232F3E"/>
   <text x="400" y="258" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">1</text>
   <text x="422" y="247" font-size="9" fill="#5A6470">HTTP tcp/80</text>
@@ -106,7 +106,7 @@
   <text x="958" y="447" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">2</text>
 
   <!-- Flow 1 cont.: ALB → task -->
-  <path d="M614 328 V477 H787" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah)"/>
+  <path d="M614 328 V477 H787" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah-arch)"/>
 
   <!-- ===== Managed services outside the VPC ===== -->
   <rect x="1085" y="175" width="470" height="549" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 3"/>
@@ -180,11 +180,11 @@
 
   <!-- Flows 4 / 5 / 6 and the ECR image pull -->
   <path d="M835 477 H1064" stroke="#7D8998" stroke-width="1" fill="none"/>
-  <path d="M1022 477 V245 H1110" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah)"/>
-  <path d="M1036 477 V408 H1110" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah)"/>
-  <path d="M1050 477 V485 H1110" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah)"/>
-  <path d="M1064 477 V610 H1110" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah)"/>
-  <path d="M1113 685 H1078 V640 H960 V493 H835" stroke="#7D8998" stroke-width="1" fill="none" stroke-dasharray="5 4" marker-end="url(#ah)"/>
+  <path d="M1022 477 V245 H1110" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah-arch)"/>
+  <path d="M1036 477 V408 H1110" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah-arch)"/>
+  <path d="M1050 477 V485 H1110" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah-arch)"/>
+  <path d="M1064 477 V610 H1110" stroke="#7D8998" stroke-width="1" fill="none" marker-end="url(#ah-arch)"/>
+  <path d="M1113 685 H1078 V640 H960 V493 H835" stroke="#7D8998" stroke-width="1" fill="none" stroke-dasharray="5 4" marker-end="url(#ah-arch)"/>
 
   <circle cx="1022" cy="300" r="11" fill="#232F3E"/>
   <text x="1022" y="304" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">4</text>

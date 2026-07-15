@@ -1,0 +1,326 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="方案 E 完整資料分析管線候選架構圖" font-family="system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif">
+  <title>方案 E — 完整資料分析管線（候選方案，尚未部署）</title>
+  <desc>候選方案：船端 IoT Core 即時遙測與 S3 資料湖為來源，Glue / Lambda 做 ETL、Step Functions 編排，Timestream / Athena 提供查詢，供給 ECS 決策應用、QuickSight BI 與 SageMaker / Bedrock 預測。2026-07-15 自帳號 516665228894 讀回：圖中 11 個 AWS 節點裡，ECS 決策應用與 Amazon Bedrock 已上線，其餘 9 項皆為提案。其中 S3 經 list_buckets 讀回帳號內 0 個 bucket；Lambda 經 list_functions 讀回帳號內實有 1 個函式，但非本專案所建；IoT Core / Glue / Step Functions / Timestream / Athena / QuickSight / SageMaker 未逐一查帳號，係依原始碼與 pom 判定本專案未使用（標〔非讀回〕）。</desc>
+  <defs>
+    <marker id="ah-opte" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,1.2 L8,4.5 L0,7.8 Z" fill="#5A6875"/>
+    </marker>
+
+    <g id="g-opte-iot">
+      <g fill="none" stroke="#FFFFFF" stroke-width="1.6">
+        <rect x="7" y="7" width="10" height="10" rx="2"/>
+        <path d="M10,7 V3 M14,7 V3 M10,17 V21 M14,17 V21 M7,10 H3 M7,14 H3 M17,10 H21 M17,14 H21"/>
+      </g>
+      <circle cx="12" cy="12" r="2" fill="#FFFFFF"/>
+    </g>
+    <g id="g-opte-s3" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round">
+      <path d="M4.5,5.5 H19.5 L17.5,20.5 H6.5 Z"/>
+      <path d="M5.3,11 H18.7"/>
+    </g>
+    <g id="g-opte-glue" fill="none" stroke="#FFFFFF" stroke-width="1.4">
+      <circle cx="9.5" cy="9.5" r="3.8"/>
+      <path d="M9.5,3.6 V5.1 M9.5,13.9 V15.4 M3.6,9.5 H5.1 M13.9,9.5 H15.4 M5.3,5.3 L6.4,6.4 M12.6,12.6 L13.7,13.7 M13.7,5.3 L12.6,6.4 M6.4,12.6 L5.3,13.7"/>
+      <circle cx="16.2" cy="16.2" r="2.9"/>
+      <path d="M16.2,11.9 V13.3 M16.2,19.1 V20.5 M11.9,16.2 H13.3 M19.1,16.2 H20.5"/>
+    </g>
+    <g id="g-opte-lambda" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round">
+      <path d="M6,20 L13,4"/>
+      <path d="M10.3,11.5 L17.6,20"/>
+    </g>
+    <g id="g-opte-sfn">
+      <g fill="none" stroke="#FFFFFF" stroke-width="1.5">
+        <rect x="3.5" y="3.5" width="8" height="6" rx="1.5"/>
+        <rect x="14" y="15" width="7" height="6" rx="1.5"/>
+        <path d="M7.5,9.5 V18 H11.4"/>
+      </g>
+      <path d="M11.2,15.9 L14,18 L11.2,20.1 Z" fill="#FFFFFF"/>
+    </g>
+    <g id="g-opte-ts">
+      <g fill="none" stroke="#FFFFFF" stroke-width="1.5">
+        <ellipse cx="12" cy="6" rx="7.5" ry="2.8"/>
+        <path d="M4.5,6 V18 A7.5,2.8 0 0 0 19.5,18 V6"/>
+        <path d="M4.5,12 A7.5,2.8 0 0 0 19.5,12"/>
+      </g>
+      <circle cx="17.6" cy="17.6" r="4.2" fill="#527FFF" stroke="#FFFFFF" stroke-width="1.3"/>
+      <path d="M17.6,15.2 V17.6 H19.6" fill="none" stroke="#FFFFFF" stroke-width="1.3"/>
+    </g>
+    <g id="g-opte-athena" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round">
+      <path d="M3.5,5 H20.5 M3.5,9.5 H20.5 M3.5,14 H10"/>
+      <circle cx="15.4" cy="15.4" r="4.4"/>
+      <path d="M18.6,18.6 L21.4,21.4"/>
+    </g>
+    <g id="g-opte-qs">
+      <rect x="3" y="3.5" width="18" height="17" rx="2" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+      <g fill="#FFFFFF">
+        <rect x="6.6" y="12" width="2.6" height="5"/>
+        <rect x="10.7" y="8.4" width="2.6" height="8.6"/>
+        <rect x="14.8" y="10.4" width="2.6" height="6.6"/>
+      </g>
+    </g>
+    <g id="g-opte-sm">
+      <path d="M6,7 L12,5.5 M6,7 L12,12 M6,7 L12,18.5 M6,17 L12,5.5 M6,17 L12,12 M6,17 L12,18.5 M12,5.5 L18,12 M12,12 L18,12 M12,18.5 L18,12" fill="none" stroke="#FFFFFF" stroke-width="1.2"/>
+      <g fill="#FFFFFF">
+        <circle cx="6" cy="7" r="1.9"/><circle cx="6" cy="17" r="1.9"/>
+        <circle cx="12" cy="5.5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="18.5" r="1.9"/>
+        <circle cx="18" cy="12" r="1.9"/>
+      </g>
+    </g>
+    <g id="g-opte-ecs" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linejoin="round">
+      <path d="M12,1.6 L22,7 L22,17 L12,22.4 L2,17 L2,7 Z"/>
+      <path d="M12,12 L22,7 M12,12 L2,7 M12,12 L12,22.4"/>
+    </g>
+    <g id="g-opte-bed">
+      <path d="M12,12 L12,3.5 M12,12 L19.4,7.8 M12,12 L19.4,16.2 M12,12 L12,20.5 M12,12 L4.6,16.2 M12,12 L4.6,7.8" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+      <circle cx="12" cy="12" r="2.8" fill="#FFFFFF"/>
+      <circle cx="12" cy="3.5" r="1.7" fill="#FFFFFF"/>
+      <circle cx="19.4" cy="7.8" r="1.7" fill="#FFFFFF"/>
+      <circle cx="19.4" cy="16.2" r="1.7" fill="#FFFFFF"/>
+      <circle cx="12" cy="20.5" r="1.7" fill="#FFFFFF"/>
+      <circle cx="4.6" cy="16.2" r="1.7" fill="#FFFFFF"/>
+      <circle cx="4.6" cy="7.8" r="1.7" fill="#FFFFFF"/>
+    </g>
+    <g id="g-opte-ship" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round">
+      <path d="M3,15 H21 L18.5,20.5 H5.5 Z"/>
+      <path d="M12,15 V4 M12,6 L18,9 L12,11.6"/>
+    </g>
+    <g id="g-opte-users" fill="#FFFFFF">
+      <circle cx="8.5" cy="7.5" r="3"/>
+      <path d="M2.6,19 a6,6 0 0 1 11.8,0 Z"/>
+      <circle cx="16.6" cy="9.2" r="2.4"/>
+      <path d="M12.8,19 a4.6,4.6 0 0 1 8.8,0 Z"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <!-- ===================== title ===================== -->
+  <text x="42" y="40" font-size="23" font-weight="600" fill="#232F3E">方案 E — 完整資料分析管線<tspan font-weight="400" fill="#5A6875"> · 候選方案（CANDIDATE）</tspan></text>
+  <text x="42" y="63" font-size="12.5" fill="#5A6875">全船隊即時遙測 ＋ 資料湖 ＋ ETL ＋ 查詢 ＋ BI / ML —— 依「擷取 / 儲存 / 處理 / 查詢與服務」四層鋪陳</text>
+
+  <!-- ===================== CANDIDATE banner ===================== -->
+  <rect x="42" y="74" width="1518" height="46" rx="4" fill="#FFF4E5" stroke="#E8C99B" stroke-width="1"/>
+  <rect x="42" y="74" width="4" height="46" fill="#B0451B"/>
+  <text x="60" y="93" font-size="11.5" font-weight="700" fill="#232F3E">候選方案 · 尚未部署 —— 本圖是規模化終局的「提案」，不是已上線的系統。圖中 11 個 AWS 節點，2026-07-15 讀回確認已上線的有 2 個（標示「已上線」者）；其餘標「提案」。</text>
+  <text x="60" y="110" font-size="10" fill="#5A6875">已上線與 S3 查核以 boto3 / curl 自帳號 516665228894 讀回；標〔非讀回〕〔推導〕者非帳號讀回，依據見該處註記。本方案對「15 艘船 × 一天一筆正午報表」明顯過度設計，且需要資料工程與 MLOps 能力——是三天賽程之外的成長路線。</text>
+
+  <!-- ===================== AWS Cloud boundary ===================== -->
+  <rect x="176" y="124" width="1248" height="732" rx="8" fill="none" stroke="#879196" stroke-width="1"/>
+  <rect x="185" y="131" width="24" height="22" rx="3" fill="#232F3E"/>
+  <text x="197" y="147" font-size="8.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">aws</text>
+  <text x="217" y="147" font-size="11" fill="#232F3E">AWS Cloud</text>
+  <text x="1412" y="147" font-size="10" fill="#5A6875" text-anchor="end">區域 us-east-1 · 帳號 516665228894</text>
+
+  <!-- ===================== outside cloud : vessels ===================== -->
+  <rect x="44" y="354" width="48" height="48" rx="8" fill="#7D8998"/>
+  <use href="#g-opte-ship" transform="translate(53,363) scale(1.25)"/>
+  <text x="68" y="420" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">船隊感測器</text>
+  <text x="68" y="433" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">油耗 / 航速 / 吃水 / 天氣</text>
+  <text x="68" y="445" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">船端裝置 · 非 AWS</text>
+  <rect x="6" y="455" width="124" height="16" rx="8" fill="#F1F3F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="68" y="466" font-size="8.5" font-weight="600" fill="#5F6B7A" text-anchor="middle">提案 · 未串接〔非讀回〕</text>
+
+  <!-- ===================== outside cloud : consumers ===================== -->
+  <rect x="1490" y="354" width="48" height="48" rx="8" fill="#7D8998"/>
+  <use href="#g-opte-users" transform="translate(1499,363) scale(1.25)"/>
+  <text x="1514" y="420" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">陽明營運端</text>
+  <text x="1514" y="433" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">決策者 / 分析師</text>
+  <text x="1514" y="445" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">瀏覽器 · 非 AWS</text>
+
+  <!-- ===================== lane boxes ===================== -->
+  <rect x="192" y="158" width="250" height="586" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 4"/>
+  <circle cx="210" cy="176" r="11" fill="#232F3E"/>
+  <text x="210" y="180" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+  <text x="228" y="180" font-size="11" font-weight="600" fill="#232F3E">擷取 Ingest</text>
+
+  <rect x="454" y="158" width="246" height="586" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 4"/>
+  <circle cx="472" cy="176" r="11" fill="#232F3E"/>
+  <text x="472" y="180" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+  <text x="490" y="180" font-size="11" font-weight="600" fill="#232F3E">儲存 Store</text>
+
+  <rect x="712" y="158" width="236" height="586" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 4"/>
+  <circle cx="730" cy="176" r="11" fill="#232F3E"/>
+  <text x="730" y="180" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+  <text x="748" y="180" font-size="11" font-weight="600" fill="#232F3E">處理 Process</text>
+
+  <rect x="960" y="158" width="448" height="586" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 4"/>
+  <circle cx="978" cy="176" r="11" fill="#232F3E"/>
+  <text x="978" y="180" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+  <text x="996" y="180" font-size="11" font-weight="600" fill="#232F3E">查詢與服務 Query &amp; Serve</text>
+  <text x="966" y="194" font-size="9.5" font-weight="600" fill="#5A6875">查詢層</text>
+  <text x="1186" y="194" font-size="9.5" font-weight="600" fill="#5A6875">服務層</text>
+
+  <!-- ===================== lane 1 : IoT Core ===================== -->
+  <rect x="293" y="206" width="48" height="48" rx="8" fill="#E7157B"/>
+  <use href="#g-opte-iot" transform="translate(302,215) scale(1.25)"/>
+  <text x="317" y="270" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">AWS IoT Core</text>
+  <text x="317" y="283" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">船端即時遙測（MQTT）</text>
+  <text x="317" y="295" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">粒度由「一天一筆」變連續</text>
+  <rect x="249" y="305" width="136" height="16" rx="8" fill="#F1F3F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="317" y="316" font-size="8.5" font-weight="600" fill="#5F6B7A" text-anchor="middle">提案 · 本專案未使用〔非讀回〕</text>
+
+  <!-- lane 1 : today's real source -->
+  <path d="M290,400 H326 L338,412 V452 H290 Z" fill="#FFFFFF" stroke="#879196" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M326,400 V412 H338" fill="none" stroke="#879196" stroke-width="1.4"/>
+  <path d="M298,422 H330 M298,430 H330 M298,438 H318" fill="none" stroke="#879196" stroke-width="1.3"/>
+  <text x="317" y="470" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">正午報表資料</text>
+  <text x="317" y="483" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">/api/uploads/noon-report（端點已存在）</text>
+  <text x="317" y="495" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">今日：real-metrics.json 於 build 時烘入映像</text>
+  <rect x="255" y="505" width="124" height="16" rx="8" fill="#EFF5E4" stroke="#7AA116" stroke-width="0.8"/>
+  <text x="317" y="516" font-size="8.5" font-weight="600" fill="#5B7F16" text-anchor="middle">已上線 · 但未進資料湖</text>
+
+  <rect x="204" y="560" width="226" height="68" rx="4" fill="#F4F6F8" stroke="#D5DBE1" stroke-width="1"/>
+  <text x="216" y="580" font-size="9" font-weight="700" fill="#232F3E">提案要改變的事</text>
+  <text x="216" y="595" font-size="8.5" fill="#4E5B6B">把「一天一筆正午報表」換成連續遙測，</text>
+  <text x="216" y="608" font-size="8.5" fill="#4E5B6B">原始資料先落地資料湖，而不是烘進映像。</text>
+  <text x="216" y="621" font-size="8.5" fill="#DD344C">〔非讀回〕今日沒有任何船端裝置連到 AWS。</text>
+
+  <!-- ===================== lane 2 : S3 data lake ===================== -->
+  <rect x="553" y="206" width="48" height="48" rx="8" fill="#7AA116"/>
+  <use href="#g-opte-s3" transform="translate(562,215) scale(1.25)"/>
+  <text x="577" y="270" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">Amazon S3</text>
+  <text x="577" y="283" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">資料湖 · 原始遙測 + 5 年正午報表</text>
+  <text x="577" y="295" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">raw / curated 分區 · Parquet</text>
+  <rect x="515" y="305" width="124" height="16" rx="8" fill="#F1F3F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="577" y="316" font-size="8.5" font-weight="600" fill="#5F6B7A" text-anchor="middle">提案 · 帳號中 0 個 bucket</text>
+
+  <rect x="466" y="452" width="222" height="88" rx="4" fill="#FBF6F7" stroke="#EBD3D8" stroke-width="1"/>
+  <rect x="466" y="452" width="3" height="88" fill="#DD344C"/>
+  <text x="478" y="469" font-size="9" font-weight="700" fill="#DD344C">事實查核 · 2026-07-15</text>
+  <text x="478" y="484" font-size="8.5" fill="#232F3E">Java 程式碼對 S3 零參照。</text>
+  <text x="478" y="497" font-size="8.5" fill="#232F3E">pom 內的 AWS SDK 只有 bedrockruntime、</text>
+  <text x="478" y="510" font-size="8.5" fill="#232F3E">sns、sesv2 三項。</text>
+  <text x="478" y="525" font-size="8.5" fill="#232F3E">→ 帳號內 0 個 bucket（s3 list_buckets 讀回）。</text>
+
+  <!-- ===================== lane 3 : ETL group ===================== -->
+  <rect x="724" y="196" width="212" height="170" rx="4" fill="none" stroke="#A7AFB7" stroke-width="1" stroke-dasharray="5 4"/>
+  <text x="734" y="214" font-size="9.5" font-weight="600" fill="#5A6875">ETL 作業（提案）</text>
+
+  <rect x="760" y="224" width="48" height="48" rx="8" fill="#8C4FFF"/>
+  <use href="#g-opte-glue" transform="translate(769,233) scale(1.25)"/>
+  <text x="784" y="288" font-size="10" font-weight="600" fill="#232F3E" text-anchor="middle">AWS Glue</text>
+
+  <rect x="848" y="224" width="48" height="48" rx="8" fill="#ED7100"/>
+  <use href="#g-opte-lambda" transform="translate(857,233) scale(1.25)"/>
+  <text x="872" y="288" font-size="10" font-weight="600" fill="#232F3E" text-anchor="middle">AWS Lambda</text>
+
+  <text x="830" y="303" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">清洗 · 有效天旗標 · 正規化</text>
+  <text x="830" y="315" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">Glue 批次 ETL + 維護 Data Catalog</text>
+  <text x="830" y="327" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">Lambda 事件觸發的小批次轉換</text>
+  <rect x="762" y="337" width="136" height="16" rx="8" fill="#F1F3F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="830" y="348" font-size="8.5" font-weight="600" fill="#5F6B7A" text-anchor="middle">提案 · 本專案未使用〔非讀回〕</text>
+
+  <!-- lane 3 : Step Functions -->
+  <rect x="806" y="420" width="48" height="48" rx="8" fill="#E7157B"/>
+  <use href="#g-opte-sfn" transform="translate(815,429) scale(1.25)"/>
+  <text x="830" y="484" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">AWS Step Functions</text>
+  <text x="830" y="497" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">管線編排 · 排程每日 ETL</text>
+  <text x="830" y="509" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">失敗重試與狀態追蹤</text>
+  <rect x="762" y="519" width="136" height="16" rx="8" fill="#F1F3F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="830" y="530" font-size="8.5" font-weight="600" fill="#5F6B7A" text-anchor="middle">提案 · 本專案未使用〔非讀回〕</text>
+
+  <!-- ===================== lane 4 : query layer ===================== -->
+  <rect x="1006" y="226" width="48" height="48" rx="8" fill="#527FFF"/>
+  <use href="#g-opte-ts" transform="translate(1015,235) scale(1.25)"/>
+  <text x="1030" y="290" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">Amazon Timestream</text>
+  <text x="1030" y="303" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">時序資料庫 · 毫秒級查詢</text>
+  <text x="1030" y="315" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">近期航次的即時指標</text>
+  <rect x="962" y="325" width="136" height="16" rx="8" fill="#F1F3F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="1030" y="336" font-size="8.5" font-weight="600" fill="#5F6B7A" text-anchor="middle">提案 · 本專案未使用〔非讀回〕</text>
+
+  <rect x="1006" y="420" width="48" height="48" rx="8" fill="#8C4FFF"/>
+  <use href="#g-opte-athena" transform="translate(1015,429) scale(1.25)"/>
+  <text x="1030" y="484" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">Amazon Athena</text>
+  <text x="1030" y="497" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">SQL on S3 · 隨選查詢</text>
+  <text x="1030" y="509" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">5 年歷史的隨選分析</text>
+  <rect x="962" y="519" width="136" height="16" rx="8" fill="#F1F3F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="1030" y="530" font-size="8.5" font-weight="600" fill="#5F6B7A" text-anchor="middle">提案 · 本專案未使用〔非讀回〕</text>
+
+  <!-- ===================== lane 4 : serve layer ===================== -->
+  <rect x="1250" y="206" width="48" height="48" rx="8" fill="#ED7100"/>
+  <use href="#g-opte-ecs" transform="translate(1259,215) scale(1.25)"/>
+  <text x="1274" y="270" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">ECS Fargate 決策應用</text>
+  <text x="1274" y="283" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">cluster fleetmind · svc fleetmind-svc</text>
+  <text x="1274" y="295" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">fleetmind-api:5 · ARM64 · 512 / 1024 MiB</text>
+  <rect x="1206" y="305" width="136" height="16" rx="8" fill="#EFF5E4" stroke="#7AA116" stroke-width="0.8"/>
+  <text x="1274" y="316" font-size="8.5" font-weight="600" fill="#5B7F16" text-anchor="middle">已上線 · 讀回於 2026-07-15</text>
+
+  <rect x="1250" y="344" width="48" height="48" rx="8" fill="#8C4FFF"/>
+  <use href="#g-opte-qs" transform="translate(1259,353) scale(1.25)"/>
+  <text x="1274" y="408" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">Amazon QuickSight</text>
+  <text x="1274" y="421" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">決策者自助式 BI 報表</text>
+  <text x="1274" y="433" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">船隊 KPI · 趨勢 · 清洗成效</text>
+  <rect x="1206" y="443" width="136" height="16" rx="8" fill="#F1F3F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="1274" y="454" font-size="8.5" font-weight="600" fill="#5F6B7A" text-anchor="middle">提案 · 本專案未使用〔非讀回〕</text>
+
+  <!-- ML group -->
+  <rect x="1180" y="470" width="220" height="170" rx="4" fill="none" stroke="#A7AFB7" stroke-width="1" stroke-dasharray="5 4"/>
+  <text x="1192" y="488" font-size="9.5" font-weight="600" fill="#5A6875">預測 / ML</text>
+
+  <rect x="1216" y="498" width="48" height="48" rx="8" fill="#01A88D"/>
+  <use href="#g-opte-sm" transform="translate(1225,507) scale(1.25)"/>
+  <text x="1240" y="562" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">SageMaker</text>
+  <rect x="1184" y="572" width="112" height="16" rx="8" fill="#F1F3F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="1240" y="583" font-size="8.5" font-weight="600" fill="#5F6B7A" text-anchor="middle">提案 · 未使用〔非讀回〕</text>
+
+  <rect x="1304" y="498" width="48" height="48" rx="8" fill="#01A88D"/>
+  <use href="#g-opte-bed" transform="translate(1313,507) scale(1.25)"/>
+  <text x="1328" y="562" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">Bedrock</text>
+  <rect x="1300" y="572" width="56" height="16" rx="8" fill="#EFF5E4" stroke="#7AA116" stroke-width="0.8"/>
+  <text x="1328" y="583" font-size="8.5" font-weight="600" fill="#5B7F16" text-anchor="middle">已上線</text>
+
+  <text x="1290" y="604" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">Speed Loss 預測 · 清洗時機建議</text>
+  <text x="1290" y="616" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">Bedrock 今日已用於 ai-brief</text>
+  <text x="1290" y="628" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">與查詢層的連線為提案</text>
+
+  <rect x="1180" y="650" width="220" height="86" rx="4" fill="#F4F6F8" stroke="#D5DBE1" stroke-width="1"/>
+  <text x="1192" y="670" font-size="9" font-weight="700" fill="#232F3E">服務層的誠實註記</text>
+  <text x="1192" y="685" font-size="8.5" fill="#4E5B6B">今日的 ECS 應用不讀任何查詢層：</text>
+  <text x="1192" y="698" font-size="8.5" fill="#4E5B6B">它直接讀映像內的 real-metrics.json。</text>
+  <text x="1192" y="711" font-size="8.5" fill="#4E5B6B">圖中 Timestream → ECS 那條箭頭為提案。</text>
+  <text x="1192" y="726" font-size="8.5" fill="#DD344C">QuickSight / SageMaker 均為提案〔非讀回〕。</text>
+
+  <!-- ===================== arrows ===================== -->
+  <path d="M92,378 H132 Q136,378 136,374 V234 Q136,230 140,230 H287" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <text x="197" y="223" font-size="9" fill="#5A6875">MQTT 遙測（提案）</text>
+
+  <path d="M341,218 H547" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <text x="374" y="211" font-size="9" fill="#5A6875">即時串流落地</text>
+
+  <path d="M338,426 H474 Q478,426 478,422 V250 Q478,246 482,246 H547" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <text x="342" y="419" font-size="8.5" fill="#5A6875">提案：原始檔落地資料湖</text>
+
+  <path d="M601,230 H718" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <text x="620" y="223" font-size="9" fill="#5A6875">原始 → ETL</text>
+
+  <path d="M830,414 V372" fill="none" stroke="#5A6875" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#ah-opte)"/>
+  <text x="840" y="396" font-size="8.5" fill="#5A6875">編排 · 重試 / 失敗</text>
+
+  <path d="M936,250 H1000" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <text x="962" y="243" font-size="8.5" fill="#5A6875">時序寫入</text>
+
+  <path d="M936,300 H948 Q952,300 952,304 V440 Q952,444 956,444 H1000" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+
+  <path d="M1054,238 H1244" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <text x="1078" y="231" font-size="8.5" fill="#5A6875">毫秒級查詢（提案）</text>
+
+  <path d="M1054,266 H1116 Q1120,266 1120,270 V360 Q1120,364 1124,364 H1244" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <path d="M1054,432 H1128 Q1132,432 1132,428 V382 Q1132,378 1136,378 H1244" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <path d="M1054,456 H1108 Q1112,456 1112,460 V536 Q1112,540 1116,540 H1174" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+
+  <path d="M1298,222 H1440 Q1444,222 1444,226 V360 Q1444,364 1448,364 H1484" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <text x="1306" y="215" font-size="8.5" fill="#5A6875">dashboard（今日已上線）</text>
+  <path d="M1298,384 H1484" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-opte)"/>
+  <text x="1318" y="377" font-size="8.5" fill="#5A6875">自助式 BI（提案）</text>
+
+  <!-- ===================== bottom panel : today's reality ===================== -->
+  <rect x="192" y="756" width="1216" height="90" rx="4" fill="#F4F6F8" stroke="#D5DBE1" stroke-width="1"/>
+  <rect x="192" y="756" width="3" height="90" fill="#DD344C"/>
+  <text x="206" y="776" font-size="10.5" font-weight="700" fill="#232F3E">今日真正在跑的路徑（對照）—— 上方的資料管線（擷取／儲存／處理／查詢）本專案一項都還沒建</text>
+  <text x="206" y="794" font-size="9.5" fill="#4E5B6B">真實：瀏覽器 → ALB fleetmind-alb :80 → ECS Fargate 任務 :8080（任務 SG 僅放行 ALB SG）→ Spring Boot 單一容器同時吐 dashboard 與 REST API；RealDataService 直接讀映像內的 real-metrics.json —— 沒有 S3、沒有資料庫、沒有 ETL、沒有查詢引擎。</text>
+  <text x="206" y="809" font-size="9.5" fill="#4E5B6B">real-metrics.json 於 build time 烘入 ARM64 映像並推上 ECR（516665228894.dkr.ecr.us-east-1.amazonaws.com/fleetmind-api）；冷啟動當下即持有真實資料。15 艘船 · 2021–2025 正午報表 · k = FOC / STW³（ISO 19030）· 門檻 10%。</text>
+  <text x="206" y="824" font-size="9.5" fill="#4E5B6B">本圖 11 個 AWS 節點中，2026-07-15 自帳號讀回確認已上線的有 2 個：ECS 決策應用（cluster fleetmind · svc fleetmind-svc · task def fleetmind-api:5 · FARGATE · ARM64）與 Amazon Bedrock（us.anthropic.claude-haiku-4-5-20251001-v1:0 · Converse API）。</text>
+  <text x="206" y="839" font-size="9.5" fill="#DD344C">其餘 9 項皆為提案：S3 已讀回帳號內 0 個 bucket；Lambda 帳號內實有 1 個但非本專案所建；IoT Core / Glue / Step Functions / Timestream / Athena / QuickSight / SageMaker 未逐一查帳號，係依原始碼與 pom 判定本專案未使用〔非讀回〕。</text>
+
+  <!-- ===================== footnote ===================== -->
+  <text x="42" y="882" font-size="9.5" fill="#5A6875">本圖不繪 SNS fleetmind-alerts（0 訂閱）與 SES v2（今日實際送達的告警路徑）—— 兩者屬告警鏈路，與本資料管線無關；ALB / VPC / 子網 / IAM / CloudWatch Logs 亦不重複繪出，詳見系統雲端架構圖、即時資料流圖與權限設定圖。DynamoDB 事實表明列未使用，故不出現在本提案。</text>
+</svg>

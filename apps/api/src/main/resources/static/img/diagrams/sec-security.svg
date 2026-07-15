@@ -1,0 +1,247 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="FleetMind 資安：已實作 vs 規劃中" font-family="system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif">
+  <title>FleetMind — 資安：已實作 vs 規劃中</title>
+  <desc>上半部「已實作」為 2026-07-15 自帳號 516665228894 讀回的項目：ALB 為唯一對外入口（直打任務公網 IP 98.92.30.118:8080 已 timeout）、Security Group fleetmind-sg 只放行 ALB SG 的 tcp/8080（無 0.0.0.0/0）、IAM 兩角色分離（應用程式拉不到 ECR、寫不了 log group）、CloudWatch Logs 群組 /fleetmind/api；AWS Shield Standard 標〔非讀回〕—— 它是 AWS 於所有 ALB 預設自動生效的行為，不是我們部署的，也不是自帳號讀回的組態。下半部「規劃中」四項都不在本專案的部署內〔非讀回 · 依原始碼與部署紀錄〕，各卡片徽章寫的是今天的實際探測結果：AWS WAF（帳號內 0 個 WebACL）、GuardDuty（list_detectors 回 AccessDenied —— 我們開不了，也因此無從確認帳號是否已啟用，本圖不主張它不存在）、Secrets Manager（帳號內 0 個 secret）、KMS 客戶自管金鑰（帳號內只有 AWS 託管預設金鑰，沒有我們的 CMK）。兩個子網皆為公有子網、任務仍有公網 IP；收口靠的是 Security Group，不是子網隔離，圖中不畫私有子網。</desc>
+
+  <defs>
+    <marker id="ah-sec" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,1.2 L8,4.5 L0,7.8 Z" fill="#5A6875"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <!-- ===================== Title ===================== -->
+  <text x="42" y="40" font-size="23" font-weight="700" fill="#232F3E">資安 — 已實作 vs 規劃中</text>
+  <text x="42" y="63" font-size="12.5" fill="#5F6B7A">FleetMind · 帳號 516665228894 · us-east-1 · 圖中 AWS 資源組態與探測結果於 2026-07-15 以 boto3 / curl 自實際帳號讀回；標〔推導〕〔非讀回〕者除外，依據見該處註記</text>
+
+  <!-- ===================== AWS Cloud boundary (0.0.0.0/0 stays outside) ===================== -->
+  <rect x="150" y="84" width="1410" height="794" rx="8" fill="none" stroke="#879196" stroke-width="1"/>
+  <rect x="159" y="90" width="22" height="22" rx="3" fill="#232F3E"/>
+  <text x="170" y="105.5" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle">aws</text>
+  <text x="188" y="106" font-size="12" fill="#414D5C">AWS Cloud · us-east-1 · 516665228894</text>
+
+  <!-- ===================================================================
+       BAND A — 已實作
+       =================================================================== -->
+  <rect x="170" y="120" width="1372" height="442" rx="6" fill="#FFFFFF" stroke="#879196" stroke-width="1.2"/>
+  <rect x="186" y="128" width="118" height="20" rx="10" fill="#EFF5E4" stroke="#7AA116" stroke-width="0.9"/>
+  <text x="245" y="142" font-size="10" font-weight="700" fill="#5B7F16" text-anchor="middle">已實作 · 可當場驗證</text>
+  <text x="316" y="142" font-size="11.5" font-weight="700" fill="#232F3E">今天真的在跑 —— 每一項旁邊都附上當場可驗的證據；標〔非讀回〕者除外，依據見該處註記</text>
+
+  <!-- ===== Internet: OUTSIDE the AWS Cloud boundary ===== -->
+  <rect x="30" y="316" width="48" height="48" rx="8" fill="#7D8998"/>
+  <g transform="translate(39.6,325.6) scale(1.2)">
+    <circle cx="12" cy="12" r="9.4" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+    <ellipse cx="12" cy="12" rx="4.1" ry="9.4" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+    <path d="M2.7,12 H21.3 M4.2,7 H19.8 M4.2,17 H19.8" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+  </g>
+  <text x="54" y="382" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">網際網路</text>
+  <text x="54" y="395" font-size="9" font-style="italic" fill="#6E7B8B" text-anchor="middle">0.0.0.0/0</text>
+
+  <!-- allowed path: internet -> ALB -->
+  <path d="M78,332 H387" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-sec)"/>
+  <text x="322" y="325" font-size="9" fill="#5A6875" text-anchor="middle">HTTP tcp/80</text>
+
+  <!-- blocked path: internet -> task public IP, dropped at the SG -->
+  <path d="M78,352 H196 V462 H547" fill="none" stroke="#DD344C" stroke-width="1.2" stroke-dasharray="5 4"/>
+  <text x="380" y="456" font-size="8" fill="#DD344C" text-anchor="middle">直打任務公網 IP 98.92.30.118:8080</text>
+
+  <!-- ===== VPC ===== -->
+  <rect x="248" y="170" width="700" height="376" rx="5" fill="none" stroke="#8C4FFF" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <g transform="translate(260,176)">
+    <rect width="16" height="16" rx="3" fill="#8C4FFF"/>
+    <path d="M8 4 V12 M4 8 H12" stroke="#FFFFFF" stroke-width="1.2" fill="none"/>
+    <circle cx="8" cy="8" r="2" fill="#FFFFFF"/>
+  </g>
+  <text x="282" y="189" font-size="10" font-weight="600" fill="#8C4FFF">VPC vpc-0415efac81151722c</text>
+
+  <!-- ===== Public subnets (both public — no private subnet exists) ===== -->
+  <rect x="262" y="202" width="672" height="330" rx="4" fill="none" stroke="#7AA116" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="274" y="220" font-size="9.5" font-weight="600" fill="#5A6875">公有子網 ×2（mapPublicIpOnLaunch = true）· us-east-1d / us-east-1f</text>
+  <text x="274" y="233" font-size="8" fill="#6B7885" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">subnet-0144505bb2c5a9341 · 172.31.0.0/20 · subnet-0c6f4ad04cd4bb79a · 172.31.64.0/20</text>
+  <text x="274" y="250" font-size="8.5" font-weight="700" fill="#DD344C">沒有私有子網 · 任務 assignPublicIp = ENABLED —— 收口靠 Security Group，不是子網隔離</text>
+
+  <!-- ALB -->
+  <rect x="387" y="316" width="48" height="48" rx="8" fill="#8C4FFF"/>
+  <g transform="translate(396.6,325.6) scale(1.2)">
+    <path d="M12,5.5 V12 M4,12 H20 M4,12 V17.5 M12,12 V17.5 M20,12 V17.5" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+    <circle cx="12" cy="3.4" r="2.3" fill="#FFFFFF"/>
+    <circle cx="4" cy="19.6" r="2.3" fill="#FFFFFF"/>
+    <circle cx="12" cy="19.6" r="2.3" fill="#FFFFFF"/>
+    <circle cx="20" cy="19.6" r="2.3" fill="#FFFFFF"/>
+  </g>
+  <circle cx="383" cy="312" r="11" fill="#232F3E"/>
+  <text x="383" y="316" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+  <text x="411" y="384" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">Application Load Balancer</text>
+  <text x="411" y="398" font-size="9" font-style="italic" fill="#6E7B8B" text-anchor="middle">fleetmind-alb · internet-facing · 監聽 tcp/80</text>
+  <text x="411" y="410" font-size="9" font-style="italic" fill="#6E7B8B" text-anchor="middle">AZ us-east-1d + us-east-1f</text>
+  <text x="411" y="422" font-size="9" font-style="italic" fill="#6E7B8B" text-anchor="middle">fleetmind-tg → 172.31.65.255:8080 healthy</text>
+
+  <!-- ALB -> task -->
+  <path d="M435,332 H714" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-sec)"/>
+  <text x="496" y="326" font-size="9" fill="#5A6875" text-anchor="middle">tcp/8080 ← 僅 ALB SG</text>
+
+  <!-- ===== Security group : the thing that actually closes the entry ===== -->
+  <rect x="556" y="268" width="364" height="232" rx="4" fill="none" stroke="#DD344C" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <circle cx="572" cy="283" r="11" fill="#232F3E"/>
+  <text x="572" y="287" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+  <text x="590" y="281" font-size="8.5" font-weight="700" fill="#DD344C">Security group fleetmind-sg · sg-0dde0180ccac18f05</text>
+  <text x="590" y="293" font-size="8" font-style="italic" fill="#B0451B">入站僅 tcp/8080 ← ALB SG（規則中沒有 0.0.0.0/0）</text>
+
+  <!-- ECS task -->
+  <rect x="714" y="316" width="48" height="48" rx="8" fill="#ED7100"/>
+  <g transform="translate(723.6,325.6) scale(1.2)">
+    <path d="M12,1.6 L22,7 L22,17 L12,22.4 L2,17 L2,7 Z" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linejoin="round"/>
+    <path d="M12,12 L22,7 M12,12 L2,7 M12,12 L12,22.4" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linejoin="round"/>
+  </g>
+  <text x="738" y="384" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">ECS on Fargate</text>
+  <text x="738" y="398" font-size="9" font-style="italic" fill="#6E7B8B" text-anchor="middle">叢集 fleetmind · 服務 fleetmind-svc · desiredCount 1</text>
+  <text x="738" y="410" font-size="9" font-style="italic" fill="#6E7B8B" text-anchor="middle">fleetmind-api:5 · ARM64 · 512 CPU / 1024 MiB · awsvpc</text>
+  <text x="738" y="422" font-size="9" font-style="italic" fill="#6E7B8B" text-anchor="middle">容器埠 8080/tcp · 仍持有公網 IP（免 NAT 拉 ECR）</text>
+
+  <!-- blocked marker sits ON the SG boundary -->
+  <circle cx="556" cy="462" r="9" fill="#FFFFFF" stroke="#DD344C" stroke-width="1.6"/>
+  <path d="M551.6,457.6 L560.4,466.4 M560.4,457.6 L551.6,466.4" stroke="#DD344C" stroke-width="1.8" stroke-linecap="round"/>
+  <text x="572" y="458" font-size="8.5" font-weight="700" fill="#DD344C">→ timeout（被 fleetmind-sg 擋下）</text>
+  <text x="572" y="470" font-size="8" fill="#5A6875">今日收緊前同一支 curl 回 200；改後逾時，走 ALB 仍 200</text>
+
+  <!-- task -> IAM roles (riser routed in the gap outside the VPC) -->
+  <path d="M762,340 H956 V240 H966" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-sec)"/>
+  <text x="860" y="333" font-size="9" fill="#5A6875" text-anchor="middle">sts:AssumeRole</text>
+
+  <!-- ===== Card 3 : IAM ===== -->
+  <rect x="966" y="202" width="560" height="150" rx="6" fill="#FFFFFF" stroke="#C6CDD3" stroke-width="1"/>
+  <rect x="982" y="220" width="40" height="40" rx="8" fill="#DD344C"/>
+  <g transform="translate(988.8,226.8) scale(1.1)">
+    <path d="M8,10.5 V7.6 a4,4 0 0 1 8,0 V10.5" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="4.6" y="10.2" width="14.8" height="11" rx="2" fill="#FFFFFF"/>
+    <circle cx="12" cy="14.6" r="1.7" fill="#DD344C"/>
+    <rect x="11.2" y="15.4" width="1.6" height="3.6" fill="#DD344C"/>
+  </g>
+  <circle cx="978" cy="216" r="11" fill="#232F3E"/>
+  <text x="978" y="220" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+  <text x="1032" y="236" font-size="11.5" font-weight="700" fill="#232F3E">IAM — 兩角色分離</text>
+  <text x="1032" y="252" font-size="9" font-style="italic" fill="#6E7B8B">兩者皆信任 ecs-tasks.amazonaws.com</text>
+  <text x="982" y="280" font-size="9" fill="#232F3E">執行角色 fleetmind-ecs-exec · AmazonECSTaskExecutionRolePolicy（拉 ECR、寫 CloudWatch Logs）</text>
+  <text x="982" y="295" font-size="9" fill="#232F3E">任務角色 fleetmind-ecs-task · bedrock:InvokeModel、sns:Publish、ses:SendEmail —— 無 ECR、無 Logs 權限</text>
+  <text x="982" y="314" font-size="8.5" font-weight="700" fill="#232F3E">可當場驗證：應用程式本身拉不到 ECR 映像，也寫不了自己的 log group</text>
+  <text x="982" y="330" font-size="8.5" fill="#DD344C">誠實標註：動作已收斂（只有 InvokeModel，不是 bedrock:*），但 bedrock 與 ses 的 Resource 仍是 *</text>
+  <text x="982" y="346" font-size="8.5" fill="#5A6875">三條 inline 政策中只有 sns:Publish 釘死到單一 topic ARN fleetmind-alerts</text>
+
+  <!-- IAM -> CloudWatch -->
+  <path d="M1246,352 V376" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah-sec)"/>
+  <text x="1256" y="368" font-size="8" fill="#5A6875">由執行角色寫入</text>
+
+  <!-- ===== Card 4 : CloudWatch Logs ===== -->
+  <rect x="966" y="376" width="560" height="82" rx="6" fill="#FFFFFF" stroke="#C6CDD3" stroke-width="1"/>
+  <rect x="982" y="394" width="40" height="40" rx="8" fill="#E7157B"/>
+  <g transform="translate(988.8,400.8) scale(1.1)">
+    <rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+    <path d="M7.5,8 H16.5 M7.5,12 H16.5 M7.5,16 H13.5" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+  <circle cx="978" cy="390" r="11" fill="#232F3E"/>
+  <text x="978" y="394" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+  <text x="1032" y="410" font-size="11.5" font-weight="700" fill="#232F3E">Amazon CloudWatch Logs</text>
+  <text x="1032" y="426" font-size="9" font-style="italic" fill="#6E7B8B">日誌群組 /fleetmind/api · 串流前綴 ecs</text>
+  <text x="982" y="450" font-size="8.5" fill="#5A6875">已存在且持續寫入 · 由執行角色 fleetmind-ecs-exec 寫入；任務角色沒有這個權限</text>
+
+  <!-- ===== Card 5 : Shield Standard ===== -->
+  <rect x="966" y="474" width="560" height="78" rx="6" fill="#FFFFFF" stroke="#C6CDD3" stroke-width="1"/>
+  <rect x="982" y="492" width="40" height="40" rx="8" fill="#DD344C"/>
+  <g transform="translate(988.8,498.8) scale(1.1)">
+    <path d="M12,2.4 L20.6,5.8 V12.4 C20.6,17.4 16.8,20.7 12,21.8 C7.2,20.7 3.4,17.4 3.4,12.4 V5.8 Z" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linejoin="round"/>
+    <path d="M7.8,12 L10.8,15.2 L16.4,8.8" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <circle cx="978" cy="488" r="11" fill="#232F3E"/>
+  <text x="978" y="492" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
+  <text x="1032" y="508" font-size="11.5" font-weight="700" fill="#232F3E">AWS Shield Standard</text>
+  <rect x="1330" y="496" width="180" height="17" rx="8.5" fill="#EDF1F5" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="1420" y="508" font-size="9" font-weight="700" fill="#5F6B7A" text-anchor="middle">AWS 預設 · 非我們部署</text>
+  <text x="1032" y="524" font-size="9" font-style="italic" fill="#6E7B8B">於所有 ALB 自動生效的 L3 / L4 DDoS 基礎防護<tspan dx="8" font-size="8.5" font-style="normal" fill="#6B7885">〔非讀回 · AWS 預設行為，非帳號讀回的組態〕</tspan></text>
+  <text x="982" y="544" font-size="8.5" fill="#5A6875">誠實標註：這一項不是我們設定的成果，是 AWS 預設就有；列在「已實作」只因它今天確實在保護 fleetmind-alb</text>
+
+  <!-- ===================================================================
+       BAND B — 規劃中
+       =================================================================== -->
+  <rect x="170" y="584" width="1372" height="278" rx="6" fill="#FFFFFF" stroke="#A7AFB7" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <rect x="186" y="594" width="118" height="20" rx="10" fill="#F4F6F8" stroke="#A7AFB7" stroke-width="0.9"/>
+  <text x="245" y="608" font-size="10" font-weight="700" fill="#5F6B7A" text-anchor="middle">規劃中 · 尚未部署</text>
+  <text x="316" y="608" font-size="11.5" font-weight="700" fill="#232F3E">以下四項都不在本專案的部署內<tspan dx="6" font-size="8.5" font-weight="400" fill="#6B7885">〔非讀回 · 依原始碼與部署紀錄〕</tspan><tspan dx="6" font-size="11.5" font-weight="700" fill="#232F3E">—— 徽章是今天的實際探測結果，內文是「為何還沒有」</tspan></text>
+
+  <!-- ===== Planned 1 : AWS WAF ===== -->
+  <rect x="186" y="630" width="320" height="160" rx="6" fill="#F4F6F8" stroke="#B9BEC5" stroke-width="1" stroke-dasharray="5 4"/>
+  <rect x="202" y="648" width="40" height="40" rx="8" fill="#FFFFFF" stroke="#B9BEC5" stroke-width="1.3" stroke-dasharray="3 2.5"/>
+  <g transform="translate(208.8,654.8) scale(1.1)">
+    <path d="M12,2.4 L20.6,5.8 V12.4 C20.6,17.4 16.8,20.7 12,21.8 C7.2,20.7 3.4,17.4 3.4,12.4 V5.8 Z" fill="none" stroke="#B9BEC5" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M6,10 H18 M6,14 H18 M9,10 V6.6 M15,10 V6.6 M8,14 V10 M12,14 V10 M16,14 V10 M10,17.6 V14 M14,17.6 V14" fill="none" stroke="#B9BEC5" stroke-width="1.1"/>
+  </g>
+  <text x="252" y="665" font-size="11.5" font-weight="700" fill="#414D5C">AWS WAF</text>
+  <text x="252" y="680" font-size="9" font-style="italic" fill="#8A94A0">L7 Web 應用防火牆</text>
+  <rect x="202" y="698" width="126" height="17" rx="8.5" fill="#FFFFFF" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="265" y="710" font-size="9" font-weight="700" fill="#5F6B7A" text-anchor="middle">目前 0 個 WebACL</text>
+  <text x="202" y="734" font-size="9" fill="#4E5B6B">提案：在 ALB 前面掛 WebACL —— 速率</text>
+  <text x="202" y="748" font-size="9" fill="#4E5B6B">限制、SQLi / XSS 規則、地理封鎖。</text>
+  <text x="202" y="766" font-size="8.5" fill="#5A6875">為何還沒有：三天賽程沒排到。帳號內</text>
+  <text x="202" y="779" font-size="8.5" fill="#5A6875">WebACL 數 = 0，今天沒有任何規則在擋。</text>
+
+  <!-- ===== Planned 2 : GuardDuty ===== -->
+  <rect x="526" y="630" width="320" height="160" rx="6" fill="#F4F6F8" stroke="#B9BEC5" stroke-width="1" stroke-dasharray="5 4"/>
+  <rect x="542" y="648" width="40" height="40" rx="8" fill="#FFFFFF" stroke="#B9BEC5" stroke-width="1.3" stroke-dasharray="3 2.5"/>
+  <g transform="translate(548.8,654.8) scale(1.1)">
+    <path d="M2.4,12 C5.6,6.8 8.7,4.8 12,4.8 C15.3,4.8 18.4,6.8 21.6,12 C18.4,17.2 15.3,19.2 12,19.2 C8.7,19.2 5.6,17.2 2.4,12 Z" fill="none" stroke="#B9BEC5" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="12" cy="12" r="3.4" fill="none" stroke="#B9BEC5" stroke-width="1.6"/>
+  </g>
+  <text x="592" y="665" font-size="11.5" font-weight="700" fill="#414D5C">Amazon GuardDuty</text>
+  <text x="592" y="680" font-size="9" font-style="italic" fill="#8A94A0">帳號層級威脅偵測</text>
+  <rect x="542" y="698" width="140" height="17" rx="8.5" fill="#FFFFFF" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="612" y="710" font-size="9" font-weight="700" fill="#5F6B7A" text-anchor="middle">本帳號 AccessDenied</text>
+  <text x="542" y="734" font-size="9" fill="#4E5B6B">提案：開啟威脅偵測，持續分析</text>
+  <text x="542" y="748" font-size="9" fill="#4E5B6B">VPC Flow Logs 與 CloudTrail 事件。</text>
+  <text x="542" y="766" font-size="8.5" fill="#5A6875">為何還沒有：本 workshop 帳號直接回</text>
+  <text x="542" y="779" font-size="8.5" fill="#5A6875">AccessDenied —— 我們開不了，不是沒做。</text>
+
+  <!-- ===== Planned 3 : Secrets Manager ===== -->
+  <rect x="866" y="630" width="320" height="160" rx="6" fill="#F4F6F8" stroke="#B9BEC5" stroke-width="1" stroke-dasharray="5 4"/>
+  <rect x="882" y="648" width="40" height="40" rx="8" fill="#FFFFFF" stroke="#B9BEC5" stroke-width="1.3" stroke-dasharray="3 2.5"/>
+  <g transform="translate(888.8,654.8) scale(1.1)">
+    <rect x="3.4" y="4" width="17.2" height="16" rx="2" fill="none" stroke="#B9BEC5" stroke-width="1.6"/>
+    <circle cx="11" cy="12" r="4.2" fill="none" stroke="#B9BEC5" stroke-width="1.6"/>
+    <path d="M11,7.8 V12 M11,12 L14,14.6" fill="none" stroke="#B9BEC5" stroke-width="1.3"/>
+    <path d="M17.4,9.4 V14.6" fill="none" stroke="#B9BEC5" stroke-width="1.6"/>
+  </g>
+  <text x="932" y="665" font-size="11.5" font-weight="700" fill="#414D5C">AWS Secrets Manager</text>
+  <text x="932" y="680" font-size="9" font-style="italic" fill="#8A94A0">機密儲存與自動輪替</text>
+  <rect x="882" y="698" width="122" height="17" rx="8.5" fill="#FFFFFF" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="943" y="710" font-size="9" font-weight="700" fill="#5F6B7A" text-anchor="middle">目前 0 個 secret</text>
+  <text x="882" y="734" font-size="9" fill="#4E5B6B">提案：機密移入 Secrets Manager，</text>
+  <text x="882" y="748" font-size="9" fill="#4E5B6B">由任務角色取用並設定自動輪替。</text>
+  <text x="882" y="766" font-size="8.5" fill="#5A6875">現況：帳號內 secret 數 = 0。組態走 ECS</text>
+  <text x="882" y="779" font-size="8.5" fill="#5A6875">環境變數；憑證走 IAM 角色，非靜態金鑰。</text>
+
+  <!-- ===== Planned 4 : KMS CMK ===== -->
+  <rect x="1206" y="630" width="320" height="160" rx="6" fill="#F4F6F8" stroke="#B9BEC5" stroke-width="1" stroke-dasharray="5 4"/>
+  <rect x="1222" y="648" width="40" height="40" rx="8" fill="#FFFFFF" stroke="#B9BEC5" stroke-width="1.3" stroke-dasharray="3 2.5"/>
+  <g transform="translate(1228.8,654.8) scale(1.1)">
+    <path d="M7.6,10.4 V7.4 a4.4,4.4 0 0 1 8.8,0 V10.4" fill="none" stroke="#B9BEC5" stroke-width="1.6"/>
+    <rect x="4.4" y="10.4" width="15.2" height="10.6" rx="2" fill="none" stroke="#B9BEC5" stroke-width="1.6"/>
+    <circle cx="12" cy="14.6" r="1.6" fill="none" stroke="#B9BEC5" stroke-width="1.3"/>
+    <path d="M12,16.2 V18.4" fill="none" stroke="#B9BEC5" stroke-width="1.3"/>
+  </g>
+  <text x="1272" y="665" font-size="11.5" font-weight="700" fill="#414D5C">AWS KMS 客戶自管金鑰</text>
+  <text x="1272" y="680" font-size="9" font-style="italic" fill="#8A94A0">CMK · 自訂金鑰政策與輪替</text>
+  <rect x="1222" y="698" width="166" height="17" rx="8.5" fill="#FFFFFF" stroke="#A7AFB7" stroke-width="0.8"/>
+  <text x="1305" y="710" font-size="9" font-weight="700" fill="#5F6B7A" text-anchor="middle">現用 AWS 託管預設金鑰</text>
+  <text x="1222" y="734" font-size="9" fill="#4E5B6B">提案：以 CMK 加密 CloudWatch Logs</text>
+  <text x="1222" y="748" font-size="9" fill="#4E5B6B">與 ECR，並自訂輪替與金鑰政策。</text>
+  <text x="1222" y="766" font-size="8.5" fill="#5A6875">現況：使用 AWS 託管的預設金鑰 —— 加密</text>
+  <text x="1222" y="779" font-size="8.5" fill="#5A6875">有，但金鑰不在我們手上。</text>
+
+  <!-- ===== Band B footer callout ===== -->
+  <rect x="186" y="806" width="1340" height="44" rx="5" fill="#F4F6F8" stroke="#D5DBE1" stroke-width="1"/>
+  <rect x="186" y="806" width="3" height="44" fill="#A7AFB7"/>
+  <text x="202" y="824" font-size="9.5" font-weight="700" fill="#232F3E">四張卡片畫成灰色虛線輪廓，是因為這四項都不在本專案的部署內 —— 這是提案清單，不是部署清單。徽章上的 0 個 WebACL / 0 個 secret 是帳號探測結果；GuardDuty 回 AccessDenied，代表探測被拒、無從確認帳號狀態，本圖不主張它不存在。</text>
+  <text x="202" y="840" font-size="9" fill="#4E5B6B">縱深防禦的落地順序：任務移入私有子網 + NAT / VPC Endpoint → 對外入口加 WAF → 把 Bedrock 與 SES 的 Resource: * 收斂到資源層級。</text>
+
+  <!-- ===================== Footnote ===================== -->
+  <text x="42" y="890" font-size="9.5" fill="#5A6875">本圖不畫私有子網：兩個子網皆 mapPublicIpOnLaunch = true，任務 assignPublicIp = ENABLED（免 NAT 即可從 ECR 拉映像）。今天擋下直連的是 Security Group，不是子網隔離。</text>
+</svg>

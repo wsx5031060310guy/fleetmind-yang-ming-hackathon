@@ -1,0 +1,289 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="FleetMind 方案 B 全 Serverless 候選架構圖" font-family="system-ui, -apple-system, 'Helvetica Neue', 'PingFang TC', 'Noto Sans TC', sans-serif">
+  <title>FleetMind — 方案 B：全 Serverless（候選架構，尚未部署）</title>
+  <defs>
+    <marker id="ah-optb" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7D8998"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <!-- ===== Title ===== -->
+  <text x="40" y="42" font-size="21" font-weight="700" fill="#232F3E">FleetMind — 方案 B：全 Serverless（候選架構）</text>
+  <text x="40" y="64" font-size="11.5" fill="#5A6470">此圖為提案，不是部署現況。本方案的 CloudFront / S3 / API Gateway / Lambda / DynamoDB / EventBridge 目前皆未建立。</text>
+  <text x="40" y="80" font-size="11.5" fill="#5A6470">Bedrock、SNS、SES 已實際存在於帳號 516665228894（2026-07-15 以 boto3 讀回）；本圖畫的是它們在此候選方案中的角色。</text>
+
+  <!-- ===== CANDIDATE badge ===== -->
+  <rect x="1150" y="22" width="410" height="48" rx="8" fill="#FDECEE" stroke="#DD344C" stroke-width="1.2"/>
+  <text x="1170" y="44" font-size="12" font-weight="700" fill="#DD344C">候選方案 · 尚未部署（CANDIDATE）</text>
+  <text x="1170" y="60" font-size="9" fill="#232F3E">本頁備選架構之一；此架構尚未部署（圖中標〔今日已存在〕者除外）</text>
+
+  <!-- ===== User browser — OUTSIDE the AWS Cloud boundary ===== -->
+  <g transform="translate(127,232)">
+    <rect x="0" y="0" width="56" height="44" rx="4" fill="#FFFFFF" stroke="#232F3E" stroke-width="1.6"/>
+    <path d="M0 11 H56" stroke="#232F3E" stroke-width="1.4" fill="none"/>
+    <circle cx="6" cy="5.5" r="1.6" fill="#232F3E"/>
+    <circle cx="12" cy="5.5" r="1.6" fill="#232F3E"/>
+    <circle cx="18" cy="5.5" r="1.6" fill="#232F3E"/>
+    <path d="M7 20 H36 M7 26 H30 M7 32 H41" stroke="#879196" stroke-width="1.4" fill="none"/>
+  </g>
+  <text x="155" y="296" text-anchor="middle" font-size="11.5" font-weight="600" fill="#232F3E">使用者的瀏覽器</text>
+  <text x="155" y="310" text-anchor="middle" font-size="8.5" font-style="italic" fill="#6B7885">網際網路端 · AWS Cloud 之外</text>
+  <text x="155" y="323" text-anchor="middle" font-size="8" fill="#879196">本方案未部署，無對應公開網址</text>
+
+  <!-- ===== AWS Cloud boundary ===== -->
+  <rect x="280" y="92" width="1295" height="668" rx="6" fill="none" stroke="#879196" stroke-width="1.2"/>
+  <rect x="292" y="102" width="24" height="24" rx="4" fill="#232F3E"/>
+  <text x="304" y="118" text-anchor="middle" font-size="9" font-weight="700" fill="#FFFFFF">aws</text>
+  <text x="326" y="119" font-size="11" font-weight="600" fill="#232F3E">AWS Cloud</text>
+  <text x="1555" y="119" text-anchor="end" font-size="10" fill="#5A6470">候選部署目標 · us-east-1 · 帳號 516665228894</text>
+
+  <!-- ===================== BAND (a) — request path ===================== -->
+  <rect x="315" y="136" width="1245" height="384" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="330" y="156" font-size="10" font-weight="600" fill="#5A6470">(a) 請求路徑（提案）—— 靜態前端與 API 分離</text>
+
+  <!-- CloudFront -->
+  <rect x="372" y="186" width="48" height="48" rx="8" fill="#8C4FFF"/>
+  <g transform="translate(372,186)" fill="none" stroke="#FFFFFF" stroke-width="1.6">
+    <circle cx="24" cy="24" r="15"/>
+    <ellipse cx="24" cy="24" rx="6.5" ry="15"/>
+    <path d="M9 24 H39 M12 16 H36 M12 32 H36"/>
+  </g>
+  <text x="396" y="254" text-anchor="middle" font-size="11.5" font-weight="600" fill="#232F3E">Amazon CloudFront</text>
+  <text x="396" y="268" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">靜態內容 CDN 分發</text>
+  <text x="396" y="280" text-anchor="middle" font-size="8.5" font-style="italic" fill="#879196">〔未部署〕帳號內無此資源</text>
+
+  <!-- S3 static site -->
+  <rect x="636" y="186" width="48" height="48" rx="8" fill="#7AA116"/>
+  <g transform="translate(636,186)">
+    <ellipse cx="24" cy="15" rx="11" ry="3.4" fill="none" stroke="#FFFFFF" stroke-width="1.7"/>
+    <path d="M13 15 H35 L32 34 H16 Z" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linejoin="round"/>
+    <path d="M18 22 H30 M19 28 H29" stroke="#FFFFFF" stroke-width="1.4" fill="none"/>
+  </g>
+  <text x="660" y="254" text-anchor="middle" font-size="11.5" font-weight="600" fill="#232F3E">Amazon S3（前端靜態網站）</text>
+  <text x="660" y="268" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">HTML / CSS / JS 前端資產</text>
+  <text x="660" y="280" text-anchor="middle" font-size="8.5" font-style="italic" fill="#879196">〔未部署〕帳號目前未使用 S3</text>
+
+  <!-- browser -> CloudFront -->
+  <path d="M185 248 H336 Q340 248 340 244 V218 Q340 214 344 214 H368" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <text x="196" y="242" font-size="9" fill="#5A6470">取得靜態頁面</text>
+  <circle cx="300" cy="248" r="11" fill="#232F3E"/>
+  <text x="300" y="252" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">1</text>
+
+  <!-- CloudFront -> S3 -->
+  <path d="M424 210 H632" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <text x="528" y="203" text-anchor="middle" font-size="9" fill="#5A6470">origin：S3 靜態網站</text>
+
+  <!-- API Gateway -->
+  <rect x="372" y="326" width="48" height="48" rx="8" fill="#8C4FFF"/>
+  <g transform="translate(372,326)">
+    <path d="M11 24 H23" stroke="#FFFFFF" stroke-width="1.6" fill="none"/>
+    <path d="M19 20 L23 24 L19 28" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="25" y="12" width="4" height="24" rx="1.5" fill="#FFFFFF"/>
+    <path d="M31 15 H36 M31 24 H36 M31 33 H36" stroke="#FFFFFF" stroke-width="1.6" fill="none"/>
+    <circle cx="38.5" cy="15" r="2.2" fill="#FFFFFF"/>
+    <circle cx="38.5" cy="24" r="2.2" fill="#FFFFFF"/>
+    <circle cx="38.5" cy="33" r="2.2" fill="#FFFFFF"/>
+  </g>
+  <text x="396" y="394" text-anchor="middle" font-size="11.5" font-weight="600" fill="#232F3E">Amazon API Gateway</text>
+  <text x="396" y="408" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">HTTP API</text>
+  <text x="396" y="420" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">對應現有 16 個 /api/* 端點</text>
+  <text x="396" y="432" text-anchor="middle" font-size="8.5" font-style="italic" fill="#879196">〔未部署〕帳號內無此資源</text>
+
+  <!-- browser -> API Gateway -->
+  <path d="M185 262 H336 Q340 262 340 266 V346 Q340 350 344 350 H368" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <text x="196" y="276" font-size="9" fill="#5A6470">呼叫 /api/*</text>
+  <circle cx="340" cy="306" r="11" fill="#232F3E"/>
+  <text x="340" y="310" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">2</text>
+
+  <!-- COLD START gate, sitting on the request path -->
+  <path d="M424 350 H486" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <rect x="490" y="330" width="124" height="40" rx="6" fill="#FDECEE" stroke="#DD344C" stroke-width="1"/>
+  <text x="552" y="346" text-anchor="middle" font-size="8.5" font-weight="700" fill="#DD344C">冷啟動延遲</text>
+  <text x="552" y="359" text-anchor="middle" font-size="7.5" fill="#232F3E">僅發生在冷叫用／擴容</text>
+  <path d="M618 350 H632" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+
+  <!-- Lambda (API) -->
+  <rect x="636" y="322" width="56" height="56" rx="10" fill="#ED7100"/>
+  <g transform="translate(636,322)" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round">
+    <path d="M18 14 L38 42"/>
+    <path d="M27 27 L18 42"/>
+  </g>
+  <circle cx="632" cy="326" r="11" fill="#232F3E"/>
+  <text x="632" y="330" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">3</text>
+  <text x="664" y="398" text-anchor="middle" font-size="11.5" font-weight="600" fill="#232F3E">AWS Lambda（Java）</text>
+  <text x="664" y="412" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">core-calc / 決策 / 門檻 / forecast</text>
+  <text x="664" y="424" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">以函式取代現行 Spring Boot 單一容器</text>
+  <text x="664" y="436" text-anchor="middle" font-size="8.5" font-style="italic" fill="#879196">〔未部署 · 非讀回〕本專案未使用 Lambda（依原始碼）</text>
+  <text x="664" y="448" text-anchor="middle" font-size="8.5" font-style="italic" fill="#879196">帳號內實有 1 個 Lambda（讀回），非本專案部署</text>
+  <text x="664" y="466" text-anchor="middle" font-size="8.5" font-style="italic" fill="#6B7885">〔提案效益 · 非讀回〕隨請求自動伸縮到零</text>
+  <text x="664" y="478" text-anchor="middle" font-size="8.5" font-style="italic" fill="#6B7885">幾乎不用管機器與擴縮（優點卡所列）</text>
+
+  <!-- downstream sub-group -->
+  <rect x="800" y="168" width="750" height="346" rx="4" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="3 3"/>
+  <text x="814" y="186" font-size="9" font-weight="600" fill="#5A6470">Lambda 的下游（提案角色）· 其中 Bedrock / SNS / SES 今日已存在，DynamoDB 未使用</text>
+
+  <!-- fan-out trunk + risers -->
+  <path d="M692 350 H790" fill="none" stroke="#7D8998" stroke-width="1"/>
+  <path d="M752 350 V222 H826" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <path d="M764 350 V304 H826" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <path d="M776 350 V386 H826" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <path d="M788 350 V462 H826" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <circle cx="728" cy="328" r="11" fill="#232F3E"/>
+  <text x="728" y="332" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">4</text>
+
+  <!-- DynamoDB -->
+  <rect x="830" y="200" width="44" height="44" rx="8" fill="#527FFF"/>
+  <g transform="translate(830,200)" fill="none" stroke="#FFFFFF" stroke-width="1.6">
+    <ellipse cx="22" cy="13" rx="10" ry="3.6"/>
+    <path d="M12 13 V31 A10 3.6 0 0 0 32 31 V13"/>
+    <path d="M12 22 A10 3.6 0 0 0 32 22"/>
+  </g>
+  <text x="888" y="217" font-size="11.5" font-weight="600" fill="#232F3E">Amazon DynamoDB</text>
+  <text x="888" y="231" font-size="9" font-style="italic" fill="#6B7885">metrics / 設定資料表</text>
+  <text x="888" y="243" font-size="9" font-style="italic" fill="#6B7885">取代現行「real-metrics.json 烘在映像內」的取數方式</text>
+  <text x="888" y="255" font-size="9" font-style="italic" fill="#879196">〔未部署〕帳號內 0 張資料表（讀回）；Java 原始碼零參照、pom 內無此 SDK 依賴〔非讀回〕</text>
+
+  <!-- Bedrock -->
+  <rect x="830" y="282" width="44" height="44" rx="8" fill="#01A88D"/>
+  <g transform="translate(830,282)">
+    <path d="M22 8 L34 15 V29 L22 36 L10 29 V15 Z" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+    <path d="M22 22 V13 M22 22 L30 27 M22 22 L14 27" stroke="#FFFFFF" stroke-width="1.3" fill="none"/>
+    <circle cx="22" cy="22" r="3" fill="#FFFFFF"/>
+    <circle cx="22" cy="12.5" r="2" fill="#FFFFFF"/>
+    <circle cx="30.5" cy="27.2" r="2" fill="#FFFFFF"/>
+    <circle cx="13.5" cy="27.2" r="2" fill="#FFFFFF"/>
+  </g>
+  <text x="888" y="299" font-size="11.5" font-weight="600" fill="#232F3E">Amazon Bedrock</text>
+  <text x="888" y="313" font-size="9" font-style="italic" fill="#6B7885">us.anthropic.claude-haiku-4-5-20251001-v1:0 · Converse API</text>
+  <text x="888" y="325" font-size="9" font-style="italic" fill="#6B7885">AI brief 生成；本方案改由 Lambda 呼叫</text>
+  <text x="888" y="337" font-size="9" fill="#5B7F16">〔今日已存在〕此模型與 Converse API 為 2026-07-15 讀回的實際組態</text>
+
+  <!-- SNS -->
+  <rect x="830" y="364" width="44" height="44" rx="8" fill="#E7157B"/>
+  <g transform="translate(830,364)">
+    <circle cx="12" cy="22" r="4" fill="#FFFFFF"/>
+    <path d="M16 22 L28 11.5 M16 22 L30 22 M16 22 L28 32.5" stroke="#FFFFFF" stroke-width="1.5" fill="none"/>
+    <circle cx="31" cy="10" r="3" fill="#FFFFFF"/>
+    <circle cx="33" cy="22" r="3" fill="#FFFFFF"/>
+    <circle cx="31" cy="34" r="3" fill="#FFFFFF"/>
+  </g>
+  <text x="888" y="381" font-size="11.5" font-weight="600" fill="#232F3E">Amazon SNS</text>
+  <text x="888" y="395" font-size="9" font-style="italic" fill="#6B7885">sns:Publish · arn:aws:sns:us-east-1:516665228894:fleetmind-alerts</text>
+  <path d="M891 403 L898.5 416 H883.5 Z" fill="none" stroke="#D13212" stroke-width="1.1" stroke-linejoin="round"/>
+  <text x="891" y="414.5" text-anchor="middle" font-size="7.5" font-weight="700" fill="#D13212">!</text>
+  <text x="905" y="414" font-size="9" font-style="italic" fill="#D13212">〔今日已存在，但 0 個訂閱〕Publish 會成功，卻扇出到沒有任何人</text>
+
+  <!-- SES -->
+  <rect x="830" y="440" width="44" height="44" rx="8" fill="#E7157B"/>
+  <g transform="translate(830,440)">
+    <rect x="9" y="13" width="26" height="18" rx="2.5" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+    <path d="M10.5 15 L22 24 L33.5 15" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+  </g>
+  <text x="888" y="457" font-size="11.5" font-weight="600" fill="#232F3E">Amazon SES v2</text>
+  <text x="888" y="471" font-size="9" font-style="italic" fill="#6B7885">SendEmail · 寄件者／收件者 wsx5031060310guy@gmail.com</text>
+  <text x="888" y="483" font-size="9" fill="#5B7F16">〔今日已存在〕今天真正把告警送進信箱的是這條路徑</text>
+  <text x="888" y="495" font-size="9" font-style="italic" fill="#879196">本方案沿用；只是改由 Lambda 而非 Fargate 容器呼叫</text>
+
+  <!-- ===================== BAND (b) — recompute path ===================== -->
+  <rect x="315" y="536" width="1245" height="212" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="330" y="554" font-size="10" font-weight="600" fill="#5A6470">(b) 重算路徑（提案）—— 每晚排程重算</text>
+
+  <!-- EventBridge -->
+  <rect x="360" y="584" width="44" height="44" rx="8" fill="#E7157B"/>
+  <g transform="translate(360,584)">
+    <circle cx="22" cy="22" r="12" fill="none" stroke="#FFFFFF" stroke-width="1.7"/>
+    <path d="M22 14 V22 L28 26" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="22" cy="22" r="1.6" fill="#FFFFFF"/>
+  </g>
+  <circle cx="356" cy="580" r="11" fill="#232F3E"/>
+  <text x="356" y="584" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">5</text>
+  <text x="382" y="646" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Amazon EventBridge</text>
+  <text x="382" y="660" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">每晚排程規則</text>
+  <text x="382" y="672" text-anchor="middle" font-size="8.5" font-style="italic" fill="#879196">〔未部署〕帳號內無此規則</text>
+
+  <!-- EventBridge -> Lambda -->
+  <path d="M404 606 H612" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <text x="508" y="598" text-anchor="middle" font-size="9" fill="#5A6470">每晚觸發（cron 排程）</text>
+
+  <!-- Lambda (recompute) -->
+  <rect x="616" y="578" width="56" height="56" rx="10" fill="#ED7100"/>
+  <g transform="translate(616,578)" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round">
+    <path d="M18 14 L38 42"/>
+    <path d="M27 27 L18 42"/>
+  </g>
+  <text x="644" y="650" text-anchor="middle" font-size="11.5" font-weight="600" fill="#232F3E">AWS Lambda · 指標重算</text>
+  <text x="644" y="664" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">重算 Speed Loss；k = FOC / STW³（ISO 19030）</text>
+  <text x="644" y="676" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">受 Lambda 15 分鐘執行上限與記憶體上限約束</text>
+  <text x="644" y="688" text-anchor="middle" font-size="8.5" font-style="italic" fill="#879196">〔未部署 · 非讀回〕本專案未使用 Lambda（依原始碼）</text>
+
+  <!-- S3 -> Lambda (read) -->
+  <path d="M872 606 H676" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <text x="774" y="598" text-anchor="middle" font-size="9" fill="#5A6470">讀取 2021–2025 noon reports</text>
+
+  <!-- S3 data lake -->
+  <rect x="876" y="584" width="44" height="44" rx="8" fill="#7AA116"/>
+  <g transform="translate(876,584)">
+    <ellipse cx="22" cy="14" rx="10" ry="3.1" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+    <path d="M12 14 H32 L29.5 31 H14.5 Z" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M17 20 H27 M18 25.5 H26" stroke="#FFFFFF" stroke-width="1.3" fill="none"/>
+  </g>
+  <text x="898" y="646" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Amazon S3 · noon reports</text>
+  <text x="898" y="660" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">原始資料湖 · 2021–2025 · 15 艘船</text>
+  <text x="898" y="672" text-anchor="middle" font-size="8.5" font-style="italic" fill="#879196">〔未部署〕帳號目前未使用 S3</text>
+
+  <!-- Lambda -> DynamoDB (write back), routed above the row -->
+  <path d="M644 578 V568 Q644 564 648 564 H1198 Q1202 564 1202 568 V580" fill="none" stroke="#7D8998" stroke-width="1" marker-end="url(#ah-optb)"/>
+  <text x="1060" y="576" text-anchor="middle" font-size="9" fill="#5A6470">寫回重算後的 metrics</text>
+
+  <!-- DynamoDB (recompute target) -->
+  <rect x="1180" y="584" width="44" height="44" rx="8" fill="#527FFF"/>
+  <g transform="translate(1180,584)" fill="none" stroke="#FFFFFF" stroke-width="1.6">
+    <ellipse cx="22" cy="13" rx="10" ry="3.6"/>
+    <path d="M12 13 V31 A10 3.6 0 0 0 32 31 V13"/>
+    <path d="M12 22 A10 3.6 0 0 0 32 22"/>
+  </g>
+  <text x="1202" y="646" text-anchor="middle" font-size="11" font-weight="600" fill="#232F3E">Amazon DynamoDB</text>
+  <text x="1202" y="660" text-anchor="middle" font-size="9" font-style="italic" fill="#6B7885">與 (a) 為同一組資料表</text>
+  <text x="1202" y="672" text-anchor="middle" font-size="8.5" font-style="italic" fill="#879196">〔未部署〕帳號內 0 張資料表（讀回）；Java 零參照、pom 無此 SDK〔非讀回〕</text>
+
+  <!-- ===================== Cold-start trade-off panel (outside the cloud) ===================== -->
+  <rect x="24" y="352" width="248" height="400" rx="6" fill="#F4F6F8" stroke="#D5DBE1" stroke-width="1"/>
+  <rect x="24" y="352" width="3" height="400" fill="#DD344C"/>
+  <text x="38" y="374" font-size="11" font-weight="700" fill="#232F3E">取捨：Java 冷啟動</text>
+  <text x="38" y="392" font-size="9" fill="#4E5B6B">這是本方案真正的成本，</text>
+  <text x="38" y="406" font-size="9" fill="#4E5B6B">與本節缺點卡所寫一致。</text>
+
+  <text x="38" y="428" font-size="9.5" font-weight="600" fill="#DD344C">冷叫用時</text>
+  <text x="38" y="446" font-size="9" fill="#4E5B6B">· 函式執行環境需重新建立，</text>
+  <text x="38" y="460" font-size="9" fill="#4E5B6B">  JVM 需重新啟動並載入類別</text>
+  <text x="38" y="474" font-size="9" fill="#4E5B6B">· 首個請求延遲高於暖叫用</text>
+  <text x="38" y="488" font-size="9" fill="#4E5B6B">· 流量尖峰擴容時會再次發生</text>
+
+  <text x="38" y="510" font-size="9.5" font-weight="600" fill="#232F3E">緩解</text>
+  <text x="38" y="528" font-size="9" fill="#4E5B6B">· Lambda SnapStart（缺點卡所列）</text>
+  <text x="38" y="542" font-size="9" fill="#4E5B6B">· 預先佈建並行（本圖未畫，</text>
+  <text x="38" y="556" font-size="9" fill="#4E5B6B">  因會抵銷「閒置零成本」優點）</text>
+
+  <text x="38" y="578" font-size="9.5" font-weight="600" fill="#232F3E">對照今日實際架構（現行架構）</text>
+  <text x="38" y="596" font-size="9" fill="#4E5B6B">· 現行為 ECS Fargate 常駐容器</text>
+  <text x="38" y="610" font-size="9" fill="#4E5B6B">  （fleetmind-svc · desiredCount 1）</text>
+  <text x="38" y="624" font-size="9" fill="#4E5B6B">  持續運行 → 無冷啟動，但也沒有</text>
+  <text x="38" y="638" font-size="9" fill="#4E5B6B">  優點卡所說的「閒置零成本」</text>
+  <text x="38" y="656" font-size="9" fill="#4E5B6B">· real-metrics.json 於 build 時烘入</text>
+  <text x="38" y="670" font-size="9" fill="#4E5B6B">  映像，冷啟動當下即有真實資料；</text>
+  <text x="38" y="684" font-size="9" fill="#4E5B6B">  換成 Lambda + DynamoDB 後，</text>
+  <text x="38" y="698" font-size="9" fill="#4E5B6B">  這個特性不再自動成立</text>
+
+  <text x="38" y="720" font-size="9.5" font-weight="600" fill="#232F3E">重算路徑另一上限</text>
+  <text x="38" y="738" font-size="9" fill="#4E5B6B">· 單次函式 15 分鐘 / 記憶體上限</text>
+
+  <!-- ===================== Bottom framing strip ===================== -->
+  <rect x="280" y="776" width="1295" height="112" rx="5" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="296" y="794" font-size="10.5" font-weight="600" fill="#232F3E">本圖框架：候選方案（CANDIDATE）—— 此架構尚未部署；圖中標〔今日已存在〕者為現行既有資源</text>
+  <text x="296" y="812" font-size="9" fill="#5A6470">本節在頁面上是五個備選架構之一，因此提出服務是正確且被預期的；此圖畫的是提案，不是部署現況。圖中〔未部署〕標記於 2026-07-15 以 boto3 自帳號讀回；標〔非讀回〕者除外，依據見該處註記。</text>
+  <text x="296" y="828" font-size="9" fill="#5A6470">未部署 · 帳號內 0 個（讀回）：CloudFront 分發 · S3 儲存貯體（account-wide）· API Gateway API · DynamoDB 資料表 · EventBridge 規則。Java 原始碼對 S3 / DynamoDB 零參照，pom 內唯一的 AWS SDK 依賴為 bedrockruntime、sns、sesv2。</text>
+  <text x="296" y="844" font-size="9" fill="#5A6470">Lambda 例外，不併入上列：本專案未使用〔非讀回 · 依原始碼〕；帳號內實有 1 個 Lambda（讀回），非本專案部署 —— 故本圖不主張「帳號內沒有 Lambda」。</text>
+  <text x="296" y="860" font-size="9" fill="#5A6470">今日已存在（讀回）：Bedrock（us.anthropic.claude-haiku-4-5-20251001-v1:0 · Converse API）· SNS topic fleetmind-alerts（0 個訂閱）· SES v2（wsx5031060310guy@gmail.com）。本圖只是把它們的呼叫者換成 Lambda。</text>
+  <text x="296" y="876" font-size="9" fill="#5A6470">今日實際在跑的是現行架構：ALB → ECS Fargate（叢集 fleetmind · 服務 fleetmind-svc · 任務定義 fleetmind-api:5 · ARM64）—— 見本頁「01 系統架構圖」。</text>
+</svg>
