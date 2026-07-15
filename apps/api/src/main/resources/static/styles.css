@@ -505,20 +505,71 @@ button.btn:focus-visible, .seg button:focus-visible { outline: 2px solid var(--s
 .brief-meta .mode-tag { color: var(--seafoam); font-weight: 700; }
 .brief-meta .mode-tag.fallback { color: var(--amber); }
 #brief p { font-size: 14px; line-height: 1.75; color: var(--ink-dim); margin: 0 0 12px; max-width: 70ch; text-wrap: pretty; }
-#brief p.lead { color: var(--ink); }
 
-.citation, .inline-citation {
+/* brief as a formal report: numbered sections, real bullets, footnote citations */
+.brief-body { counter-reset: brief-section; }
+.brief-title {
+  margin: 2px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; max-width: 74ch;
+}
+.brief-section {
+  display: flex; align-items: baseline; gap: 9px; margin: 22px 0 9px;
+  font-size: 12.5px; font-weight: 700; color: var(--seafoam); letter-spacing: 0.06em;
+}
+.brief-section::before {
+  counter-increment: brief-section;
+  content: counter(brief-section, decimal-leading-zero);
+  font-family: var(--fs-mono); font-size: 11px; font-weight: 700;
+  color: var(--muted-2); letter-spacing: 0.04em;
+}
+#brief .brief-list { margin: 8px 0 0; padding-left: 0; list-style: none; }
+#brief .brief-list li {
+  position: relative; margin: 0 0 9px; padding-left: 17px; max-width: 70ch;
+  font-size: 14px; line-height: 1.75; color: var(--ink-dim); text-wrap: pretty;
+}
+#brief .brief-list li::before {
+  content: ""; position: absolute; left: 0; top: 0.66em;
+  width: 5px; height: 5px; border-radius: 1px; background: var(--teal);
+}
+
+.citation, .cite-marker {
   appearance: none; font: inherit; cursor: pointer;
   border: 1px solid rgba(46, 141, 176, 0.4); color: #bfe4f2;
   background: rgba(46, 141, 176, 0.12); border-radius: 6px;
   transition: background 0.18s ease, transform 0.12s ease;
 }
-.inline-citation { padding: 0 5px; margin: 0 1px; font-size: 12px; font-family: var(--fs-mono); }
 .citation { padding: 4px 10px; font-size: 12px; font-family: var(--fs-mono); }
-.citation:hover, .inline-citation:hover { background: rgba(46, 141, 176, 0.26); }
-.citation:active, .inline-citation:active { transform: scale(0.96); }
-.citation:focus-visible, .inline-citation:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 1px; }
-.citations { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cite-ref { font-size: 100%; line-height: 0; vertical-align: super; margin-left: 1px; }
+.cite-marker {
+  min-width: 16px; padding: 2px 4px; border-radius: 4px;
+  font-family: var(--fs-mono); font-size: 9.5px; font-weight: 700; line-height: 1;
+}
+.citation:hover, .cite-marker:hover { background: rgba(46, 141, 176, 0.26); color: #eaf6fb; }
+.citation:active, .cite-marker:active { transform: scale(0.96); }
+.citation:focus-visible, .cite-marker:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 1px; }
+
+.brief-sources { margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--line); }
+.brief-sources-title {
+  margin: 0 0 11px; font-size: 10.5px; font-weight: 700;
+  color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase;
+}
+#brief .source-list { margin: 0; padding: 0; list-style: none; }
+#brief .source-item {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px;
+  padding: 0 0 9px; margin: 0 0 9px; border-bottom: 1px solid var(--line-soft);
+  font-size: 12px; color: var(--muted);
+}
+#brief .source-item:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+.source-marker { grid-row: 1 / span 2; align-self: start; margin-top: 3px; }
+.source-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; min-width: 0; }
+.source-value { font-family: var(--fs-mono); font-size: 12px; color: var(--amber); font-variant-numeric: tabular-nums; }
+.source-endpoint {
+  grid-column: 2; font-family: var(--fs-mono); font-size: 10.5px;
+  color: var(--muted-2); overflow-wrap: anywhere; line-height: 1.5;
+}
+a.source-endpoint { text-decoration: none; border-bottom: 1px dotted var(--muted-2); }
+a.source-endpoint:hover { color: var(--seafoam); border-bottom-color: var(--seafoam); }
+a.source-endpoint:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; border-radius: 3px; }
 
 .guardrail-warning {
   display: inline-flex; align-items: center; gap: 8px;
@@ -657,8 +708,8 @@ footer.site-foot { color: var(--muted-2); font-size: 11.5px; text-align: center;
   /* AI brief actions + citations tappable */
   .panel-heading .actions { width: 100%; }
   .actions .btn { flex: 1; min-height: 44px; }
-  .citations .citation { min-height: 40px; padding: 8px 12px; }
-  .inline-citation { padding: 2px 6px; }
+  .source-head .citation { min-height: 40px; padding: 8px 12px; }
+  .cite-marker { min-width: 20px; padding: 3px 6px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
