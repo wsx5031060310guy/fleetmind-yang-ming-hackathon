@@ -14,8 +14,19 @@ const C = {
   amber: "F4A72B", coral: "E76F51", white: "FFFFFF", ink: "18293B",
   mute: "5A6B7B", panel: "F2F6F9", panel2: "E8EFF4", line: "CBD8E2",
 };
-const HEAD = "Microsoft JhengHei";
-const BODY = "Microsoft JhengHei";
+// Hiragino Sans — 這台 LibreOffice 唯一解析得出的 CJK 黑體, 且 W3/W6 是真的細/粗
+// 配對 (bold 不必合成)。正體字形已驗過為 TC 形, 非日文字形。
+//
+// 別換回 Microsoft JhengHei (Windows 字體) / PingFang TC / Heiti TC / STHeiti:
+// 這台通通解不出來, 會逐 script fallback → 中文掉 STSongti (宋體) 或 DFWaWaSC (娃娃體)、
+// 粗體中文掉 WeibeiSC (魏碑書法體)、拉丁掉 Arial-Black, 同一行三種字體。
+// fc-list / find 看不出來 (LibreOffice 走 CoreText, 不是 fontconfig) — 改字體後
+// 一律用 `pdffonts` 驗算出的 PDF: 只該有 HiraginoSans-W3/W6, 出現 Songti/Weibei/WaWa 就是壞了。
+//
+// 另: CJK 沒有 italic 切片, 對含中文的 run 下 italic 會被替換成書法/楷體 → 最難讀。
+// italic 只留給純拉丁 run。
+const HEAD = "Hiragino Sans";
+const BODY = "Hiragino Sans";
 
 const pptx = new PptxGenJS();
 pptx.defineLayout({ name: "W", width: 13.333, height: 7.5 });
@@ -49,7 +60,7 @@ s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: H, fill: { color: C.navy 
 s.addShape(pptx.ShapeType.rect, { x: 0, y: H - 2.5, w: W, h: 2.5, fill: { color: C.navy2 } });
 s.addText("FLEETMIND", { x: M, y: 1.55, w: 9, h: 0.5, fontFace: BODY, fontSize: 15, color: C.amber, bold: true, charSpacing: 6, margin: 0 });
 s.addText("AI 船舶效能分析與\n節能決策支援系統", { x: M, y: 2.05, w: 11.4, h: 2.0, fontFace: HEAD, fontSize: 46, color: C.white, bold: true, lineSpacingMultiple: 1.02, margin: 0 });
-s.addText("數字來自計算　語言來自 AI　決策留給人", { x: M, y: 4.35, w: 11, h: 0.5, fontFace: HEAD, fontSize: 19, color: C.seafoam, italic: true, margin: 0 });
+s.addText("數字來自計算　語言來自 AI　決策留給人", { x: M, y: 4.35, w: 11, h: 0.5, fontFace: HEAD, fontSize: 19, color: C.seafoam, margin: 0 });
 s.addText([
   { text: "陽明海運 · 航運物流組", options: { bold: true, color: C.white } },
   { text: "    |    AWS Summit Taipei 2026 百工百業瘋 AI — AI Everywhere Hackathon", options: { color: "AEC4D6" } },
@@ -64,24 +75,25 @@ s.addText("船殼與螺旋槳污損讓同樣航速要燒更多油。船東靠水
 const probStats = [
   { n: "15", u: "艘船 · 5 年", d: "匿名航行日報（noon report）", c: C.teal },
   { n: "21,282", u: "日報列", d: "＋ 77 筆水下養護事件", c: C.teal },
-  { n: "-12% ~ +22%", u: "Speed Loss 全隊範圍", d: "從剛養護到重度污損", c: C.coral },
+  // fs 22: 這串 11 字在 30pt 下 ≈2.84" > 卡片內寬 2.38" → 會折兩行撞到下面的 u 標籤。
+  { n: "-12% ~ +22%", u: "Speed Loss 全隊範圍", d: "從剛養護到重度污損", c: C.coral, fs: 22 },
   { n: "102", u: "格待預測油耗", d: "官方客觀評分標的", c: C.amber },
 ];
 probStats.forEach((p, i) => {
   const x = M + i * ((W - 2 * M - 0.4 * 3) / 4 + 0.4), w = (W - 2 * M - 0.4 * 3) / 4;
   card(s, x, 3.0, w, 2.9);
-  s.addText(p.n, { x: x + 0.15, y: 3.35, w: w - 0.3, h: 0.9, fontFace: HEAD, fontSize: 30, bold: true, color: p.c, margin: 0 });
+  s.addText(p.n, { x: x + 0.15, y: 3.35, w: w - 0.3, h: 0.9, fontFace: HEAD, fontSize: p.fs || 30, bold: true, color: p.c, valign: "middle", margin: 0 });
   s.addText(p.u, { x: x + 0.15, y: 4.3, w: w - 0.3, h: 0.4, fontFace: BODY, fontSize: 12.5, bold: true, color: C.ink, margin: 0 });
   s.addText(p.d, { x: x + 0.15, y: 4.75, w: w - 0.3, h: 0.9, fontFace: BODY, fontSize: 11.5, color: C.mute, lineSpacingMultiple: 1.1, margin: 0 });
 });
-s.addText("資料由命題企業提供，僅存於競賽 AWS 帳號、不進版控、賽後刪除。", { x: M, y: 6.25, w: W - 2 * M, h: 0.35, fontFace: BODY, fontSize: 11, italic: true, color: C.mute, margin: 0 });
+s.addText("資料由命題企業提供，僅存於競賽 AWS 帳號、不進版控、賽後刪除。", { x: M, y: 6.25, w: W - 2 * M, h: 0.35, fontFace: BODY, fontSize: 11, color: C.mute, margin: 0 });
 s.addNotes("[0:30–1:10] 點出痛點：污損偷油、養護決策靠經驗。用真資料規模帶出我們有本錢做量化。");
 
 // ---------- Slide 3: what we built (2 deliverables) ----------
 s = pptx.addSlide(); lightBg(s);
 head(s, "Our Solution", "兩條主線，直攻 55% 硬分數");
 const deliv = [
-  { tag: "客觀評分 25%", tagc: C.amber, t: "油耗預測模型", pts: ["預測 102 格被遮蔽的全速油耗", "反事實推論：現在做 UWC/PP 能省多少", "污損時鐘 + 跨姊妹船遷移學習"], foot: "predict/ · Python · sklearn" },
+  { tag: "客觀評分 25%", tagc: C.amber, t: "油耗預測模型", pts: ["預測 102 格被遮蔽的全速油耗", "反事實推論：現在做 UWC/PP 能少燒多少油", "污損時鐘 + 跨姊妹船遷移學習"], foot: "predict/ · Python · sklearn" },
   { tag: "專家品評 30%", tagc: C.seafoam, t: "Speed Loss Dashboard", pts: ["ISO 19030 框架下的效能衰退趨勢", "船殼 vs 螺旋槳歸因", "養護事件與效能恢復時序對比"], foot: "core-calc + apps/api · Java / Spring Boot" },
 ];
 deliv.forEach((d, i) => {
@@ -92,8 +104,8 @@ deliv.forEach((d, i) => {
   s.addText(d.pts.map((p, j) => ({ text: p, options: { bullet: { code: "2022", indent: 14 }, color: C.ink, breakLine: j < d.pts.length - 1, paraSpaceAfter: 8 } })), { x: x + 0.35, y: 3.3, w: w - 0.7, h: 1.5, fontFace: BODY, fontSize: 14, margin: 0 });
   s.addText(d.foot, { x: x + 0.35, y: 5.05, w: w - 0.7, h: 0.35, fontFace: BODY, fontSize: 11, italic: true, color: C.teal, bold: true, margin: 0 });
 });
-s.addText("＋ 20% 商務決策價值（ROI 反事實）　＋ 15% 技術可行性　＋ 10% AI 協作創意", { x: M, y: 5.85, w: W - 2 * M, h: 0.4, align: "center", fontFace: BODY, fontSize: 13.5, bold: true, color: C.mute, margin: 0 });
-s.addNotes("[1:10–1:50] 兩個產出對應 30%+25% 硬分數；其餘三維度靠 ROI、單服務架構、AI guardrail。");
+s.addText("＋ 20% 商務決策價值（多耗油量反事實）　＋ 15% 技術可行性　＋ 10% AI 協作創意", { x: M, y: 5.85, w: W - 2 * M, h: 0.4, align: "center", fontFace: BODY, fontSize: 13.5, bold: true, color: C.mute, margin: 0 });
+s.addNotes("[1:10–1:50] 兩個產出對應 30%+25% 硬分數；其餘三維度靠多耗油量估算、單服務架構、AI guardrail。");
 
 // ---------- Slide 4: data & method ----------
 s = pptx.addSlide(); lightBg(s);
@@ -126,7 +138,7 @@ shipRows.forEach((r, i) => {
   s.addText(r[0], { x: 7.85, y, w: 4.9, h: 0.4, fontFace: BODY, fontSize: 13.5, bold: true, color: C.white, margin: 0 });
   s.addText(r[1], { x: 7.85, y: y + 0.32, w: 4.9, h: 0.35, fontFace: BODY, fontSize: 11.5, color: typeof r[2] === "string" && r[2].length === 6 ? r[2] : C.white, margin: 0 });
 });
-s.addText("被遮蔽的 3 艘預測船，在同型訓練船上有大量可見歷史 → 遷移學習。", { x: 7.85, y: 6.05, w: 4.9, h: 0.6, fontFace: BODY, fontSize: 11, italic: true, color: C.seafoam, lineSpacingMultiple: 1.1, margin: 0 });
+s.addText("被遮蔽的 3 艘預測船，在同型訓練船上有大量可見歷史 → 遷移學習。", { x: 7.85, y: 6.05, w: 4.9, h: 0.6, fontFace: BODY, fontSize: 11, color: C.seafoam, lineSpacingMultiple: 1.1, margin: 0 });
 s.addNotes("[1:50–2:35] 方法核心：k=FOC/STW³ 把速度與洋流正規化，只在同速帶比 k，減速不會被誤記成污損。");
 
 // ---------- Slide 5: dashboard + fleet chart (official item 1) ----------
@@ -143,7 +155,7 @@ s.addChart(pptx.ChartType.bar, [{ name: "Speed Loss %", labels: fleet.map(f => f
   valAxisHidden: true, valGridLine: { style: "none" }, catGridLine: { style: "none" },
   valAxisMinVal: 0, valAxisMaxVal: 25,
 });
-s.addText("依 Speed Loss 排序的船隊優先盤點（前 8 名）", { x: M, y: 6.55, w: 7, h: 0.3, fontFace: BODY, fontSize: 11, italic: true, color: C.mute, margin: 0 });
+s.addText("依 Speed Loss 排序的船隊優先盤點（前 8 名）", { x: M, y: 6.55, w: 7, h: 0.3, fontFace: BODY, fontSize: 11, color: C.mute, margin: 0 });
 // right feature list
 const feats = [
   ["互動趨勢圖", "點選任一船，看 Speed Loss 隨航程變化、事件標記、資料缺口"],
@@ -152,10 +164,12 @@ const feats = [
   ["誠實信心", "顯示 ±區間、n、未解釋殘差，不做假精確"],
 ];
 card(s, 8.05, 1.9, W - M - 8.05, 4.6, C.panel);
+// 卡片右緣在 W-M=12.633, 文字左緣 8.35 → 內寬上限 4.28。原本 4.3/4.35 會讓行尾壓在卡片邊
+// 線上 (Hiragino 比舊 fallback 寬, 更明顯)。收到 3.98 = 左右各留 0.3 padding。
 feats.forEach((f, i) => {
   const y = 2.2 + i * 1.05;
-  s.addText(f[0], { x: 8.35, y, w: 4.3, h: 0.35, fontFace: HEAD, fontSize: 15, bold: true, color: C.navy, margin: 0 });
-  s.addText(f[1], { x: 8.35, y: y + 0.34, w: 4.35, h: 0.62, fontFace: BODY, fontSize: 11.5, color: C.mute, lineSpacingMultiple: 1.08, margin: 0 });
+  s.addText(f[0], { x: 8.35, y, w: 3.98, h: 0.35, fontFace: HEAD, fontSize: 15, bold: true, color: C.navy, margin: 0 });
+  s.addText(f[1], { x: 8.35, y: y + 0.34, w: 3.98, h: 0.62, fontFace: BODY, fontSize: 11.5, color: C.mute, lineSpacingMultiple: 1.08, margin: 0 });
 });
 s.addNotes("[2:35–3:35] Demo（最長，實機操作）：真資料 15 船，點 S11（最嚴重、692 天沒清）看趨勢；再點 S23 看歸因。強調數字全來自 core-calc 確定性計算。");
 
@@ -170,7 +184,7 @@ s.addText([
   { text: "螺旋槳僅佔 4%", options: { color: "AEC4D6", breakLine: true } },
   { text: "→ 建議優先安排水下清潔（UWC），拋光次之", options: { color: C.seafoam } },
 ], { x: M + 0.35, y: 4.15, w: 4.9, h: 0.9, fontFace: BODY, fontSize: 13, lineSpacingMultiple: 1.2, margin: 0 });
-s.addText("方法：以隔離區段（只影響螺旋槳 / 只影響船殼的窗口）各自量 k 漂移率拆分；區段稀疏時退回標記過的 50/50，不假裝精準。", { x: M + 0.35, y: 5.2, w: 4.9, h: 1.0, fontFace: BODY, fontSize: 11, italic: true, color: "8FA8BD", lineSpacingMultiple: 1.12, margin: 0 });
+s.addText("方法：以隔離區段（只影響螺旋槳 / 只影響船殼的窗口）各自量 k 漂移率拆分；區段稀疏時退回標記過的 50/50，不假裝精準。", { x: M + 0.35, y: 5.2, w: 4.9, h: 1.0, fontFace: BODY, fontSize: 11, color: "8FA8BD", lineSpacingMultiple: 1.12, margin: 0 });
 // right: UWI honesty
 card(s, 6.75, 1.9, W - M - 6.75, 4.5, C.panel);
 s.addText("誠實處理「純檢查」事件（UWI）", { x: 7.05, y: 2.15, w: 5.4, h: 0.4, fontFace: HEAD, fontSize: 16, bold: true, color: C.navy, margin: 0 });
@@ -210,37 +224,41 @@ s.addText([
 ], { x: M, y: 4.95, w: 7.0, h: 0.9, fontFace: BODY, fontSize: 13, lineSpacingMultiple: 1.12, margin: 0 });
 // right honesty card
 card(s, 8.05, 1.85, W - M - 8.05, 4.0, C.panel2);
-s.addText("刻意的簡單", { x: 8.35, y: 2.1, w: 4.3, h: 0.4, fontFace: HEAD, fontSize: 16, bold: true, color: C.navy, margin: 0 });
-s.addText("我們試過更複雜的堆疊與單調約束——在防漏驗證上都沒贏過樸素 GBM baseline，於是資料驅動地選 baseline。", { x: 8.35, y: 2.55, w: 4.35, h: 1.3, fontFace: BODY, fontSize: 13, color: C.ink, lineSpacingMultiple: 1.18, margin: 0 });
-s.addText("「不 ship 比 baseline 差的模型」是原則，不是能力上限。", { x: 8.35, y: 3.95, w: 4.35, h: 0.9, fontFace: BODY, fontSize: 12, italic: true, color: C.teal, bold: true, lineSpacingMultiple: 1.15, margin: 0 });
-s.addText("提交標的：全速時段油耗總量（MT），以每小時率×全速時數還原。", { x: 8.35, y: 5.0, w: 4.35, h: 0.7, fontFace: BODY, fontSize: 11, color: C.mute, lineSpacingMultiple: 1.1, margin: 0 });
+// 同上: 內寬收到 3.98, 否則行尾會壓在卡片右邊線上。
+s.addText("刻意的簡單", { x: 8.35, y: 2.1, w: 3.98, h: 0.4, fontFace: HEAD, fontSize: 16, bold: true, color: C.navy, margin: 0 });
+s.addText("我們試過更複雜的堆疊與單調約束——在防漏驗證上都沒贏過樸素 GBM baseline，於是資料驅動地選 baseline。", { x: 8.35, y: 2.55, w: 3.98, h: 1.3, fontFace: BODY, fontSize: 13, color: C.ink, lineSpacingMultiple: 1.18, margin: 0 });
+s.addText("「不 ship 比 baseline 差的模型」是原則，不是能力上限。", { x: 8.35, y: 3.95, w: 3.98, h: 0.9, fontFace: BODY, fontSize: 12, color: C.teal, bold: true, lineSpacingMultiple: 1.15, margin: 0 });
+s.addText("提交標的：全速時段油耗總量（MT），以每小時率×全速時數還原。", { x: 8.35, y: 5.0, w: 3.98, h: 0.7, fontFace: BODY, fontSize: 11, color: C.mute, lineSpacingMultiple: 1.1, margin: 0 });
 s.addNotes("[4:25–5:25] 誠實：baseline 勝出。強調防漏驗證的嚴謹（模擬真實遮蔽），這是評審會追問的點。");
 
-// ---------- Slide 8: ROI / business value ----------
+// ---------- Slide 8: 多耗燃油噸數（粗估）----------
+// 依 docs/27 工程師回饋第 9 點：成本由別部門管，他們只負責「發現問題、通知需要清洗」
+// → 主線移除金額與投資回收模型。第 10 點允許估「多耗燃油噸數（噸，不談金額）」但須明標粗估。
 s = pptx.addSlide(); darkBg(s);
 s.addText("官方必含（商務價值 20%）", { x: M, y: 0.5, w: 11, h: 0.3, fontFace: BODY, fontSize: 12, color: C.amber, bold: true, charSpacing: 2, margin: 0 });
-s.addText("同一個模型回答：現在清，能省多少？", { x: M, y: 0.8, w: 11.8, h: 0.7, fontFace: HEAD, fontSize: 30, bold: true, color: C.white, margin: 0 });
-s.addText("反事實推論：把污損時鐘歸零重新預測，得到每天可省油量、年省金額與回本天數（油價 USD 650/MT）。", { x: M, y: 1.65, w: W - 2 * M, h: 0.5, fontFace: BODY, fontSize: 14, color: "AEC4D6", margin: 0 });
+s.addText("同一個模型回答：污損正在多燒多少油？", { x: M, y: 0.8, w: 11.8, h: 0.7, fontFace: HEAD, fontSize: 30, bold: true, color: C.white, margin: 0 });
+s.addText("反事實推論：把污損時鐘歸零重新預測，得到同航速下每天多耗的燃油噸數。只談噸數，不談金額。", { x: M, y: 1.65, w: 9.1, h: 0.5, fontFace: BODY, fontSize: 14, color: "AEC4D6", margin: 0 });
+chip(s, W - M - 2.7, 1.62, 2.7, "粗估 · 非正式數字", C.amber, C.navy);
 const roi = [
-  ["S23", "24.4%", "16.4 MT/日", "≈ US$3.9M/年", "HIGH · n=506"],
-  ["S6", "25.1%", "14.8 MT/日", "≈ US$3.5M/年", "LOW · 樣本不足"],
-  ["S11", "52.3%", "40.1 MT/日", "≈ US$9.5M/年", "極端 · 692 天未清"],
+  ["S23", "24.4%", "16.4 MT/日", "HIGH · n=506"],
+  ["S6", "25.1%", "14.8 MT/日", "LOW · 樣本不足"],
+  ["S11", "52.3%", "40.1 MT/日", "極端 · 692 天未清"],
 ];
 // table header
-const cols = [1.5, 2.3, 2.6, 3.0, 2.5];
-const cx = [M, M + 1.5, M + 3.8, M + 6.4, M + 9.4];
-const hd = ["船", "可省比例", "每日省油", "年省金額", "信心"];
+const cols = [1.5, 2.6, 3.4, 3.6];
+const cx = [M, M + 1.5, M + 4.1, M + 7.5];
+const hd = ["船", "可省比例", "每日多耗燃油", "信心"];
 card(s, M, 2.4, W - 2 * M, 3.6, C.navy2);
 hd.forEach((h2, i) => s.addText(h2, { x: cx[i] + 0.2, y: 2.6, w: cols[i], h: 0.4, fontFace: BODY, fontSize: 13, bold: true, color: C.seafoam, margin: 0 }));
 roi.forEach((r, ri) => {
   const y = 3.15 + ri * 0.86;
   r.forEach((cell, ci) => {
-    const isMoney = ci === 3, isPct = ci === 1;
-    s.addText(cell, { x: cx[ci] + 0.2, y, w: cols[ci] + 0.3, h: 0.5, fontFace: ci === 0 || isMoney ? HEAD : BODY, fontSize: isMoney ? 17 : (ci === 0 ? 17 : 14), bold: ci === 0 || isMoney || isPct, color: isMoney ? C.amber : C.white, valign: "middle", margin: 0 });
+    const isTons = ci === 2, isPct = ci === 1;
+    s.addText(cell, { x: cx[ci] + 0.2, y, w: cols[ci] + 0.3, h: 0.5, fontFace: ci === 0 || isTons ? HEAD : BODY, fontSize: isTons ? 17 : (ci === 0 ? 17 : 14), bold: ci === 0 || isTons || isPct, color: isTons ? C.amber : C.white, valign: "middle", margin: 0 });
   });
 });
-s.addText("決策支援，非自動指令：低信心→先做便宜的水下檢查；高信心且回本快→建議清潔；最終由輪機主管拍板。", { x: M, y: 6.25, w: W - 2 * M, h: 0.5, fontFace: BODY, fontSize: 12.5, italic: true, color: "8FA8BD", margin: 0 });
-s.addNotes("[5:25–6:20] 主打 S23（HIGH 信心、船殼 96%）：清一次年省近 400 萬美金。S11 是極端案例。強調人在迴路、數字可回溯。");
+s.addText("決策支援，非自動指令：低信心→先做便宜的水下檢查；高信心且多耗油量大→建議清潔；最終由輪機主管拍板。", { x: M, y: 6.25, w: W - 2 * M, h: 0.5, fontFace: BODY, fontSize: 12.5, color: "8FA8BD", margin: 0 });
+s.addNotes("[5:25–6:20] 主打 S23（HIGH 信心、船殼 96%）：同航速下每天多耗約 16.4 MT。S11 是極端案例。刻意不出金額——貴司工程師講明成本是別部門的事，我們只負責發現問題、通知該清洗；油價每港每次都不同，要換算自行乘上當期油價即可。強調人在迴路、數字可回溯。");
 
 // ---------- Slide 9: gaps & more data (official item 3) ----------
 s = pptx.addSlide(); lightBg(s);
@@ -254,7 +272,7 @@ const gaps = [
 const wants = [
   "軸功率計 + 對水速度計 → 直接升級 ISO 19030 全合規",
   "進塢後海試曲線 → 更準的效能參考基準",
-  "貴司 UWC/PP 恢復幅度紀錄 → 歸因與 ROI 有 ground truth",
+  "貴司 UWC/PP 恢復幅度紀錄 → 歸因與多耗油量估算有 ground truth",
   "塗層年限 / 吃水俯仰 trim / 航線港口 → 更強的決策依據",
 ];
 s.addText("本次分析的限制", { x: M, y: 1.75, w: 5.8, h: 0.4, fontFace: HEAD, fontSize: 17, bold: true, color: C.navy, margin: 0 });
@@ -277,7 +295,7 @@ const flow = [
   ["S3", "航行/養護資料", C.teal],
   ["core-calc + predict", "確定性計算 + 預測（數字唯一來源）", C.navy],
   ["Spring Boot", "API + Dashboard 同源", C.seafoam],
-  ["Bedrock (Claude)", "決策簡報 · guardrail", C.amber],
+  ["Bedrock", "Claude Haiku · 決策簡報 · guardrail", C.amber],
 ];
 flow.forEach((f, i) => {
   const w = 2.75, gap = 0.42, x = M + i * (w + gap);
@@ -286,7 +304,7 @@ flow.forEach((f, i) => {
   s.addText(f[1], { x: x + 0.15, y: 2.72, w: w - 0.3, h: 0.7, fontFace: BODY, fontSize: 11, color: i === 3 ? C.navy : "E6EEF5", lineSpacingMultiple: 1.05, margin: 0 });
   if (i < 3) s.addText("▶", { x: x + w + 0.02, y: 2.55, w: 0.38, h: 0.4, align: "center", valign: "middle", fontFace: BODY, fontSize: 16, color: C.line, margin: 0 });
 });
-s.addText("部署　App Runner（fallback ECS Express / EC2）· S3 · DynamoDB · Bedrock · CloudWatch · region us-east-1", { x: M, y: 3.7, w: W - 2 * M, h: 0.4, fontFace: BODY, fontSize: 12.5, color: C.mute, margin: 0 });
+s.addText("部署　ECS Fargate（ARM64）· ALB · ECR · Bedrock（Claude Haiku）· SNS · CloudWatch · us-east-1 · Day1 已實測上線", { x: M, y: 3.7, w: W - 2 * M, h: 0.4, fontFace: BODY, fontSize: 12.5, color: C.mute, margin: 0 });
 // AI role
 card(s, M, 4.3, W - 2 * M, 2.05, C.panel);
 s.addText("AI 的角色：數字來自計算，語言來自 AI，決策留給人", { x: M + 0.35, y: 4.5, w: W - 2 * M - 0.7, h: 0.4, fontFace: HEAD, fontSize: 16, bold: true, color: C.navy, margin: 0 });
@@ -303,7 +321,7 @@ s.addText("FLEETMIND", { x: M, y: 1.5, w: 9, h: 0.4, fontFace: BODY, fontSize: 1
 s.addText("把船隊的效能衰退，變成可計算、\n可歸因、人可拍板的節能決策", { x: M, y: 2.0, w: 11.6, h: 1.6, fontFace: HEAD, fontSize: 33, bold: true, color: C.white, lineSpacingMultiple: 1.05, margin: 0 });
 const closeItems = [
   ["Speed Loss Dashboard", "真資料 15 船 · ISO 19030 · 船殼/螺旋槳歸因"],
-  ["油耗預測 102 格", "RMSE 3.51 MT · 防漏驗證 · 反事實 ROI"],
+  ["油耗預測 102 格", "RMSE 3.51 MT · 防漏驗證 · 反事實多耗油量"],
   ["決策支援 · 人在迴路", "AI 解釋不發明 · 單服務 AWS 架構"],
 ];
 closeItems.forEach((c, i) => {
@@ -347,15 +365,15 @@ qaSlide("Speed Loss / ISO 19030", [
 ]);
 qaSlide("UWI 判讀 · 商務價值", [
   ["UWI 你說不改善，但圖上有變化？", "兩個地方兩種角色：物理先驗放『預測模型污損時鐘不因 UWI 重置』；dashboard 誠實顯示實測 delta+信心，不硬壓成零。刻意分開統計實測與物理先驗。"],
-  ["這系統怎麼幫我省錢？講數字。", "反事實：把污損時鐘歸零重預測，得每天可省油量、年省金額、回本天數（油價 US$650/MT）。S23 清一次年省近 US$3.9M。"],
-  ["AI 會自己排清潔嗎？", "不會，決策支援、人拍板。低信心→先做便宜水下檢查；高信心且回本快→建議清潔。反事實是檢視證據，不是自動指令。"],
+  ["這系統能幫我省多少？講數字。", "我們刻意不出金額。貴司工程師講得很清楚：成本是別部門管的，你們要的是「發現問題、通知需要清洗」。所以我們只講噸數——反事實把污損時鐘歸零重預測，S23 同航速下每天多耗約 16.4 MT（可省 24.4%，HIGH 信心 · n=506）。這是粗估、非正式數字；要換算成本，用貴司當期實際油價乘上去即可，每港每次加油價格都不同，我們不假裝知道。"],
+  ["AI 會自己排清潔嗎？", "不會，決策支援、人拍板。低信心→先做便宜水下檢查；高信心且多耗油量大→建議清潔。反事實是檢視證據，不是自動指令。"],
   ["資料品質差的日子會硬給建議嗎？", "被拒列標原因+品質分；可比樣本不足時不出高信心建議，改建議先做檢查。信心與 n 永遠跟著數字顯示。"],
 ]);
 qaSlide("AI · AWS · 限制", [
   ["AI 扮演什麼角色？怎麼防亂編數字？", "數字來自計算、語言來自 AI。Bedrock(Claude) 只改寫已算好的指標；guardrail 逐一比對每個數字的引用來源，未引用/引錯即攔——無法發明數字。開發用 Kiro。"],
-  ["架構？成本？為何不上 SageMaker？", "單一 Spring Boot on App Runner + S3 + DynamoDB + Bedrock + CloudWatch，us-east-1，約 <US$70/月。ISO 19030 本身確定性、樣本少硬煉會過擬合，且複雜模型沒贏過 baseline。"],
+  ["架構？成本？為何不上 SageMaker？", "單一 Spring Boot 容器：ECS Fargate（ARM64）+ ALB + ECR + Bedrock（Claude Haiku）+ SNS + CloudWatch，帳號 516665228894 · us-east-1，Day1 已實測上線。ARM64 Fargate 成本低、免管 EC2/OS patch。原本評估的 App Runner 本次受帳號權限阻擋（AccessDenied），故走 Fargate。不上 SageMaker：ISO 19030 本身確定性、樣本少硬煉會過擬合，複雜模型也沒贏過 baseline。"],
   ["最大的限制是什麼？（主動揭露）", "①SOG 非對水速度、洋流系統偏差 ②無軸功率、k 是代理 ③歸因稀疏時退 50/50 ④UWI 仍有量測雜訊，呈現而非壓平。都在 UI/偏離表明示。"],
-  ["給更多資料會怎麼強化？", "軸功率計+對水速度計→升級 ISO 19030 全合規；海試曲線→更準基準；貴司 UWC/PP 恢復幅度紀錄→歸因與 ROI 有 ground truth。框架不改、餵更好量測即升級。"],
+  ["給更多資料會怎麼強化？", "軸功率計+對水速度計→升級 ISO 19030 全合規；海試曲線→更準基準；貴司 UWC/PP 恢復幅度紀錄→歸因與多耗油量估算有 ground truth。框架不改、餵更好量測即升級。"],
 ]);
 
 const out = path.join(__dirname, "fleetmind-proposal-deck.pptx");
