@@ -146,6 +146,55 @@
   .diagram svg { display: block; min-width: 720px; width: 100%; height: auto; }
   .dcap { padding: 12px 18px; border-top: 1px solid var(--line-soft); font-size: 12.5px; color: var(--muted); font-family: var(--mono); background: var(--surface-2); }
 
+  /* ---- blueprint viewer: white AWS drawings presented as lit drawing sheets ---- */
+  .bp { margin: 26px 0 0; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+  .bp-rail { display: flex; gap: 4px; flex-wrap: wrap; padding: 10px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+  .bp-tab { appearance: none; border: 1px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 700; padding: 7px 12px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: baseline; gap: 8px; transition: background .18s, color .18s, border-color .18s; }
+  .bp-tab .n { font-family: var(--mono); font-size: 10.5px; font-weight: 600; color: var(--muted-2); }
+  .bp-tab:hover { background: var(--band); color: var(--ink); }
+  .bp-tab[aria-selected="true"] { background: color-mix(in srgb, var(--current) 16%, transparent); border-color: color-mix(in srgb, var(--current) 42%, transparent); color: var(--current); }
+  .bp-tab[aria-selected="true"] .n { color: var(--current); }
+  .bp-tab:focus-visible, .bp-open:focus-visible, .bp-btn:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+
+  .bp-stage { padding: clamp(14px, 2.4vw, 22px); }
+  .bp-sheet[hidden] { display: none; }
+  .bp-open { display: block; width: 100%; padding: 0; border: 0; border-radius: 10px; background: #fff; cursor: zoom-in; position: relative; overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(148, 183, 214, 0.24), 0 26px 58px -30px rgba(0, 0, 0, 0.9); transition: box-shadow .2s; }
+  .bp-open img { display: block; width: 100%; height: auto; }
+  .bp-open:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--seafoam) 55%, transparent), 0 30px 64px -28px rgba(0, 0, 0, 0.95); }
+  .bp-hint { position: absolute; right: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; font-weight: 600;
+    padding: 6px 11px; border-radius: 999px; background: rgba(7, 21, 35, 0.88); color: #EAF2F9; border: 1px solid rgba(148, 183, 214, 0.34); pointer-events: none; }
+  .bp-cap { margin: 15px 2px 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: var(--muted); }
+  .bp-cap b { color: var(--ink-dim); font-weight: 700; }
+  .bp-cap .warn { color: var(--amber); font-weight: 700; }
+  #blueprint code { font-family: var(--mono); font-size: 0.94em; color: var(--ink-dim); background: var(--band); border: 1px solid var(--line-soft); border-radius: 5px; padding: 1px 5px; }
+
+  /* fullscreen reader */
+  .bp-modal { padding: 0; border: 0; width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; background: var(--bg-2); color: var(--ink); overflow: hidden; }
+  .bp-modal::backdrop { background: rgba(3, 11, 20, 0.88); }
+  .bp-modal[open] { display: flex; flex-direction: column; }
+  .bp-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; flex: none;
+    padding: 10px clamp(10px, 2vw, 16px); border-bottom: 1px solid var(--line); background: var(--surface); }
+  .bp-bar-t { font-size: 13px; font-weight: 700; letter-spacing: -0.01em; min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bp-tools { display: flex; gap: 5px; flex: none; }
+  .bp-btn { appearance: none; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-dim); font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+    padding: 6px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+  .bp-btn:hover { border-color: var(--seafoam); color: var(--ink); }
+  .bp-btn[aria-pressed="true"] { background: color-mix(in srgb, var(--current) 18%, transparent); border-color: color-mix(in srgb, var(--current) 45%, transparent); color: var(--current); }
+  .bp-scroll { flex: 1; overflow: auto; background: var(--bg); overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .bp-scroll.can-drag { cursor: grab; }
+  .bp-scroll.drag { cursor: grabbing; }
+  /* min-width:min-content keeps the left edge reachable when the drawing is wider than the viewport */
+  .bp-canvas { display: flex; align-items: center; justify-content: center; min-width: min-content; min-height: 100%; padding: 14px; }
+  .bp-canvas img { display: block; max-width: none; height: auto; background: #fff; border-radius: 6px; user-select: none; -webkit-user-drag: none;
+    box-shadow: 0 0 0 1px rgba(148, 183, 214, 0.2), 0 20px 50px -30px #000; }
+  @media (prefers-reduced-motion: no-preference) {
+    .bp-modal[open] { animation: bpIn .22s ease-out; }
+    .bp-modal[open]::backdrop { animation: bpFade .22s ease-out; }
+  }
+  @keyframes bpIn { from { opacity: 0; transform: scale(.985); } }
+  @keyframes bpFade { from { opacity: 0; } }
+
   /* svg node styling (shared) */
   .band-rect { fill: var(--band); }
   .band-label { fill: var(--muted-2); font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
@@ -200,7 +249,10 @@
     .grid2 { grid-template-columns: 1fr; }
     .nav { display: none; }
   }
-  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+    .bp-tab, .bp-open { transition: none !important; }
+  }
   html { scroll-behavior: smooth; }
 </style>
 </head>
@@ -231,6 +283,7 @@
     <a href="/proposal.html">提案簡報</a>
     <a href="/admin.html">後台</a>
     <a href="#current">現行架構</a>
+    <a href="#blueprint">實測藍圖</a>
     <a href="#optB">Serverless</a>
     <a href="#optC">App Runner</a>
     <a href="#optD">EC2</a>
@@ -332,6 +385,56 @@
       <div class="fact"><div class="k">入口</div><div class="v">ALB 靜態 DNS</div></div>
       <div class="fact"><div class="k">成本層級</div><div class="v">低～中（常駐）</div></div>
       <div class="fact"><div class="k">維運負擔</div><div class="v">低</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== BLUEPRINTS (read back from the live account) ===================== -->
+  <section id="blueprint">
+    <div class="sec-head">
+      <p class="sec-kicker"><span class="tag cur">實測・讀自帳號</span> Verified blueprints</p>
+      <h2><span class="num">圖</span>三張實測藍圖 — 架構、權限、資料流</h2>
+      <p class="sec-lede">這三張圖不是為了簡報好看畫的：每個框、每條 ARN 都是從帳號 <b>516665228894</b> 讀回來、再逐條對照過的。包含不好看的部分——兩個子網都是 public、任務帶 public IP、SNS topic 沒有訂閱者、Bedrock 與 SES 的 policy 是 <code>Resource: *</code>。點任一張放大到 100% 以上，ARN 與 policy 可以逐行讀。</p>
+    </div>
+
+    <div class="bp" id="bpViewer">
+      <div class="bp-rail" role="tablist" aria-label="藍圖切換">
+        <button class="bp-tab" role="tab" type="button" id="bpT1" aria-controls="bpP1" aria-selected="true"><span class="n">01</span>系統雲端架構</button>
+        <button class="bp-tab" role="tab" type="button" id="bpT2" aria-controls="bpP2" aria-selected="false"><span class="n">02</span>權限設定 · IAM</button>
+        <button class="bp-tab" role="tab" type="button" id="bpT3" aria-controls="bpP3" aria-selected="false"><span class="n">03</span>即時資料流</button>
+      </div>
+
+      <div class="bp-stage">
+        <div class="bp-sheet" role="tabpanel" id="bpP1" aria-labelledby="bpT1" tabindex="0">
+          <button class="bp-open" type="button" data-src="/img/diagrams/architecture.svg" data-title="01 · 系統雲端架構圖">
+            <img src="/img/diagrams/architecture.svg" width="1600" height="900" alt="FleetMind 系統雲端架構圖：VPC 內兩個公有子網、internet-facing ALB、ECS Fargate 任務，以及 Bedrock、SNS、SES、CloudWatch Logs 等代管服務。">
+            <span class="bp-hint">⤢ 點擊放大閱讀</span>
+          </button>
+          <p class="bp-cap">VPC <b>vpc-0415efac81151722c</b>，兩個子網 <span class="warn">都是 public</span>（<code>mapPublicIpOnLaunch=true</code>），Fargate 任務<span class="warn">也帶 public IP</span>——這是為了不架 NAT gateway 也能從 ECR 拉映像。擋在外面的不是子網隔離，是 security group：<b>fleetmind-sg</b> 的 tcp/8080 只放行來自 ALB SG 的流量。</p>
+        </div>
+
+        <div class="bp-sheet" role="tabpanel" id="bpP2" aria-labelledby="bpT2" tabindex="0" hidden>
+          <button class="bp-open" type="button" data-src="/img/diagrams/iam.svg" data-title="02 · 權限設定：IAM 兩角色分離與網路權限邊界">
+            <img src="/img/diagrams/iam.svg" width="1600" height="900" alt="FleetMind IAM 權限設定圖：task role 與 execution role 分離，列出各自的 inline policy、action 與 resource，以及 security group 構成的網路權限邊界。">
+            <span class="bp-hint">⤢ 點擊放大閱讀</span>
+          </button>
+          <p class="bp-cap">兩個角色是分開的，這是真的最小權限收穫：<b>fleetmind-ecs-task</b> 只有 <code>bedrock:InvokeModel</code>、<code>sns:Publish</code>、<code>ses:SendEmail</code>；拉 ECR 映像與寫 log group 的權限在 <b>fleetmind-ecs-exec</b> 上——應用本身永遠碰不到。動作是窄的（只有 <code>InvokeModel</code>，不是 <code>bedrock:*</code>），SNS 綁死單一 topic ARN；但 <span class="warn">Bedrock 與 SES 是 <code>Resource: *</code></span>，圖上照實標，不寫「全面最小權限」。</p>
+        </div>
+
+        <div class="bp-sheet" role="tabpanel" id="bpP3" aria-labelledby="bpT3" tabindex="0" hidden>
+          <button class="bp-open" type="button" data-src="/img/diagrams/dataflow.svg" data-title="03 · 即時資料流">
+            <img src="/img/diagrams/dataflow.svg" width="1600" height="900" alt="FleetMind 即時資料流圖：瀏覽器經 ALB 進入 Fargate 任務，RealDataService 讀取映像內的 real-metrics.json，ai-brief 走 Bedrock Converse 與 guardrail 驗證，門檻越線時發出 SNS 與 SES 告警，日誌進 CloudWatch。">
+            <span class="bp-hint">⤢ 點擊放大閱讀</span>
+          </button>
+          <p class="bp-cap">瀏覽器 → ALB:80 → 目標群組 → 任務:8080。<b>real-metrics.json</b> 在 build 時就烤進映像，<code>RealDataService</code> 直接讀檔——執行期不打任何資料庫、冷啟即有真資料。<code>/api/vessels/{id}/ai-brief</code> 走 Bedrock Converse → <code>AiBriefGuardrail.validate()</code>，通過才回傳並存為 last-good，失敗退快取、再退確定性 fallback。門檻越線時同時 <code>SNS Publish</code> 與 <code>SES SendEmail</code>——<span class="warn">SNS topic 目前 0 個訂閱</span>，publish 會成功但沒有人收得到；今天真正會寄達信箱的是 SES。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="facts">
+      <div class="fact"><div class="k">子網</div><div class="v">2 × public（非私有）</div></div>
+      <div class="fact"><div class="k">8080 入口</div><div class="v">只收 ALB SG</div></div>
+      <div class="fact"><div class="k">Task role</div><div class="v">3 條 inline policy</div></div>
+      <div class="fact"><div class="k">SNS 訂閱數</div><div class="v">0（SES 才寄達）</div></div>
     </div>
   </section>
 
@@ -506,48 +609,45 @@
   <!-- ===================== SECURITY ===================== -->
   <section id="security">
     <div class="sec-head">
-      <p class="sec-kicker"><span class="tag cur">縱深防禦</span> Security</p>
-      <h2><span class="num">安</span>資安：VPC 隔離 ＋ GuardDuty 威脅偵測</h2>
-      <p class="sec-lede">船務資料敏感，安全不是加分是底線。VPC 把服務關進私有子網、只讓 ALB 對外；邊緣有 Shield/WAF，帳號層有 GuardDuty 持續偵測異常，憑證進 Secrets Manager、資料以 KMS 加密、所有動作留 CloudTrail、權限走 IAM 最小化。</p>
+      <p class="sec-kicker"><span class="tag cur">現況與規劃</span> Security</p>
+      <h2><span class="num">安</span>資安：已收口的入口 ＋ 規劃中的縱深</h2>
+      <p class="sec-lede">縱深防禦是目標，但這頁把「已經在跑的」和「還沒做的」分開講——旁邊就是 live URL，寫得比實際好只會被 curl 拆穿。<b>今天真正擋得住的是入口</b>：Security Group 只放行 ALB，直打 task 公網 IP 已 timeout。其餘是下一步。</p>
     </div>
     <div class="diagram"><div class="scroll">
-      <svg viewBox="0 0 960 360" role="img" aria-label="資安縱深防禦架構圖">
-        <title>資安縱深防禦</title>
-        <desc>邊緣 Shield 與 WAF 防護，Amazon VPC 以公有/私有子網隔離，ECS 在私有子網無公網 IP，GuardDuty 威脅偵測、Secrets Manager 管憑證、KMS 加密、CloudTrail 稽核、IAM 最小權限。</desc>
-        <g class="node"><rect x="18" y="150" width="128" height="56" rx="10"/><text class="svc" x="34" y="176">全球船務端</text><text class="role" x="34" y="194">網際網路</text></g>
-        <g class="node hl"><rect x="170" y="150" width="120" height="56" rx="10"/><text class="svc" x="186" y="176">Shield ＋ WAF</text><text class="role" x="186" y="194">DDoS · L7 過濾</text></g>
-        <rect class="band-rect" x="314" y="66" width="454" height="262" rx="14"/>
-        <text class="band-label" x="330" y="90">Amazon VPC（私有網路隔離）</text>
-        <rect class="band-rect" x="332" y="108" width="196" height="200" rx="10"/>
-        <text class="band-label" x="346" y="130">公有子網</text>
-        <g class="node hl"><rect x="350" y="170" width="162" height="60" rx="10"/><text class="svc" x="366" y="196">Application Load Balancer</text><text class="role" x="366" y="214">Security Group 只開 443</text></g>
-        <rect class="band-rect" x="544" y="108" width="208" height="200" rx="10"/>
-        <text class="band-label" x="558" y="130">私有子網（無公網 IP）</text>
-        <g class="node cur"><rect x="562" y="170" width="172" height="60" rx="10"/><text class="svc" x="578" y="196">ECS Fargate 決策服務</text><text class="role" x="578" y="214">NAT 出網 · VPC Endpoint</text></g>
-        <g class="node"><rect x="800" y="70" width="146" height="46" rx="9"/><text class="svc" x="814" y="90">GuardDuty</text><text class="role" x="814" y="107">威脅偵測</text></g>
-        <g class="node"><rect x="800" y="126" width="146" height="46" rx="9"/><text class="svc" x="814" y="146">Secrets Manager</text><text class="role" x="814" y="163">憑證管理</text></g>
-        <g class="node"><rect x="800" y="182" width="146" height="46" rx="9"/><text class="svc" x="814" y="202">KMS</text><text class="role" x="814" y="219">靜態加密</text></g>
-        <g class="node"><rect x="800" y="238" width="146" height="46" rx="9"/><text class="svc" x="814" y="258">CloudTrail</text><text class="role" x="814" y="275">稽核日誌</text></g>
-        <g class="node"><rect x="800" y="294" width="146" height="46" rx="9"/><text class="svc" x="814" y="314">IAM</text><text class="role" x="814" y="331">最小權限</text></g>
-        <path class="edge" d="M146 178 H170" marker-end="url(#arrow)"/>
-        <path class="edge strong" d="M290 178 H350" marker-end="url(#arrowS)"/>
-        <path class="edge" d="M512 200 H562" marker-end="url(#arrow)"/>
-        <path class="edge" d="M734 186 C 762 150, 776 110, 800 96" marker-end="url(#arrow)"/>
-        <path class="edge" d="M734 200 H800" marker-end="url(#arrow)"/>
+      <svg viewBox="0 0 960 300" role="img" aria-label="資安現況：已實作與規劃中">
+        <title>資安：已實作 vs 規劃中</title>
+        <desc>已實作：ALB 為唯一對外入口、任務 Security Group 只放行 ALB 的 SG、IAM 兩角色分離、CloudWatch Logs、Shield Standard 自動生效。規劃中：AWS WAF（目前 0 個 WebACL）、GuardDuty（本帳號 AccessDenied 開不了）、Secrets Manager（目前 0 個 secret）、KMS 自管金鑰（現用 AWS 託管預設金鑰）。兩個子網皆為公有、任務仍有公網 IP，收口靠的是 Security Group 而非子網隔離。</desc>
+
+        <rect class="band-rect" x="16" y="24" width="928" height="120" rx="12"/>
+        <text class="band-label" x="32" y="46">已實作 · 可當場驗證</text>
+        <g class="node"><rect x="34" y="60" width="140" height="66" rx="9"/><text class="svc" x="48" y="84">網際網路</text><text class="role" x="48" y="102">0.0.0.0/0</text></g>
+        <g class="node hl"><rect x="200" y="60" width="172" height="66" rx="9"/><text class="svc" x="214" y="84">ALB · 公有子網</text><text class="role" x="214" y="102">唯一對外入口 · tcp/80</text></g>
+        <g class="node cur"><rect x="398" y="60" width="186" height="66" rx="9"/><text class="svc" x="412" y="84">ECS Fargate · 公有子網</text><text class="role" x="412" y="102">SG 只放行 ALB SG 的 8080</text></g>
+        <g class="node"><rect x="610" y="60" width="152" height="66" rx="9"/><text class="svc" x="624" y="84">IAM 兩角色分離</text><text class="role" x="624" y="102">task / execution role</text></g>
+        <g class="node"><rect x="788" y="60" width="140" height="66" rx="9"/><text class="svc" x="802" y="84">CloudWatch Logs</text><text class="role" x="802" y="102">/fleetmind/api</text></g>
+        <path class="edge" d="M174 93 H200" marker-end="url(#arrow)"/>
+        <path class="edge strong" d="M372 93 H398" marker-end="url(#arrowS)"/>
+
+        <rect class="band-rect" x="16" y="164" width="928" height="120" rx="12"/>
+        <text class="band-label" x="32" y="186">規劃中 · 尚未部署</text>
+        <g class="node"><rect x="34" y="200" width="212" height="66" rx="9"/><text class="svc" x="48" y="224">AWS WAF</text><text class="role" x="48" y="242">目前 0 個 WebACL</text></g>
+        <g class="node"><rect x="270" y="200" width="212" height="66" rx="9"/><text class="svc" x="284" y="224">GuardDuty</text><text class="role" x="284" y="242">本帳號 AccessDenied，開不了</text></g>
+        <g class="node"><rect x="506" y="200" width="200" height="66" rx="9"/><text class="svc" x="520" y="224">Secrets Manager</text><text class="role" x="520" y="242">目前 0 個 secret</text></g>
+        <g class="node"><rect x="730" y="200" width="198" height="66" rx="9"/><text class="svc" x="744" y="224">KMS 自管金鑰</text><text class="role" x="744" y="242">現用 AWS 託管預設金鑰</text></g>
       </svg>
-    </div><div class="dcap">縱深防禦：邊緣 → VPC 子網隔離 → 帳號級威脅偵測 → 加密/稽核/最小權限，逐層收斂攻擊面。</div></div>
+    </div><div class="dcap">上排每一項都可當場驗；下排每一項都標了為何還沒有。Shield Standard 在任何 ALB 上自動生效（AWS 預設，非我們部署）。</div></div>
     <div class="grid2">
-      <div class="card pros"><h3>◆ 防護面</h3><ul>
-        <li>VPC 私有子網：ECS 無公網 IP，只有 ALB 對外</li>
-        <li>GuardDuty 持續偵測異常 API／外連／憑證濫用</li>
-        <li>Secrets Manager ＋ KMS：憑證不落地、資料加密</li>
-        <li>WAF/Shield 擋 L7 攻擊與 DDoS；CloudTrail 全稽核</li>
+      <div class="card pros"><h3>◆ 已實作（可驗證）</h3><ul>
+        <li><b>ALB 是唯一對外入口</b>：<code>fleetmind-sg</code> 只放行 ALB SG 的 8080——直打 task 公網 IP <code>:8080</code> 已 timeout，走 ALB 仍 200</li>
+        <li><b>IAM 兩角色分離</b>：execution role 拉 ECR／寫 log，task role 只有 Bedrock/SNS/SES——應用本身拉不到映像，也寫不了自己的 log group</li>
+        <li><b>SNS 綁死單一 topic ARN</b>；動作已收斂（只有 <code>InvokeModel</code>，不是 <code>bedrock:*</code>）</li>
+        <li>CloudWatch Logs <code>/fleetmind/api</code>；Shield Standard 於 ALB 自動生效</li>
       </ul></div>
-      <div class="card cons"><h3>◆ 落地順序</h3><ul>
-        <li>先 VPC＋SG＋IAM 最小權限（現行已具雛形）</li>
-        <li>再開 GuardDuty＋CloudTrail（近乎零維運）</li>
-        <li>憑證遷入 Secrets Manager、S3/DynamoDB 啟用 KMS</li>
-        <li>對外入口加 WAF；規模化再上 Shield Advanced</li>
+      <div class="card cons"><h3>◆ 誠實盤點 · 下一步</h3><ul>
+        <li><b>不是私有子網</b>：兩個子網皆 <code>mapPublicIpOnLaunch=true</code>，任務仍有公網 IP（無 NAT 時拉 ECR 需要）——收口靠 SG，不是子網隔離</li>
+        <li><b>不宣稱「全面最小權限」</b>：<code>bedrock:InvokeModel</code> 與 <code>ses:SendEmail</code> 仍是 <code>Resource: *</code></li>
+        <li>WAF 與 Secrets Manager 尚未部署；GuardDuty 受本 workshop 帳號權限阻擋，我們開不了</li>
+        <li>下一步：任務移入私有子網＋NAT／VPC Endpoint、對外入口加 WAF、Bedrock/SES 收斂資源範圍</li>
       </ul></div>
     </div>
   </section>
@@ -633,6 +733,24 @@
   </footer>
 </div>
 
+<!-- blueprint fullscreen reader -->
+<dialog class="bp-modal" id="bpModal" aria-label="藍圖放大檢視">
+  <div class="bp-bar">
+    <span class="bp-bar-t" id="bpModalTitle"></span>
+    <div class="bp-tools">
+      <button class="bp-btn" type="button" data-z="fit" aria-pressed="true">適合寬度</button>
+      <button class="bp-btn" type="button" data-z="1" aria-pressed="false">100%</button>
+      <button class="bp-btn" type="button" data-z="2" aria-pressed="false">200%</button>
+      <button class="bp-btn" type="button" id="bpClose" aria-label="關閉放大檢視">✕</button>
+    </div>
+  </div>
+  <div class="bp-scroll" id="bpScroll">
+    <div class="bp-canvas">
+      <img id="bpModalImg" width="1600" height="900" alt="" draggable="false">
+    </div>
+  </div>
+</dialog>
+
 <script>
   (function () {
     var root = document.documentElement;
@@ -645,6 +763,96 @@
     }
     function apply(t) { root.setAttribute('data-theme', t); txt.textContent = (t === 'dark') ? '淺色' : '深色'; }
     btn.addEventListener('click', function () { apply(current() === 'dark' ? 'light' : 'dark'); });
+  })();
+
+  // ---- blueprint viewer: tabs + fullscreen zoom/pan reader ----
+  (function () {
+    var viewer = document.getElementById('bpViewer');
+    var dlg = document.getElementById('bpModal');
+    if (!viewer || !dlg) return;
+
+    var tabs = Array.prototype.slice.call(viewer.querySelectorAll('.bp-tab'));
+    var panels = tabs.map(function (t) { return document.getElementById(t.getAttribute('aria-controls')); });
+
+    function select(i, focus) {
+      tabs.forEach(function (t, n) {
+        var on = (n === i);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        panels[n].hidden = !on;
+      });
+      if (focus) tabs[i].focus();
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(i); });
+      t.addEventListener('keydown', function (e) {
+        var d = e.key === 'ArrowRight' ? 1 : (e.key === 'ArrowLeft' ? -1 : 0);
+        if (!d) return;
+        e.preventDefault();
+        select((i + d + tabs.length) % tabs.length, true);
+      });
+    });
+    select(0);
+
+    var img = document.getElementById('bpModalImg');
+    var title = document.getElementById('bpModalTitle');
+    var scroll = document.getElementById('bpScroll');
+    var zbtns = Array.prototype.slice.call(dlg.querySelectorAll('.bp-btn[data-z]'));
+    var NATURAL = 1600; // all three drawings are authored at 1600x900
+    var mode = 'fit';
+
+    function applyZoom(z, keepCentre) {
+      var cx = 0.5, cy = 0.5;
+      if (keepCentre && scroll.scrollWidth > 0 && scroll.scrollHeight > 0) {
+        cx = (scroll.scrollLeft + scroll.clientWidth / 2) / scroll.scrollWidth;
+        cy = (scroll.scrollTop + scroll.clientHeight / 2) / scroll.scrollHeight;
+      }
+      mode = z;
+      img.style.width = (z === 'fit') ? '100%' : (NATURAL * parseFloat(z)) + 'px';
+      zbtns.forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.z === z ? 'true' : 'false'); });
+      scroll.classList.toggle('can-drag', z !== 'fit');
+      // reading scrollWidth forces layout, so these land on the new size
+      scroll.scrollLeft = cx * scroll.scrollWidth - scroll.clientWidth / 2;
+      scroll.scrollTop = cy * scroll.scrollHeight - scroll.clientHeight / 2;
+    }
+
+    Array.prototype.slice.call(viewer.querySelectorAll('.bp-open')).forEach(function (b) {
+      b.addEventListener('click', function () {
+        img.src = b.dataset.src;
+        img.alt = b.querySelector('img').alt;
+        title.textContent = b.dataset.title;
+        if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+        applyZoom('fit');
+      });
+    });
+    zbtns.forEach(function (b) {
+      b.addEventListener('click', function () { applyZoom(b.dataset.z, true); });
+    });
+    document.getElementById('bpClose').addEventListener('click', function () { dlg.close(); });
+
+    // drag-to-pan for mice; touch keeps native momentum scrolling
+    var dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
+    scroll.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || mode === 'fit') return;
+      dragging = true;
+      sx = e.clientX; sy = e.clientY; sl = scroll.scrollLeft; st = scroll.scrollTop;
+      scroll.classList.add('drag');
+      scroll.setPointerCapture(e.pointerId);
+    });
+    scroll.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      e.preventDefault();
+      scroll.scrollLeft = sl - (e.clientX - sx);
+      scroll.scrollTop = st - (e.clientY - sy);
+    });
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      scroll.classList.remove('drag');
+      try { scroll.releasePointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    }
+    scroll.addEventListener('pointerup', endDrag);
+    scroll.addEventListener('pointercancel', endDrag);
   })();
 </script>
 

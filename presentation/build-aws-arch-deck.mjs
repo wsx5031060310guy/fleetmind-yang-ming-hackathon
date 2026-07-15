@@ -46,7 +46,7 @@ pptx.author = "FleetMind";
 pptx.title = "FleetMind — AWS 架構藍圖與方案比較";
 
 const W = 13.333, H = 7.5, M = 0.7, CW = W - 2 * M;
-const TOTAL = 15; // 頁碼分母
+const TOTAL = 18; // 頁碼分母
 const imgDir = path.join(__dirname, "..", "apps", "api", "src", "main", "resources", "static", "img");
 
 // 服務類別 → 色 (視覺母題核心)。深色卡上: comp/stor 用提亮版, 白色短碼才讀得到
@@ -90,7 +90,7 @@ function pageMark(s, n) {
 // 係數是量出來的, 不是猜的: Hiragino Sans bold 36pt 實際 render 後量 ink 寬 →
 // CJK 0.996 em/字 (取 1), 混合大小寫拉丁 0.62 em/字。
 // 拉丁曾寫 0.55 (別的字體的值): 低估 → 標題溢出換兩行 → 文字框垂直置中把第一行往上推 →
-// 鑽進右上 tierBadges 底下被切頭 (slide 5 「DynamoDB（資料驅動）」)。單行就不會撞, 所以
+// 鑽進右上 tierBadges 底下被切頭 (slide 7 「DynamoDB（資料驅動）」)。單行就不會撞, 所以
 // 這裡估得準比什麼都重要。改字體 = 這兩個係數要重量。
 function unitLen(t) {
   let u = 0;
@@ -221,7 +221,7 @@ function tierBadges(s, cost, fit, fitColor = C.seafoam) {
 let s = pptx.addSlide();
 // botH: 0 — 底部 stats 卡 (tr 6) 與 Live 條 (tr 4) 各自幾乎不透明, 不需要下緣 band。
 // 留著的話 band 上緣 (y=4.9) 比卡片 (y=5.15) 還高, 那 0.25" 裸露的平navy 會跟晨霧船影
-// 硬碰出一條直線 (同 slide 15 的病)。
+// 硬碰出一條直線 (同 slide 18 的病)。
 photoBg(s, "hero-dawn.jpg", { scrim: 36, topH: 0, botH: 0, edge: 18 });
 // 左側標題群坐在半透明 navy 面板上 (船影透出, 文字全可讀)
 s.addShape(pptx.ShapeType.roundRect, { x: 0.5, y: 0.95, w: 7.8, h: 4.05, fill: { color: C.navy, transparency: 18 }, line: { type: "none" }, rectRadius: 0.12, shadow: { type: "outer", color: "04101B", opacity: 0.5, blur: 14, offset: 4, angle: 90 } });
@@ -361,7 +361,62 @@ s.addText([
 ].map((p, j, a) => ({ text: p, options: { bullet: { code: "2022", indent: 12 }, color: C.white, breakLine: j < a.length - 1, paraSpaceAfter: 5 } })), { x: rx + 0.25, y: y1 + 0.52, w: colW - 0.45, h: 1.75, fontFace: BODY, fontSize: 11, lineSpacingMultiple: 1.02, margin: 0 });
 s.addNotes("現行架構 Day1 已實測上線：Spring Boot 單服務同時服務 vanilla-JS 看板與 REST API，資料 build 時烤進映像，跑在 ECS Fargate(ARM64)，前置 ALB 給穩定 URL，Bedrock 出 AI 簡報並過 guardrail，SNS 發告警。選它的理由是 3 天黑客松下 demo 風險最低、可交付性最高。");
 
-/* ============ Slides 4–8 — 方案 A~E ============ */
+/* ====== Slides 4 / 5 / 12 — AWS 官方符號原圖 (深色簡報上的白色文件) ====== */
+// 三張 3200×1800 的 AWS light/white 官方風格原圖, 已逐行對過真實帳號 —— 不重上色、不裁切、
+// 不重繪, 原樣嵌入。深色簡報上放白圖, 不能假裝它不白: 把它當「攤在桌上的白色文件」——
+// 深色 scrim 當相框、白紙卡托住它、原圖貼合紙面。白是刻意的, 不是意外。
+//
+// 幾何: 原圖 16:9, 投影片 13.333×7.5 也剛好 16:9 —— 同比例, 所以任何頁首都會同時吃掉高「與」寬
+// (少 1" 高 = 連帶少 1.78" 寬)。故 chrome 壓到最扁: 單行 eyebrow + 單行標題, 不用 head()
+// (head 的 eyebrow+標題疊到 y=1.61, 圖會再少掉約 1.2" 寬)。photoBg 也不加上/下 band
+// (topH/botH = 0): 紙卡只佔中間, band 的邊會在左右裸露處切出一條橫線 (slide 1 / 18 註解那個病)。
+//
+// 尺寸鏈一律由 docH 反推 docW = docH*16/9 → 比例精確, 不letterbox、不變形, 故不用
+// sizing:{type:"contain"}: contain 是靠 srcRect 開負值 padding 把圖 letterbox 在框內
+// (見 pptxgenjs ImageSizingXml.contain), 框仍是原 box。這裡紙卡與圖同比例, 直接給精確 w/h
+// 更可控, 也不必賭 LibreOffice 對負 srcRect 的處理。
+const DOC_PAD = 0.1, DOC_TOP = 0.94, DOC_BOT = 0.24;
+const docPaperH = H - DOC_TOP - DOC_BOT;
+const docH = docPaperH - 2 * DOC_PAD;
+const docW = docH * 16 / 9;
+const docPaperW = docW + 2 * DOC_PAD;
+const docPaperX = (W - docPaperW) / 2;
+
+function docSlide(cfg, pageNum) {
+  const sl = pptx.addSlide();
+  // scrim 壓低 (照片更暗) —— 這裡照片只是相框, 白紙才是主角; 且標題沒有 band 撐, 要靠暗底
+  photoBg(sl, cfg.img, { scrim: cfg.scrim ?? 20, topH: 0, botH: 0 });
+  pageMark(sl, pageNum);
+  // 扁頁首。標題右緣 (M + CW - 1.6 = 11.03) 收在 pageMark 頁碼 (x = 11.13) 左邊, 不撞。
+  sl.addText(cfg.eyebrow.toUpperCase(), { x: M, y: 0.26, w: CW - 1.6, h: 0.22, fontFace: BODY, fontSize: 10.5, color: C.amber, bold: true, charSpacing: 2, margin: 0 });
+  sl.addText(cfg.title, { x: M, y: 0.48, w: CW - 1.6, h: 0.4, valign: "middle", fontFace: HEAD, fontSize: 18, color: C.white, bold: true, margin: 0 });
+  // 白紙: 圖四周各留 DOC_PAD 白邊 → 圓角與框線落在紙的白邊上, 圖本身一格都不必裁
+  sl.addShape(pptx.ShapeType.roundRect, { x: docPaperX, y: DOC_TOP, w: docPaperW, h: docPaperH, fill: { color: C.white }, line: { color: C.line, width: 1 }, rectRadius: 0.06, shadow: { type: "outer", color: "04101B", opacity: 0.55, blur: 18, offset: 5, angle: 90 } });
+  sl.addImage({ path: path.join(imgDir, cfg.diagram), x: docPaperX + DOC_PAD, y: DOC_TOP + DOC_PAD, w: docW, h: docH });
+  sl.addNotes(cfg.notes);
+  return sl;
+}
+
+// Slide 4 — 系統雲端架構圖 (接在 slide 3 現行架構之後: 同一套東西, 換 AWS 自己的畫法講一次)
+// 沿用 slide 3 的機房照 → 相框同紋理, 讀成「同一章, 走進文件裡」而不是換題目
+docSlide({
+  img: "server-room.jpg", scrim: 20,
+  diagram: "diagrams/architecture.png",
+  eyebrow: "Architecture · 實帳號快照",
+  title: "AWS 官方符號版：現行架構逐項對過真實帳號",
+  notes: "前一頁是我們自己的畫法，這頁是 AWS 官方符號版：圖中每個資源組態與端點狀態，都在 2026-07-15 以 boto3 / curl 從帳號 516665228894、us-east-1 實際讀回，標「推導」「非讀回」者除外。路徑一條線看完：評審瀏覽器 → ALB fleetmind-alb（internet-facing、入站 tcp/80 來自 0.0.0.0/0、目標群組 fleetmind-tg → 172.31.65.255:8080、狀態 healthy）→ VPC vpc-0415efac81151722c 裡的 ECS Fargate task（叢集 fleetmind、服務 fleetmind-svc、任務定義 fleetmind-api:5、ARM64 / Linux、512 CPU / 1024 MiB、awsvpc、容器埠 8080、desiredCount 1）。task 往外接 Bedrock（us.anthropic.claude-haiku-4-5、Converse API，/ai-brief 過 AiBriefGuardrail.validate()）、SNS topic fleetmind-alerts、SES v2、CloudWatch Logs /fleetmind/api；映像從 ECR fleetmind-api 拉，real-metrics.json 在 build 時就烤進去。三件圖上直接標出來、不藏的事：① 請求路徑中沒有任何資料存放 —— S3 與 DynamoDB 都沒用到，Java 程式碼零參照；② SNS 目前 0 個訂閱，publish 會成功，但目前扇出到沒有任何人；③ 兩個子網都是公有、task 有公網 IP（assignPublicIp ENABLED，為了免 NAT gateway 也能拉 ECR），收口靠的是 security group fleetmind-sg 只放行來自 ALB SG 的 tcp/8080，不是靠 private subnet。",
+}, 4);
+
+// Slide 5 — 即時資料流 (緊接架構圖: 先看東西在哪, 再看一次請求怎麼走)
+docSlide({
+  img: "data-flow.jpg", scrim: 22,
+  diagram: "diagrams/dataflow.png",
+  eyebrow: "Data Flow · 讀取 / AI / 告警",
+  title: "一次請求的三條路徑，與 AI 的降級階梯",
+  notes: "同一顆容器，把一次請求拆成三條路徑看，圖上只畫 2026-07-15 於帳號 516665228894 實際存在並經驗證的資源。(a) 讀取路徑：RealDataService 直接從映像內讀 real-metrics.json —— 無網路呼叫、無資料庫、無快取層，冷啟動當下就持有真實資料；/api/fleet/summary、/api/vessels/{id}/performance、/decision、/before-after、/underwater-events 全部由記憶體中的真實資料直接回應。資料規模是 15 艘船、2021–2025 noon reports，k = FOC / STW³（ISO 19030）。(b) AI 路徑：/api/vessels/{id}/ai-brief → Bedrock Converse → AiBriefGuardrail.validate() → 降級階梯：通過就回傳 AI 摘要並快取為 last-good；護欄驗證失敗改用快取的 last-good；連 last-good 都沒有時才走決定性 fallback。這條階梯就是「數字來自計算、語言來自 AI」的實作 —— AI 講錯話會被護欄擋下來，不會污染數字。(c) 告警路徑：門檻判定 S11 Speed Loss 21.8% 大於門檻 10%（門檻走 /api/config/threshold 可調）→ /api/alerts/notify，SNS 與 SES 同時送出。誠實補充圖上也寫了：SNS 目前訂閱數 0，publish 成功但不會送達任何人；今天真正把告警送到收件匣的，是 SES 這條路徑。",
+}, 5);
+
+/* ============ Slides 6–10 — 方案 A~E ============ */
 function optionSlide(cfg, pageNum) {
   const sl = pptx.addSlide();
   photoBg(sl, cfg.img, cfg.bg || { scrim: 38 });
@@ -397,7 +452,7 @@ optionSlide({
   cons: ["非資料驅動，更新資料要重 build / 重部署", "無 BI 自助分析層", "VPC / ALB / 雙 IAM 設定較多，臨時憑證到期需重跑", "架構創新度普通，技術 / 創意分不突出"],
   whenToChoose: "首要目標是穩穩 demo、時間有限、要把工程師的 Email／告警／可調門檻需求確定交付時的預設選擇。",
   notes: "方案 A 是現行架構的正式化：把 demo 臨時做法收斂為 ECS Service 常駐 + 健檢自動重拉。它與已上線一致、可靠度最高，是安全出賽的基準線。代價是非資料驅動、無 BI、創新分普通。",
-}, 4);
+}, 6);
 
 // 方案 B
 optionSlide({
@@ -419,7 +474,7 @@ optionSlide({
   cons: ["monolith 拆多 Lambda + IaC，3 天工作量與整合風險大增", "Java Lambda 冷啟延遲可能拖慢 demo 首打", "本機難完整重現 APIGW+Lambda+DynamoDB，除錯較難", "元件變多，臨時憑證下佈署面更廣、易出錯"],
   whenToChoose: "要強調資料驅動、自動擴縮與『15→97 艘同架構』，且團隊有把握在時限內完成拆分與整合時。",
   notes: "方案 B 最雲原生：拆成 API Gateway + Lambda + DynamoDB + S3 + EventBridge，天生資料驅動、零閒置成本，擴展敘事最強。但 3 天拆分工作量大、Java Lambda 冷啟風險、本機難重現，適合有餘力衝技術分時。",
-}, 5);
+}, 7);
 
 // 方案 C
 optionSlide({
@@ -439,7 +494,7 @@ optionSlide({
   cons: ["本 workshop 帳號 App Runner AccessDenied → 決定性阻斷", "與 Fargate 一樣非資料驅動、更新要重 build 映像", "客製網路 / 私有子網彈性不如 ECS", "區域 / 映像限制較多，遇權限問題無替代路徑"],
   whenToChoose: "帳號放行 App Runner、想用最少 infra 步驟托管同一顆容器、不想碰 ALB/VPC 時（本次因 AccessDenied 不建議作主線）。",
   notes: "方案 C 架構上最省心：同一顆映像交給 App Runner 全託管，免碰 ALB/VPC。但本 workshop 帳號實測 App Runner 被 AccessDenied，是決定性阻斷，故只能列為對照 / 賽後方案。",
-}, 6);
+}, 8);
 
 // 方案 D
 optionSlide({
@@ -460,7 +515,7 @@ optionSlide({
   cons: ["要自管 OS patch / Docker / 重啟 / 健康監控，無自動復原", "單台＝單點故障，掛了 demo 就斷（需手動重拉）", "HTTPS 要自己配（反代 / 憑證），比 ALB 麻煩", "非資料驅動、無自動擴縮，擴展敘事最弱"],
   whenToChoose: "要極致省成本、完全掌控，或托管服務權限受阻時，需要一條一定跑得起來的保底部署。",
   notes: "方案 D 是保底路線：一台 EC2 + Docker + Elastic IP，最省最可控，且帳號 EC2 已實測可用，是 ALB/App Runner 都受阻時一定跑得起來的後手。代價是自管 OS、單點故障、HTTPS 要自己配。",
-}, 7);
+}, 9);
 
 // 方案 E
 optionSlide({
@@ -482,12 +537,12 @@ optionSlide({
   cons: ["元件最多、整合最重，3 天內不可能全做完，只能藍圖 + 局部 PoC", "SageMaker / IoT Core 屬 stretch，現場跑真流程風險高", "多查詢 / BI 層學習與設定成本高，易在時限內卡住", "過度工程對 hackathon 反而稀釋 demo 焦點"],
   whenToChoose: "要在簡報中展示從 hackathon demo 到全艦隊營運平台的完整演進路線圖、拿商用價值與願景分，而非現場實跑時。",
   notes: "方案 E 是企業級願景藍圖：S3 data lake + Glue ETL + Athena/Timestream + QuickSight BI + Bedrock/SageMaker 預測 + 未來 IoT Core 遙測。它不宜當 Day3 實跑主線，但作為架構故事線與企業資料應用說明極具說服力。",
-}, 8);
+}, 10);
 
-/* ============== Slide 9 — 資安：已實作 vs 規劃中 (security-soc.jpg) ============== */
+/* ============== Slide 11 — 資安：已實作 vs 規劃中 (security-soc.jpg) ============== */
 s = pptx.addSlide();
 photoBg(s, "security-soc.jpg", { scrim: 28 }); // SOC 螢幕牆重紋理 → scrim 加重
-pageMark(s, 9);
+pageMark(s, 11);
 head(s, "Security · 現況與規劃", "資安：已收口的入口 + 規劃中的縱深");
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: 1.6, w: CW, h: 0.54, fill: { color: C.navy, transparency: 14 }, line: { type: "none" }, rectRadius: 0.07 });
 s.addText("縱深防禦是目標；這頁把「已經在跑的」和「還沒做的」分開講。入口已用 SG 收成 ALB 單點、IAM 已職責分離 — 這兩項可當場驗。其餘是下一步。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.54, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.12, margin: 0 });
@@ -530,10 +585,21 @@ s.addText([
 ], { x: M + 0.3, y: 6.3, w: CW - 0.6, h: 0.7, valign: "middle", fontFace: BODY, fontSize: 11.5, lineSpacingMultiple: 1.05, margin: 0 });
 s.addNotes("資安採縱深防禦：① 邊緣 Shield 擋 DDoS + WAF 過濾 L7；② VPC 收斂 — ALB 是唯一對外入口，ECS task 的 SG 只放行 ALB SG 的 8080（實測：直打 task 公網 IP 已 timeout，走 ALB 仍 200）。誠實補充：兩個子網都是公有、task 仍有公網 IP（無 NAT 要拉 ECR），收口靠的是 SG 不是子網；③ 帳號級 GuardDuty 威脅偵測 + CloudTrail 稽核；④ 機密與加密 — Secrets Manager 託管憑證、KMS 金鑰加密、IAM 職責分離（execution role 拉 ECR/寫 log、task role 只有 Bedrock/SNS/SES；動作已收斂，SNS 綁單一 topic ARN，Bedrock 與 SES 仍為 Resource *）。");
 
-/* ======= Slide 10 — 多區域 Active-Active + 災備 (multi-region.jpg) ======= */
+// Slide 12 — 權限設定 (緊接資安頁: 前一頁宣稱「IAM 職責分離」且說了不宣稱最小權限,
+// 這頁就是那句話的圖證 —— 連「今日收緊」那道 SG 邊界也在同一張上)
+// 沿用 slide 11 的 SOC 照 → 相框同紋理, 讀成同一章的附件
+docSlide({
+  img: "security-soc.jpg", scrim: 20,
+  diagram: "diagrams/iam.png",
+  eyebrow: "IAM · 兩角色分離",
+  title: "權限邊界：誰能拉映像、誰能呼叫 Bedrock",
+  notes: "前一頁說「IAM 職責分離」可當場驗、且不宣稱全程最小權限 —— 這頁是那句話的圖證，2026-07-15 自帳號讀回。上半兩個角色，trust policy 都是 ecs-tasks.amazonaws.com：執行角色 fleetmind-ecs-exec 由 ECS agent 使用，掛 AWS 受管政策 AmazonECSTaskExecutionRolePolicy，負責拉 ECR 映像與寫 CloudWatch Logs —— 應用程式取不到這組憑證。任務角色 fleetmind-ecs-task 才是容器內應用程式的執行期身分，三條 inline 政策：fleetmind-ecs-task-inline（bedrock:InvokeModel 與 InvokeModelWithResponseStream）、fleetmind-ecs-task-sns（sns:Publish）、fleetmind-ses-send（ses:SendEmail、ses:SendRawEmail）。角色分離是真的最小權限收穫：應用程式永遠不能拉映像，也不能寫自己的 log group。但誠實框架就印在圖右邊 —— 三條政策裡只有 SNS 那條把 Resource 釘死到單一 topic ARN arn:aws:sns:us-east-1:516665228894:fleetmind-alerts，Bedrock 與 SES 兩條仍是萬用字元 *，未縮小到資源層級。所以正確說法是「動作已收斂、一個資源釘死、兩個仍是萬用字元」，不是「最小權限」。下半是網路權限邊界：任務 SG 先前入站為 0.0.0.0/0，任務以公網 IP 直接對外應答，curl http://98.92.30.118:8080/api/health 已證明回 200；改為只放行 ALB SG 之後，同一支 curl 逾時，而 ALB 仍回 200 —— 這兩支 curl 評審要驗當場就能驗。任務仍有公網 IP（assignPublicIp ENABLED，為了不架 NAT gateway 也能從 ECR 拉映像），所以不是 private subnet、也不是沒有公網 IP；正確說法是 public subnet + public IP，但 SG 只放行 ALB。",
+}, 12);
+
+/* ======= Slide 13 — 多區域 Active-Active + 災備 (multi-region.jpg) ======= */
 s = pptx.addSlide();
 photoBg(s, "multi-region.jpg", { scrim: 32 });
-pageMark(s, 10);
+pageMark(s, 13);
 head(s, "Multi-Region · Active-Active", "多區域 Active-Active + 即時告警與災備");
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: 1.6, w: CW, h: 0.5, fill: { color: C.navy, transparency: 14 }, line: { type: "none" }, rectRadius: 0.07 });
 s.addText("不同國家船務端就近接入 → Route 53 智慧路由到兩個 active 區域；一區故障自動切換、跨區雙向複製，資料不丟、服務不中斷。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.5, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.12, margin: 0 });
@@ -604,10 +670,10 @@ s.addText([
 ], { x: M + 0.3, y: 6.25, w: CW - 0.6, h: 0.75, valign: "middle", fontFace: BODY, fontSize: 11.5, lineSpacingMultiple: 1.05, margin: 0 });
 s.addNotes("多區域 Active-Active：不同國家船務端經 Route 53 地理/延遲路由就近接入，兩個區域（A ap-northeast-1 東京、B us-east-1 維吉尼亞）皆 active，各自 ALB→ECS + DynamoDB + S3。DynamoDB Global Tables 雙向複製、S3 跨區複製 CRR 備份、EventBridge 跨區匯總即時告警 → SNS/SES。任一區健康檢查失敗，Route 53 自動 failover 切換到健康區，資料已雙向同步 (RPO≈0)、不丟、服務不中斷。");
 
-/* ================= Slide 11 — 五案比較表 (ocean-deep.jpg) ================= */
+/* ================= Slide 14 — 五案比較表 (ocean-deep.jpg) ================= */
 s = pptx.addSlide();
 photoBg(s, "ocean-deep.jpg", { scrim: 42 });
-pageMark(s, 11);
+pageMark(s, 14);
 head(s, "Side-by-Side", "五案比較 — 現行方案 A 為出賽基準線");
 const thO = { fill: C.navy, color: C.white, bold: true, align: "center", valign: "middle", fontSize: 11.5, fontFace: HEAD };
 // 每一格都給不透明底 (照片不能透進表格) — 文字一律淺色
@@ -648,10 +714,10 @@ s.addText([
 ], { x: M + 0.35, y: 6.0, w: CW - 0.65, h: 1.0, valign: "middle", fontFace: BODY, fontSize: 12, lineSpacingMultiple: 1.15, margin: 0 });
 s.addNotes("比較表沿六個維度（運算 / 入口 / 閒置成本 / 維運 / 冷啟 / 黑客松適配）排列五案，highlight 現行方案 A。結論：A 為主線、D 為保底、B/E 為演進方向、C 受阻。");
 
-/* ================= Slide 12 — 未來延伸路線圖 (horizon-journey.jpg) ================= */
+/* ================= Slide 15 — 未來延伸路線圖 (horizon-journey.jpg) ================= */
 s = pptx.addSlide();
 photoBg(s, "horizon-journey.jpg", { scrim: 40, topH: 1.75, edge: 16 }); // 上緣夕陽亮帶 → 標題區加重
-pageMark(s, 12);
+pageMark(s, 15);
 head(s, "Roadmap", "從 15 艘 demo 到全艦隊即時營運平台");
 const tlY = 2.2;
 s.addShape(pptx.ShapeType.line, { x: M + 0.3, y: tlY, w: CW - 0.6, h: 0, line: { color: C.slate, width: 3 } });
@@ -679,10 +745,10 @@ s.addText([
 ], { x: M + 0.3, y: 6.25, w: CW - 0.6, h: 0.75, valign: "middle", fontFace: BODY, fontSize: 12, lineSpacingMultiple: 1.15, margin: 0 });
 s.addNotes("路線圖：Phase 0 現行 15 艘 demo；Phase 1 補資料驅動三扇門（系統介接 ingest API、檔案上傳 CSV/xlsx、後台設定門檻/通道/燃料對應）；Phase 2 擴到全艦隊 + Serverless + QuickSight/Athena BI；Phase 3 IoT Core 即時遙測 + SageMaker 預測，走向近即時偵測。");
 
-/* ================= Slide 13 — 決策級聯 (decision-lights.jpg) ================= */
+/* ================= Slide 16 — 決策級聯 (decision-lights.jpg) ================= */
 s = pptx.addSlide();
 photoBg(s, "decision-lights.jpg", { scrim: 32 }); // 號誌燈重紋理/高亮 → scrim 加重 (文字全在卡上, 照片可留多一點)
-pageMark(s, 13);
+pageMark(s, 16);
 head(s, "Decision Cascade", "決策級聯：正常 → 注意 → 行動");
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: 1.6, w: CW, h: 0.55, fill: { color: C.navy, transparency: 14 }, line: { type: "none" }, rectRadius: 0.07 });
 s.addText("同一套已上線服務，依 Speed Loss 對可調門檻的位置，把船分成三種決策狀態 — 數字觸發流程，最後一步永遠留給人。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.55, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.1, margin: 0 });
@@ -723,10 +789,10 @@ s.addText([
 ], { x: M + 0.28, y: 6.35, w: CW - 0.5, h: 0.65, valign: "middle", fontFace: BODY, fontSize: 11.5, lineSpacingMultiple: 1.0, margin: 0 });
 s.addNotes("決策級聯把架構連到產品輸出：Speed Loss 相對可調門檻分三態 — 正常(綠,持續監測) / 注意(黃,進 review 佇列+Bedrock 證據簡報) / 行動(紅,SNS 告警+人安排清洗)。例子用真實資料：S23 8.9%(n=506,HIGH) 屬注意；S11 21.8%(539 有效日,691 天未清,priority 1) 屬行動。門檻與通道皆可調，最後一步留給人。");
 
-/* ================= Slide 14 — Live Demo 導覽 (port-dusk.jpg) ================= */
+/* ================= Slide 17 — Live Demo 導覽 (port-dusk.jpg) ================= */
 s = pptx.addSlide();
 photoBg(s, "port-dusk.jpg", { scrim: 34 });
-pageMark(s, 14);
+pageMark(s, 17);
 // 背景 sonar 裝飾
 ping(s, 11.9, 6.1, 1.5, C.navy3, C.navy3);
 head(s, "Live Demo", "現場導覽：一個穩定 URL，三個入口");
@@ -756,7 +822,7 @@ s.addText([
 s.addText("帳號 516665228894 · us-east-1 · ECS Fargate (ARM64) 常駐 · ALB 靜態 URL 不換位址", { x: M, y: 6.55, w: 12, h: 0.4, fontFace: BODY, fontSize: 12, color: C.dim, margin: 0 });
 s.addNotes("現場導覽：三個入口都掛在同一顆 Fargate 容器 / 同一個 ALB 靜態網域。/ 首頁講命題與方法、/dashboard.html 是 15 艘決策看板（Speed Loss 排序 + 證據 + AI 簡報 + 可調門檻）、/architecture.html 是架構互動版。task 重啟不換 IP，現場可安心直接打開。");
 
-/* ================= Slide 15 — 結尾 (horizon-journey.jpg) ================= */
+/* ================= Slide 18 — 結尾 (horizon-journey.jpg) ================= */
 s = pptx.addSlide();
 // topH: 0 — 標題坐在自己的不透明面板上, 不需上緣 band; 留著的話 band 下緣 (y=1.4)
 // 會在面板左右兩側裸露, 與夕陽亮帶硬碰出一條全寬接縫。

@@ -1,0 +1,259 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" font-family="system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,1.2 L8,4.5 L0,7.8 Z" fill="#5A6875"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="40" y="46" font-size="23" font-weight="600" fill="#232F3E">FleetMind — 即時資料流（AWS 架構）</text>
+  <text x="40" y="70" font-size="12.5" fill="#5A6875">帳號 516665228894 · us-east-1 · 2026-07-15 以 boto3 / curl 自實際環境讀回；本圖只畫已驗證存在的資源</text>
+
+  <!-- ================= AWS Cloud boundary ================= -->
+  <rect x="270" y="92" width="1300" height="784" rx="8" fill="none" stroke="#879196" stroke-width="1"/>
+  <rect x="278" y="100" width="22" height="20" rx="3" fill="#232F3E"/>
+  <text x="289" y="114" font-size="8.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">aws</text>
+  <text x="308" y="115" font-size="12" fill="#232F3E">AWS Cloud · us-east-1</text>
+
+  <!-- ================= Browser (outside cloud) ================= -->
+  <rect x="110" y="252" width="84" height="60" rx="4" fill="#FFFFFF" stroke="#232F3E" stroke-width="1.4"/>
+  <line x1="110" y1="266" x2="194" y2="266" stroke="#232F3E" stroke-width="1"/>
+  <circle cx="119" cy="259" r="2" fill="#879196"/>
+  <circle cx="127" cy="259" r="2" fill="#879196"/>
+  <circle cx="135" cy="259" r="2" fill="#879196"/>
+  <rect x="118" y="274" width="46" height="4" rx="2" fill="#879196"/>
+  <rect x="118" y="284" width="60" height="4" rx="2" fill="#D5DBDB"/>
+  <rect x="118" y="294" width="34" height="4" rx="2" fill="#D5DBDB"/>
+  <text x="152" y="332" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">使用者瀏覽器</text>
+  <text x="152" y="346" font-size="8" fill="#5A6875" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">http://fleetmind-alb-330672315</text>
+  <text x="152" y="357" font-size="8" fill="#5A6875" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">.us-east-1.elb.amazonaws.com</text>
+
+  <!-- browser -> ALB -->
+  <!-- riser moved 244 -> 252: at x=244 it ran through its own caption (bbox right edge 247.77), bisecting the final '0' -->
+  <path d="M196,282 H248 Q252,282 252,278 V249 Q252,245 256,245 H473" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+  <text x="206" y="274" font-size="9" fill="#5A6875">HTTP :80</text>
+  <circle cx="290" cy="224" r="11" fill="#232F3E"/>
+  <text x="290" y="228" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+
+  <!-- ================= VPC ================= -->
+  <rect x="310" y="140" width="390" height="530" rx="4" fill="none" stroke="#8C4FFF" stroke-width="1" stroke-dasharray="5 4"/>
+  <text x="322" y="158" font-size="10.5" fill="#8C4FFF">VPC vpc-0415efac81151722c</text>
+
+  <rect x="324" y="172" width="362" height="484" rx="4" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="334" y="190" font-size="10" fill="#5A6875">公有子網路 ×2（mapPublicIpOnLaunch = true）</text>
+  <text x="334" y="202" font-size="8" fill="#5A6875" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">subnet-0144505bb2c5a9341 · us-east-1d · 172.31.0.0/20</text>
+  <text x="334" y="213" font-size="8" fill="#5A6875" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">subnet-0c6f4ad04cd4bb79a · us-east-1f · 172.31.64.0/20</text>
+
+  <!-- ALB tile -->
+  <rect x="481" y="221" width="48" height="48" rx="8" fill="#8C4FFF"/>
+  <circle cx="495" cy="245" r="3.4" fill="#FFFFFF"/>
+  <path d="M498,245 H507 M507,245 V231 M507,245 V259 M507,231 H513 M507,259 H513 M507,245 H513" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+  <rect x="513" y="227" width="8" height="8" rx="1.5" fill="#FFFFFF"/>
+  <rect x="513" y="241" width="8" height="8" rx="1.5" fill="#FFFFFF"/>
+  <rect x="513" y="255" width="8" height="8" rx="1.5" fill="#FFFFFF"/>
+  <text x="505" y="288" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">Application Load Balancer</text>
+  <text x="505" y="301" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">fleetmind-alb · internet-facing · 監聽 :80</text>
+  <text x="505" y="313" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">SG sg-03bc43a8da199af1a：0.0.0.0/0 → tcp/80</text>
+  <text x="505" y="325" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">AZ：us-east-1d + us-east-1f</text>
+
+  <!-- ALB -> task -->
+  <path d="M505,333 V372" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+  <text x="520" y="347" font-size="8.5" fill="#5A6875">目標群組 fleetmind-tg</text>
+  <text x="520" y="359" font-size="8.5" fill="#5A6875" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">→ 172.31.65.255:8080 · healthy</text>
+
+  <!-- Fargate tile -->
+  <rect x="481" y="380" width="48" height="48" rx="8" fill="#ED7100"/>
+  <rect x="492" y="391" width="26" height="26" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1.8"/>
+  <rect x="497" y="396" width="7" height="16" rx="1" fill="#FFFFFF"/>
+  <rect x="506" y="396" width="7" height="16" rx="1" fill="#FFFFFF"/>
+  <text x="505" y="444" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">AWS Fargate（ECS 任務）</text>
+  <text x="505" y="457" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">叢集 fleetmind · 服務 fleetmind-svc · desiredCount 1</text>
+  <text x="505" y="469" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">工作定義 fleetmind-api:5 · ARM64 · 512 CPU / 1024 MiB</text>
+  <text x="505" y="481" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">networkMode awsvpc · 容器埠 8080/tcp</text>
+
+  <!-- SG truth note -->
+  <rect x="336" y="490" width="338" height="46" rx="4" fill="#FDECEE" stroke="#DD344C" stroke-width="1"/>
+  <text x="344" y="504" font-size="8" font-weight="600" fill="#DD344C">SG fleetmind-sg · sg-0dde0180ccac18f05</text>
+  <text x="344" y="516" font-size="8" fill="#232F3E">僅允許來源為 ALB SG 的 tcp/8080（今日收斂；先前為 0.0.0.0/0，可直連 :8080）</text>
+  <text x="344" y="528" font-size="8" fill="#232F3E">任務仍具公有 IP（assignPublicIp = ENABLED，免 NAT 拉取 ECR）</text>
+
+  <!-- Spring Boot -->
+  <rect x="336" y="544" width="338" height="76" rx="6" fill="#FFFFFF" stroke="#232F3E" stroke-width="1.2"/>
+  <circle cx="352" cy="558" r="11" fill="#232F3E"/>
+  <text x="352" y="562" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+  <text x="372" y="562" font-size="11" font-weight="600" fill="#232F3E">Spring Boot（同一容器：靜態頁 + REST API）</text>
+  <text x="348" y="586" font-size="9" font-style="italic" fill="#5A6875">來源資料：映像內的 real-metrics.json，無外部資料庫</text>
+  <text x="348" y="601" font-size="9" font-style="italic" fill="#5A6875">15 艘船 · 2021–2025 noon reports · k = FOC / STW³（ISO 19030）</text>
+
+  <!-- Spring Boot -> logs -->
+  <path d="M505,620 V736 Q505,740 501,740 H414" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+  <text x="512" y="646" font-size="8" fill="#5A6875">所有日誌</text>
+
+  <!-- fan-out to branches -->
+  <path d="M674,568 H726 Q730,568 730,564 V204 Q730,200 734,200 H822" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+  <path d="M674,582 H738 Q742,582 742,578 V434 Q742,430 746,430 H892" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+  <path d="M674,596 H750 Q754,596 754,600 V696 Q754,700 758,700 H781" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+
+  <!-- ================= (a) READ ================= -->
+  <rect x="760" y="140" width="800" height="180" rx="4" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="772" y="158" font-size="10.5" fill="#5A6875">(a) 讀取路徑 · RealDataService（映像內資料，無網路跳點、無資料存放區）</text>
+
+  <circle cx="806" cy="180" r="11" fill="#232F3E"/>
+  <text x="806" y="184" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+
+  <!-- real-metrics.json doc card -->
+  <path d="M826,176 H862 L874,188 V224 H826 Z" fill="#FFFFFF" stroke="#879196" stroke-width="1.4"/>
+  <path d="M862,176 V188 H874" fill="none" stroke="#879196" stroke-width="1.4"/>
+  <line x1="834" y1="198" x2="864" y2="198" stroke="#879196" stroke-width="1.4"/>
+  <line x1="834" y1="206" x2="864" y2="206" stroke="#879196" stroke-width="1.4"/>
+  <line x1="834" y1="214" x2="852" y2="214" stroke="#879196" stroke-width="1.4"/>
+  <text x="850" y="241" font-size="10" font-weight="600" fill="#232F3E" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">real-metrics.json</text>
+  <text x="850" y="254" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">build 時打包進容器映像內</text>
+  <text x="850" y="266" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">非 AWS 服務 · 無資料庫 · 無 S3</text>
+  <text x="850" y="278" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">冷啟動即持有真實資料</text>
+
+  <path d="M878,200 H996" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+  <text x="890" y="193" font-size="8" fill="#5A6875">讀入記憶體，之後無網路呼叫</text>
+
+  <!-- endpoints card -->
+  <rect x="1000" y="170" width="550" height="140" rx="6" fill="#FFFFFF" stroke="#879196" stroke-width="1"/>
+  <text x="1016" y="191" font-size="10" font-weight="600" fill="#232F3E">REST 端點（皆由記憶體中的真實資料直接回應）</text>
+  <text x="1016" y="215" font-size="9" fill="#232F3E" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">/api/fleet/summary</text>
+  <text x="1016" y="233" font-size="9" fill="#232F3E" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">/api/vessels/{id}/performance</text>
+  <text x="1016" y="251" font-size="9" fill="#232F3E" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">/api/vessels/{id}/decision</text>
+  <text x="1016" y="269" font-size="9" fill="#232F3E" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">/api/vessels/{id}/before-after</text>
+  <text x="1016" y="287" font-size="9" fill="#232F3E" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">/api/vessels/{id}/underwater-events</text>
+  <line x1="1272" y1="200" x2="1272" y2="296" stroke="#D5DBDB" stroke-width="1"/>
+  <text x="1290" y="215" font-size="9" fill="#5A6875">資料規模：15 艘船 · 2021–2025 noon reports</text>
+  <text x="1290" y="233" font-size="9" fill="#5A6875">S11 Speed Loss 21.8%（539 有效天）</text>
+  <text x="1290" y="251" font-size="9" fill="#5A6875">S23 Speed Loss 8.9% · 門檻 10%</text>
+  <text x="1290" y="269" font-size="9" fill="#5A6875">k = FOC / STW³（ISO 19030）</text>
+  <text x="1290" y="287" font-size="9" fill="#5A6875">S11 距上次清洗 692 天</text>
+
+  <!-- ================= (b) AI ================= -->
+  <rect x="760" y="336" width="800" height="260" rx="4" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="772" y="354" font-size="10.5" fill="#5A6875">(b) AI 路徑 · /api/vessels/{id}/ai-brief → Bedrock Converse → 護欄驗證 → 降級階梯</text>
+
+  <circle cx="876" cy="398" r="11" fill="#232F3E"/>
+  <text x="876" y="402" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+
+  <!-- Bedrock tile -->
+  <rect x="896" y="406" width="48" height="48" rx="8" fill="#01A88D"/>
+  <path d="M920,430 L908,418 M920,430 L908,442 M920,430 L933,430" fill="none" stroke="#FFFFFF" stroke-width="1.4"/>
+  <circle cx="908" cy="418" r="3" fill="#FFFFFF"/>
+  <circle cx="908" cy="442" r="3" fill="#FFFFFF"/>
+  <circle cx="934" cy="430" r="3" fill="#FFFFFF"/>
+  <circle cx="920" cy="430" r="4.2" fill="#FFFFFF"/>
+  <text x="920" y="470" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">Amazon Bedrock</text>
+  <text x="920" y="483" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">Converse API</text>
+  <text x="920" y="495" font-size="8" fill="#5A6875" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">us.anthropic.claude-haiku-4-5-20251001-v1:0</text>
+  <text x="920" y="508" font-size="8" fill="#DD344C" text-anchor="middle">IAM：bedrock:InvokeModel · Resource: *</text>
+
+  <path d="M944,430 H1006" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+
+  <!-- Guardrail -->
+  <rect x="1010" y="404" width="170" height="52" rx="6" fill="#FFFFFF" stroke="#232F3E" stroke-width="1.2"/>
+  <text x="1095" y="427" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">AiBriefGuardrail</text>
+  <text x="1095" y="443" font-size="9" fill="#5A6875" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">.validate()</text>
+
+  <path d="M1180,420 H1192 Q1196,420 1196,416 V402 Q1196,398 1200,398 H1204" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+  <path d="M1180,440 H1192 Q1196,440 1196,444 V444 Q1196,448 1200,448 H1204" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+
+  <!-- ladder rows -->
+  <rect x="1210" y="380" width="340" height="36" rx="5" fill="#FFFFFF" stroke="#879196" stroke-width="1"/>
+  <rect x="1210" y="380" width="4" height="36" rx="2" fill="#01A88D"/>
+  <text x="1226" y="403" font-size="9.5" fill="#232F3E">通過 → 回傳 AI 摘要，並快取為 last-good</text>
+
+  <rect x="1210" y="430" width="340" height="36" rx="5" fill="#FFFFFF" stroke="#879196" stroke-width="1"/>
+  <rect x="1210" y="430" width="4" height="36" rx="2" fill="#DD344C"/>
+  <text x="1226" y="453" font-size="9.5" fill="#232F3E">護欄驗證失敗 → 改用快取的 last-good</text>
+
+  <path d="M1290,466 V476" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+  <text x="1300" y="477" font-size="8" fill="#5A6875">無快取可用時</text>
+
+  <rect x="1210" y="480" width="340" height="36" rx="5" fill="#FFFFFF" stroke="#879196" stroke-width="1"/>
+  <rect x="1210" y="480" width="4" height="36" rx="2" fill="#DD344C"/>
+  <text x="1226" y="503" font-size="9.5" fill="#232F3E">無 last-good → 決定性 fallback</text>
+
+  <text x="790" y="545" font-size="10" font-weight="600" fill="#232F3E">降級階梯：Bedrock → 護欄 → 快取 last-good → 決定性 fallback</text>
+  <text x="790" y="562" font-size="9" font-style="italic" fill="#5A6875">同分支另有端點 /api/vessels/{id}/ai-brief/prompt</text>
+  <text x="790" y="578" font-size="9" font-style="italic" fill="#5A6875">讀取路徑取資料無需資料存放區、不做任何外部呼叫（日誌仍寫入 CloudWatch）</text>
+
+  <!-- ================= (c) ALERT ================= -->
+  <rect x="760" y="612" width="800" height="256" rx="4" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="772" y="632" font-size="10.5" fill="#5A6875">(c) 告警路徑 · Speed Loss 越過門檻 10%</text>
+
+  <!-- threshold node -->
+  <rect x="785" y="664" width="190" height="76" rx="6" fill="#FFFFFF" stroke="#232F3E" stroke-width="1.2"/>
+  <text x="880" y="686" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">門檻判定</text>
+  <text x="880" y="703" font-size="9.5" fill="#DD344C" text-anchor="middle">S11 Speed Loss 21.8% &gt; 門檻 10%</text>
+  <text x="880" y="722" font-size="8.5" fill="#5A6875" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">/api/config/threshold</text>
+
+  <path d="M975,702 H1031" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+
+  <!-- notify pill -->
+  <circle cx="1020" cy="676" r="11" fill="#232F3E"/>
+  <text x="1020" y="680" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
+  <rect x="1035" y="680" width="160" height="44" rx="8" fill="#FFFFFF" stroke="#232F3E" stroke-width="1.2"/>
+  <text x="1115" y="700" font-size="9.5" fill="#232F3E" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">/api/alerts/notify</text>
+  <text x="1115" y="714" font-size="8.5" font-style="italic" fill="#5A6875" text-anchor="middle">同時送出兩者</text>
+
+  <path d="M1195,697 H1224" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+  <path d="M1195,707 H1202 Q1206,707 1206,711 V796 Q1206,800 1210,800 H1224" fill="none" stroke="#5A6875" stroke-width="1" marker-end="url(#ah)"/>
+
+  <!-- SNS row -->
+  <rect x="1230" y="671" width="48" height="48" rx="8" fill="#E7157B"/>
+  <path d="M1240,689 H1250 L1264,679 V711 L1250,701 H1240 Z" fill="#FFFFFF"/>
+  <path d="M1267,685 C1271,689 1271,701 1267,705" fill="none" stroke="#FFFFFF" stroke-width="1.4"/>
+  <text x="1290" y="681" font-size="11" font-weight="600" fill="#232F3E">Amazon SNS</text>
+  <text x="1290" y="694" font-size="9" font-style="italic" fill="#5A6875">sns:Publish · topic fleetmind-alerts</text>
+  <text x="1290" y="706" font-size="8" fill="#5A6875" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">arn:aws:sns:us-east-1:516665228894:fleetmind-alerts</text>
+  <text x="1290" y="718" font-size="8" fill="#5A6875">IAM sns:Publish 僅限這一個 topic ARN（已收斂）</text>
+  <rect x="1284" y="726" width="266" height="30" rx="4" fill="#FDECEE" stroke="#DD344C" stroke-width="1"/>
+  <text x="1292" y="738" font-size="8.5" font-weight="700" fill="#DD344C">目前訂閱者數 = 0</text>
+  <text x="1292" y="750" font-size="8" fill="#232F3E">Publish 成功，但目前不會送達任何人（無訂閱者可畫）</text>
+
+  <!-- SES row -->
+  <rect x="1230" y="776" width="48" height="48" rx="8" fill="#E7157B"/>
+  <rect x="1240" y="789" width="28" height="21" rx="2" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+  <path d="M1240,790 L1254,802 L1268,790" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+  <text x="1290" y="786" font-size="11" font-weight="600" fill="#232F3E">Amazon SES v2</text>
+  <text x="1290" y="799" font-size="9" font-style="italic" fill="#5A6875">SendEmail · 寄件者／收件者 wsx5031060310guy@gmail.com</text>
+  <text x="1290" y="811" font-size="8" fill="#DD344C">IAM：ses:SendEmail / ses:SendRawEmail · Resource: *</text>
+  <rect x="1284" y="819" width="266" height="18" rx="4" fill="#FFFFFF" stroke="#879196" stroke-width="1"/>
+  <text x="1292" y="832" font-size="8.5" font-weight="600" fill="#232F3E">今日真正把告警送到收件匣的，是這一條路徑</text>
+
+  <!-- ================= Observability + IAM ================= -->
+  <rect x="310" y="688" width="390" height="180" rx="4" fill="none" stroke="#879196" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="322" y="704" font-size="10.5" fill="#5A6875">可觀測性與身分</text>
+
+  <circle cx="350" cy="740" r="11" fill="#232F3E"/>
+  <text x="350" y="744" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">6</text>
+
+  <!-- CloudWatch tile -->
+  <rect x="366" y="716" width="48" height="48" rx="8" fill="#E7157B"/>
+  <rect x="377" y="727" width="26" height="26" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+  <path d="M381,746 L387,737 L392,743 L399,732" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+  <text x="390" y="780" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">CloudWatch Logs</text>
+  <text x="390" y="793" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">/fleetmind/api · 串流前綴 ecs</text>
+  <text x="390" y="805" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">應用的所有日誌輸出</text>
+
+  <!-- IAM tile -->
+  <rect x="566" y="716" width="48" height="48" rx="8" fill="#DD344C"/>
+  <path d="M590,727 L601,731 V741 C601,748 596,752 590,754 C584,752 579,748 579,741 V731 Z" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+  <circle cx="590" cy="739" r="2.6" fill="#FFFFFF"/>
+  <path d="M590,741 V747" stroke="#FFFFFF" stroke-width="1.6"/>
+  <text x="590" y="780" font-size="11" font-weight="600" fill="#232F3E" text-anchor="middle">IAM Roles</text>
+  <text x="590" y="793" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">fleetmind-ecs-task（應用）</text>
+  <text x="590" y="805" font-size="9" font-style="italic" fill="#5A6875" text-anchor="middle">fleetmind-ecs-exec（拉映像／寫日誌）</text>
+
+  <text x="322" y="820" font-size="8" fill="#232F3E">兩角色分離：應用本身無法拉映像、也無法寫入日誌群組（僅 execution role 可）</text>
+  <text x="322" y="832" font-size="8" fill="#232F3E">動作收斂：Bedrock 僅 InvokeModel / InvokeModelWithResponseStream，非 bedrock:*</text>
+  <text x="322" y="844" font-size="8" fill="#232F3E">sns:Publish 僅限 fleetmind-alerts 這一個 topic ARN</text>
+  <text x="322" y="856" font-size="8" fill="#DD344C">但 Bedrock 與 SES 兩條 inline 政策 Resource 皆為 *，不宜整體宣稱「最小權限」</text>
+
+  <!-- footnote -->
+  <text x="40" y="890" font-size="9.5" fill="#5A6875">本圖僅含 2026-07-15 於帳號 516665228894 實際存在並經驗證的資源。未使用 S3 / DynamoDB，App Runner 因帳號權限被拒、EC2+Docker 為未採用的備案，故均不繪。</text>
+</svg>
