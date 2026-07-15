@@ -21,9 +21,16 @@
       --pad:clamp(18px,4vw,44px);
     }
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth;overflow-x:hidden;-webkit-text-size-adjust:100%}
+    /* overflow-x MUST be clip, not hidden, on html and body.
+       `hidden` makes them scroll containers, and a scroll-container ancestor silently kills
+       `position: sticky` on .stage — which is the entire mechanism this page's four pinned acts
+       are built on. With `hidden` the stages never pinned: each just scrolled past with its act,
+       so a scene's words drifted off the top long before the next scene's arrived, leaving ~590px
+       of photo with no text, twice per story. `clip` blocks the same horizontal overflow without
+       creating a scroll container. */
+    html{scroll-behavior:smooth;overflow-x:clip;-webkit-text-size-adjust:100%}
     body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--navy-950);
-      overflow-x:hidden;max-width:100%;-webkit-font-smoothing:antialiased;line-height:1.6}
+      overflow-x:clip;max-width:100%;-webkit-font-smoothing:antialiased;line-height:1.6}
     a{color:inherit}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0}
 
@@ -651,14 +658,29 @@
         var p = clamp01((sc - y0) / (y1 - y0));
         if(rail) rail.style.width = (p*100).toFixed(2) + '%';
 
-        // scroll-driven fade for each pinned act (transform/opacity only)
+        // Scroll-driven fade for each pinned act (transform/opacity only).
+        //
+        // Keyed to where the act's STAGE actually sits in the viewport, not to progress through
+        // the act's own box. The previous version divided by (box.h - H), so the same constants
+        // meant different things per act — the acts are 150/190/210vh — and the text died in the
+        // handover: act 1's copy was gone by scrollY 450 (as its stage unpins) while act 2's did
+        // not begin fading in until 1038, even though act 2's stage enters the viewport at 450.
+        // That left ~590px of photo with no words, twice per story.
+        //
+        // A sticky (top:0) stage sits at viewport-y:
+        //   arriving  box.top - sc            (> 0, before it pins)
+        //   pinned    0
+        //   leaving   box.top + box.h - H - sc (< 0, after it unpins)
+        // so both edges can be derived from cached values — no layout read in the loop.
+        var FADE = H * 0.55;                  // fade distance, in viewport units: same feel for every act
         for(var i=0;i<acts.length;i++){
           var box = actBox[i]; var si = actIn[i];
           if(!box || !si) continue;
-          var local = (sc - box.top) / Math.max(1, (box.h - H));
+          var arrive = box.top - sc;                       // >0 while the stage is still below
+          var leave  = (box.top + box.h - H) - sc;         // <0 once the stage is riding up and out
           var o, ty=0;
-          if(local < 0){ o = clamp01(1 + local*2.6); ty = (-local)*40; }
-          else if(local > 0.74){ var fdt = clamp01((local-0.74)/0.26); o = 1 - fdt; ty = -fdt*54; }
+          if(arrive > 0){ o = clamp01(1 - arrive/FADE); ty = (arrive/FADE)*40; }
+          else if(leave < 0){ var fdt = clamp01(-leave/FADE); o = 1 - fdt; ty = -fdt*54; }
           else { o = 1; }
           si.style.opacity = o.toFixed(3);
           si.style.transform = 'translate3d(0,' + ty.toFixed(1) + 'px,0)';
