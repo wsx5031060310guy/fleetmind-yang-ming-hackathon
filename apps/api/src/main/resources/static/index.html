@@ -60,7 +60,9 @@
       padding:clamp(76px,13vh,120px) var(--pad) clamp(48px,9vh,90px)}
     .stage-in{position:relative;z-index:5;width:100%;max-width:1080px;margin:0 auto;
       opacity:1;will-change:transform,opacity}
-    /* readability scrim over the cinematic photo (both canvas & static modes) */
+    /* readability scrim over the photo.
+       Static mode: one scrim per .stage — each act paints its own background image,
+       so the scrim has to travel with it. */
     .stage::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
       background:
         linear-gradient(180deg,rgba(4,16,28,.44) 0%,rgba(4,16,28,0) 24%,rgba(4,16,28,.06) 52%,rgba(4,16,28,.80) 100%),
@@ -68,6 +70,27 @@
     .act.a3 .stage::before{background:
         linear-gradient(180deg,rgba(6,10,18,.46) 0%,rgba(6,10,18,0) 22%,rgba(40,8,6,.10) 52%,rgba(6,10,18,.82) 100%),
         radial-gradient(140% 108% at 16% 66%,rgba(6,10,18,.56),rgba(6,10,18,0) 60%)}
+
+    /* Canvas mode: ONE scrim pinned to the viewport, not one per .stage.
+       Why: .stage is sticky/100vh inside a 150–210vh .act, and its ::before is
+       absolute, so the gradient's own bottom edge — which sits at its DARKEST stop
+       (.80) rather than fading out — belongs to a scrolling box. While the stage is
+       stuck that edge is off-screen at the viewport bottom (the intended look), but
+       the moment the act ends and the stage unsticks, the edge sweeps up through the
+       frame as a hard full-width line across the fixed canvas behind it.
+       Pinning the scrim to the viewport keeps the exact same composition while stuck
+       and makes the edge unreachable. The a3 red cast is dropped here on purpose:
+       drawGrade() already paints it into the canvas per-act.
+       Both selectors below are needed: `.act.a3 .stage::before` is (0,3,1) and would
+       otherwise out-specify a lone `body.has-canvas .stage::before` (0,2,2), leaving
+       act 3 — the whole subsea/fouling half of the story — still seaming. */
+    body.has-canvas .stage::before,
+    body.has-canvas .act.a3 .stage::before{background:none}
+    body.has-canvas .act{z-index:2}
+    body.has-canvas::after{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;
+      background:
+        linear-gradient(180deg,rgba(4,16,28,.44) 0%,rgba(4,16,28,0) 24%,rgba(4,16,28,.06) 52%,rgba(4,16,28,.80) 100%),
+        radial-gradient(140% 108% at 16% 66%,rgba(4,16,28,.54),rgba(4,16,28,0) 60%)}
 
     /* per-act photographic background (used when canvas is OFF / reduced-motion) */
     .act.a1{background:#07182b url("/img/hero-dawn.jpg") center/cover no-repeat}
