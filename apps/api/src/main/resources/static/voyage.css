@@ -187,6 +187,7 @@ main#voyage { position: relative; z-index: 1; }
 .sp-telemetry   { background-image: url("/img/underwater-rays.jpg"); }
 .sp-degradation { background-image: url("/img/underwater-rays.jpg"); background-position: center 60%; }
 .sp-decision    { background-image: url("/img/sonar.jpg"); }
+.sp-dataflow    { background-image: url("/img/data-flow.jpg"); }
 .sp-outro       { background-image: url("/img/ocean-deep.jpg"); }
 
 .scene-kicker {
@@ -450,6 +451,74 @@ main#voyage { position: relative; z-index: 1; }
 .notify-status.warn { color: var(--watch); }
 .notify-status.err { color: var(--act); }
 
+/* ---------- dataflow: the request path this page is actually using ----------
+   Topology is HTML/CSS (not SVG) so it reflows honestly at 390px instead of shrinking text.
+   Two motion signals, deliberately distinct:
+     .hot  = a REAL request just traversed this hop (pulse, ~1s, driven by the fetch recorder)
+     .dim  = this hop is not in the path for the origin actually being served right now */
+.df-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; align-items: start; }
+
+.df-node {
+  border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px;
+  background: linear-gradient(160deg, var(--hud-bg-2), var(--hud-bg));
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.df-node .df-t { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.df-node .df-s { font-size: 10.5px; color: var(--muted); font-family: var(--fs-mono); margin-top: 2px; overflow-wrap: anywhere; }
+.df-node.dim { opacity: 0.5; border-style: dashed; }
+.df-node.hot, .df-branch.hot {
+  border-color: var(--line-lit); transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(63, 224, 197, 0.18), 0 0 26px rgba(63, 224, 197, 0.34);
+}
+
+/* vertical hop connector; the packet only ever moves via transform */
+.df-link { height: 22px; width: 2px; margin-left: 26px; position: relative;
+  background: linear-gradient(180deg, rgba(63, 224, 197, 0.45), rgba(63, 224, 197, 0.12)); }
+.df-link .df-packet {
+  position: absolute; left: -3px; top: -2px; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 10px var(--glow-teal); opacity: 0;
+}
+.df-link.hot .df-packet { animation: dfFlow 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes dfFlow {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(24px); opacity: 0; }
+}
+.df-hopnote { font-size: 10.5px; color: var(--muted); font-family: var(--fs-mono);
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%); white-space: nowrap; }
+
+.df-branches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.df-branch { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; background: rgba(6, 22, 38, 0.45);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+.df-branch .df-bt { font-size: 12px; font-weight: 800; }
+.df-branch .df-bs { font-size: 10.5px; color: var(--muted); margin-top: 2px; line-height: 1.45; }
+.df-branch .df-live { font-size: 10.5px; font-family: var(--fs-mono); color: var(--accent); margin-top: 5px; min-height: 1.3em; }
+.df-branch .df-live.idle { color: var(--muted-2); }
+.df-branch .warn { color: var(--watch); }
+
+/* the absence IS the architecture: nothing here, and that is the claim */
+.df-absent { margin-top: 10px; border: 1px dashed rgba(233, 105, 78, 0.38); border-radius: 12px;
+  padding: 7px 11px; background: rgba(233, 105, 78, 0.05); }
+.df-absent .x { font-family: var(--fs-mono); font-weight: 800; font-size: 12px; color: var(--muted-2);
+  text-decoration: line-through; text-decoration-color: var(--act); text-decoration-thickness: 2px; }
+.df-absent .df-s { font-size: 10.5px; color: var(--ink-dim); margin-top: 2px; font-family: var(--fs-ui); }
+
+/* live request log — newest on top */
+.df-log { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.df-row { display: grid; grid-template-columns: 30px 1fr auto auto; gap: 8px; align-items: baseline;
+  font-family: var(--fs-mono); font-size: 11px; padding: 4px 8px; border-radius: 8px;
+  border: 1px solid var(--line-soft); background: rgba(6, 22, 38, 0.42); }
+.df-row.fresh { animation: dfRowIn 0.5s cubic-bezier(0.19, 1, 0.22, 1); }
+@keyframes dfRowIn { from { opacity: 0; transform: translateY(-7px); } to { opacity: 1; transform: none; } }
+.df-row .m { color: var(--accent); font-weight: 800; }
+.df-row .p { color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.df-row .ms { color: var(--ink); font-weight: 700; }
+.df-row .st { color: var(--muted); }
+.df-row.bad { border-color: rgba(233, 105, 78, 0.4); }
+.df-row.bad .ms, .df-row.bad .st { color: var(--act); }
+.df-tally { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 11px; font-family: var(--fs-mono); color: var(--muted); }
+.df-tally b { color: var(--ink); font-size: 15px; margin-right: 3px; }
+
 /* ---------- fleet outro ---------- */
 .fleet-map { position: relative; border: 1px solid var(--line); border-radius: 18px; background:
   radial-gradient(ellipse at 50% 40%, rgba(63,224,197,0.06), transparent 70%), var(--hud-bg);
@@ -484,7 +553,15 @@ main#voyage { position: relative; z-index: 1; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 760px) {
-  .telem-grid, .deg-grid { grid-template-columns: 1fr; }
+  .telem-grid, .deg-grid, .df-grid { grid-template-columns: 1fr; }
+  /* Stacked, this scene is genuinely taller than one viewport, and a sticky 100vh stage would
+     clip exactly the two things that matter — the title and the live request log. So on phones
+     this one scene releases the sticky stage and flows normally; nothing is hidden. */
+  #s-dataflow .stage { position: static; height: auto; min-height: 100vh; }
+  .df-branches { grid-template-columns: 1fr; }
+  .df-row { grid-template-columns: 26px 1fr auto auto; font-size: 10.5px; }
+  .df-log .df-row:nth-child(n+5) { display: none; }
+  .df-branch .df-bs, .df-node .df-s, .df-absent .df-s { font-size: 10px; line-height: 1.45; }
   .ba-kfaceoff { grid-template-columns: 1fr; }
   .ba-arrow { transform: rotate(90deg); }
   .v-nav { display: none; }
@@ -507,6 +584,9 @@ main#voyage { position: relative; z-index: 1; }
   .evt-card { opacity: 1 !important; transform: none !important; filter: none !important; }
   .bubbles, .wave { display: none !important; }
   #atmos { display: none !important; }
+  /* dataflow: the live log and counters still update — only the pulse/packet motion is dropped */
+  .df-link .df-packet { display: none !important; }
+  .df-row.fresh { animation: none !important; }
   /* stop parallax: photo backdrops become static, fully visible under their scrim */
   .scene-photo, .scene-photo__img { transform: none !important; }
   .v-progress { transition: none !important; }

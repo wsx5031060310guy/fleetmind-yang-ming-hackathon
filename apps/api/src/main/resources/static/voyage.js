@@ -37,16 +37,55 @@
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
   function $(sel) { return document.querySelector(sel); }
 
+  /* ---------- live request recorder ----------
+     A thin observer sitting inside getJson: it measures what the page was already going to do
+     and never issues a request of its own. The dataflow scene renders ONLY what lands here, so
+     every path / latency / byte count on screen came from real traffic.
+     Ring buffer starts at page load, so the scene is populated before the visitor reaches it. */
+  const FLOW_MAX = 24;
+  const flow = { log: [], seq: 0, listeners: [], ai: null, alert: null, counts: { read: 0, ai: 0, alert: 0 } };
+
+  function byteLen(text) {
+    try { return new TextEncoder().encode(text).length; } catch (e) { return text ? text.length : 0; }
+  }
+  function nowMs() { return typeof performance !== "undefined" && performance.now ? performance.now() : Date.now(); }
+  function flowBranch(path) {
+    if (path.indexOf("/ai-brief") >= 0) return "ai";
+    if (path.indexOf("/alerts/notify") >= 0) return "alert";
+    return "read";
+  }
+  function recordFlow(entry) {
+    flow.seq += 1;
+    entry.n = flow.seq;
+    entry.branch = flowBranch(entry.path);
+    flow.counts[entry.branch] = (flow.counts[entry.branch] || 0) + 1;
+    flow.log.push(entry);
+    if (flow.log.length > FLOW_MAX) flow.log.shift();
+    flow.listeners.forEach((fn) => { try { fn(entry); } catch (e) { /* a listener must never break a fetch */ } });
+  }
+
   async function getJson(path, options, timeoutMs) {
     const t = timeoutMs || 9000;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), t);
+    const method = String((options && options.method) || "GET").toUpperCase();
+    const t0 = nowMs();
+    let logged = false;
+    const mark = (fields) => {
+      if (logged) return;
+      logged = true;
+      recordFlow(Object.assign({ method: method, path: path, ms: nowMs() - t0, bytes: null }, fields));
+    };
     try {
       const res = await fetch(path, Object.assign({}, options, { signal: controller.signal }));
-      if (!res.ok) throw new Error(res.status + " " + res.statusText);
-      return await res.json();
+      if (!res.ok) { mark({ status: res.status, ok: false }); throw new Error(res.status + " " + res.statusText); }
+      // read as text so the real decoded payload size is measurable; JSON.parse is equivalent to res.json()
+      const text = await res.text();
+      mark({ status: res.status, ok: true, bytes: byteLen(text) });
+      return JSON.parse(text);
     } catch (error) {
-      if (error && error.name === "AbortError") throw new Error("timeout " + t / 1000 + "s");
+      if (error && error.name === "AbortError") { mark({ status: 0, ok: false, note: "timeout" }); throw new Error("timeout " + t / 1000 + "s"); }
+      mark({ status: 0, ok: false, note: "error" });
       throw error;
     } finally { clearTimeout(timer); }
   }
@@ -994,6 +1033,7 @@
     body.replaceChildren(el("p", "chart-note", "生成中…（呼叫 Bedrock，過數字守門）"));
     try {
       const d = await getJson("/api/vessels/" + encodeURIComponent(store.vesselId) + "/ai-brief", { method: "POST" }, 16000);
+      try { flowNoteAi(d); } catch (e) { /* the dataflow annotation must never break the brief */ }
       renderBrief(body, d);
     } catch (e) {
       body.replaceChildren(el("p", "notify-status err", "AI 簡報暫不可用：" + (e && e.message ? e.message : "unknown")));
@@ -1063,6 +1103,7 @@
     status.className = "notify-status"; status.textContent = "傳送中…";
     try {
       const res = await getJson("/api/alerts/notify", { method: "POST" }, 12000);
+      try { flowNoteAlert(res); } catch (e) { /* the dataflow annotation must never break the alert */ }
       if (res && res.status === "queued") {
         status.className = "notify-status ok";
         status.textContent = "已排入告警佇列（" + fmt(res.alertCount, 0) + " 筆告警，topic 已設定）。";
@@ -1074,6 +1115,190 @@
       status.className = "notify-status err";
       status.textContent = "寄送失敗：" + (e && e.message ? e.message : "unknown");
     } finally { btn.disabled = false; }
+  }
+
+  /* ---- dataflow: the path these numbers actually travelled ----
+     Everything rendered here is derived from the recorder above — real paths, real measured
+     latencies, real payload sizes. Nothing is scripted or simulated. */
+  let dfState = null;
+
+  function fmtBytes(b) {
+    const n = Number(b);
+    if (!Number.isFinite(n)) return "—";
+    return n >= 1024 ? (n / 1024).toFixed(1) + " KB" : n + " B";
+  }
+  function dfNode(title, sub, tag, extraClass) {
+    const n = el("div", "df-node" + (extraClass ? " " + extraClass : ""));
+    const t = el("div", "df-t");
+    t.append(el("span", "", title));
+    if (tag) { const g = el("span", "tag"); g.textContent = tag; t.append(g); }
+    n.append(t);
+    if (sub) n.append(el("div", "df-s", sub));
+    return n;
+  }
+  function dfLink(note) {
+    const l = el("div", "df-link");
+    l.append(el("span", "df-packet"));
+    if (note) l.append(el("span", "df-hopnote", note));
+    return l;
+  }
+  function dfPulse(node, hold) {
+    if (RM || !node) return;                 // reduced motion: state still updates, motion does not
+    node.classList.remove("hot");
+    void node.offsetWidth;                   // force reflow so a repeat request re-runs the animation
+    node.classList.add("hot");
+    setTimeout(() => node.classList.remove("hot"), hold || 1000);
+  }
+  function dfLast(branch) {
+    for (let i = flow.log.length - 1; i >= 0; i -= 1) {
+      if (flow.log[i].branch === branch && flow.log[i].ok) return flow.log[i];
+    }
+    return null;
+  }
+  function dfPaintBranch(key) {
+    if (!dfState) return;
+    const node = dfState.live[key];
+    const count = flow.counts[key] || 0;
+    if (!count) { node.className = "df-live idle"; node.textContent = dfState.idle[key]; return; }
+    node.className = "df-live";
+    const last = dfLast(key);
+    let txt = count + " 次 · 最近 " + fmt(last ? last.ms : NaN, 1) + " ms";
+    const extra = key === "ai" ? flow.ai : key === "alert" ? flow.alert : null;
+    if (extra) txt += " · " + extra;
+    node.textContent = txt;
+  }
+  function flowNoteAi(d) {
+    const guard = d && d.guardrail;
+    const verdict = !guard ? null : guard.passed === false ? "守門攔截" : "守門通過";
+    flow.ai = (d && d.mode ? String(d.mode) : "N/A") + (verdict ? " · " + verdict : "");
+    dfPaintBranch("ai");
+  }
+  function flowNoteAlert(res) {
+    const parts = [res && res.status ? String(res.status) : "N/A"];
+    if (res && res.topicConfigured !== undefined) parts.push("SNS " + (res.topicConfigured ? "已設定" : "未設定"));
+    if (res && res.sesConfigured !== undefined) parts.push("SES " + (res.sesConfigured ? "已設定" : "未設定"));
+    flow.alert = parts.join(" · ");
+    dfPaintBranch("alert");
+  }
+
+  function renderDataflow() {
+    const map = $("#dataflow-map");
+    const side = $("#dataflow-side");
+    if (!map || !side) return;
+    // Honest about the entry point: only claim the ALB when the ALB is actually serving this page.
+    const viaAlb = /\.elb\.amazonaws\.com$/i.test(location.hostname);
+
+    $("#dataflow-lead").textContent =
+      "剛才那些數字，是這一頁跟後端要來的。以下不是示意動畫：是這一頁真正發出的請求、瀏覽器真正量到的往返時間與回應大小。";
+
+    /* --- topology (top-down: browser → ALB → Fargate → three branches) --- */
+    map.append(dfNode("使用者瀏覽器", location.host, "你在這裡"));
+    const l1 = dfLink("HTTP :80");
+    map.append(l1);
+    map.append(dfNode("Application Load Balancer",
+      "fleetmind-alb · internet-facing · 監聽 :80 · us-east-1d + us-east-1f",
+      viaAlb ? "唯一入口" : "此環境未經過", viaAlb ? "" : "dim"));
+    const l2 = dfLink("僅 ALB SG → tcp/8080");
+    map.append(l2);
+    const task = dfNode("ECS Fargate 任務 · Spring Boot",
+      "fleetmind-api:5 · ARM64 · awsvpc · :8080 · 單一容器同時供靜態頁與 REST API", "運算");
+    map.append(task);
+
+    const branches = el("div", "df-branches");
+    const mk = (key, title, sub) => {
+      const b = el("div", "df-branch");
+      b.dataset.branch = key;
+      b.append(el("div", "df-bt", title));
+      b.append(el("div", "df-bs", sub));
+      const live = el("div", "df-live idle");
+      b.append(live);
+      branches.append(b);
+      return { box: b, live: live };
+    };
+    const bRead = mk("read", "讀取 · RealDataService",
+      "映像內的 real-metrics.json 直接回應。路徑上沒有資料庫，也沒有任何網路跳點。");
+    const bAi = mk("ai", "AI · Bedrock Converse",
+      "Claude Haiku → AiBriefGuardrail.validate()：通過即回傳並快取 last-good；失敗改用快取；再不行走確定性 fallback。");
+    const bAlert = mk("alert", "告警 · SNS + SES",
+      "跨門檻 → /api/alerts/notify → SNS Publish 與 SES SendEmail。SNS topic 目前 0 訂閱，Publish 會成功但送達 0 人；今天真正把信寄出去的是 SES。");
+    map.append(branches);
+
+    const absent = el("div", "df-absent");
+    absent.append(el("div", "x", "S3 · DynamoDB"));
+    absent.append(el("div", "df-s", "不在這條路徑上——整段請求沒有任何資料存放區。資料在 build 時就打包進映像，冷啟動即持有真實資料。這個「沒有」，就是這張圖最想講的事。"));
+    map.append(absent);
+    map.append(el("p", "chart-note", "所有日誌 → CloudWatch /fleetmind/api（單向、不在回應路徑上）"));
+
+    /* --- live log --- */
+    side.append(el("div", "hud-label", "這一頁真正發出的請求（最新在上）"));
+    const logHost = el("div", "df-log");
+    side.append(logHost);
+
+    const tally = el("div", "df-tally");
+    const mkTally = (label) => {
+      const s = el("span");
+      const b = el("b", "tnum", "—");
+      s.append(b, document.createTextNode(label));
+      tally.append(s);
+      return b;
+    };
+    const tTotal = mkTally("次請求");
+    const tMed = mkTally("ms 中位往返");
+    const tDb = mkTally("次資料庫往返");
+    tDb.textContent = "0";
+    side.append(tally);
+
+    side.append(el("p", "chart-note",
+      "量測方式：performance.now() 夾住每一次 fetch，涵蓋送出到回應主體讀完；位元組為解碼後的回應大小。"));
+    side.append(el("p", "chart-note",
+      "擋住直連 :8080 的是安全群組，不是子網路隔離——兩個子網路都是公有，任務也仍持有公有 IP（免 NAT 拉 ECR），只是 SG 只認 ALB。"));
+    side.append(el("p", "chart-note",
+      "SNS / SES 由伺服器背景 executor 送出，HTTP 回應在那之前就返回 queued——上面的毫秒數不包含實際送信。"));
+
+    dfState = {
+      links: [l1, l2],
+      task: task,
+      branches: { read: bRead.box, ai: bAi.box, alert: bAlert.box },
+      live: { read: bRead.live, ai: bAi.live, alert: bAlert.live },
+      idle: {
+        read: "尚未有讀取請求",
+        ai: "尚未觸發 · 上一幕點「生成 AI 簡報」",
+        alert: "尚未觸發 · 上一幕點「寄送告警通知」"
+      },
+      log: logHost,
+      tally: { total: tTotal, med: tMed }
+    };
+
+    // replay the ring buffer (requests fired before the visitor scrolled here), then go live
+    flow.log.forEach((e) => dfApply(e, false));
+    ["read", "ai", "alert"].forEach(dfPaintBranch);
+    dfTally();
+    flow.listeners.push((e) => { dfApply(e, true); dfPaintBranch(e.branch); dfTally(); });
+  }
+
+  function dfTally() {
+    if (!dfState) return;
+    dfState.tally.total.textContent = String(flow.seq);
+    const ok = flow.log.filter((e) => e.ok).map((e) => e.ms).sort((a, b) => a - b);
+    dfState.tally.med.textContent = ok.length ? fmt(ok[Math.floor(ok.length / 2)], 1) : "—";
+  }
+
+  function dfApply(entry, live) {
+    if (!dfState) return;
+    const row = el("div", "df-row" + (entry.ok ? "" : " bad") + (live && !RM ? " fresh" : ""));
+    row.append(el("span", "m", entry.method));
+    row.append(el("span", "p", entry.path));
+    row.append(el("span", "ms", entry.ok ? fmt(entry.ms, 1) + " ms" : String(entry.note || "fail")));
+    row.append(el("span", "st", entry.ok ? entry.status + " · " + fmtBytes(entry.bytes) : String(entry.status || "—")));
+    row.title = entry.method + " " + entry.path;
+    dfState.log.prepend(row);
+    while (dfState.log.children.length > 8) dfState.log.lastChild.remove();
+    if (!live) return;
+    // a real request just traversed the path — walk the pulse down it
+    dfPulse(dfState.links[0], 700);
+    setTimeout(() => dfPulse(dfState.links[1], 700), 110);
+    setTimeout(() => dfPulse(dfState.task, 900), 220);
+    setTimeout(() => dfPulse(dfState.branches[entry.branch], 1200), 330);
   }
 
   /* ---- fleet outro ---- */
@@ -1127,8 +1352,8 @@
   }
 
   /* ================= scroll engine ================= */
-  const SCENES = ["arrival", "berth", "underwater-events", "cleaning-recovery", "departure", "telemetry", "degradation", "decision", "fleet-outro"];
-  const SCENE_SHORT = ["入港", "靠泊", "下潛", "對照", "離港", "遙測", "衰退", "決策", "艦隊"];
+  const SCENES = ["arrival", "berth", "underwater-events", "cleaning-recovery", "departure", "telemetry", "degradation", "decision", "dataflow", "fleet-outro"];
+  const SCENE_SHORT = ["入港", "靠泊", "下潛", "對照", "離港", "遙測", "衰退", "決策", "資料流", "艦隊"];
 
   function buildNav() {
     const nav = $("#v-nav");
@@ -1300,6 +1525,7 @@
     try { renderTelemetry(); } catch (e) {}
     try { renderDegradation(); } catch (e) {}
     try { renderDecision(); } catch (e) {}
+    try { renderDataflow(); } catch (e) {}
     try { renderOutro(); } catch (e) {}
 
     // seed background particles for underwater scene
