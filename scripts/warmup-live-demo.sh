@@ -6,8 +6,13 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib/curl-common.sh"
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 REPEAT=1
 SLEEP_SECONDS=2
-VESSEL_ID="YM-DEMO-01"
-EVENT_ID="event-2025-03-cleaning"
+# S11 is the vessel the demo actually clicks, so it is the one whose ai-brief has to be warm.
+# These used to be YM-DEMO-01 / event-2025-03-cleaning, which DemoDataService still answers 200 for
+# but which is not in the real fleet: /api/fleet/summary returns S1..S23, so the fleet-summary check
+# failed on its own default, the script exited 1, and it never reached the ai-brief call it exists to
+# make. Running it before going on stage would have left S11 cold.
+VESSEL_ID="S11"
+EVENT_ID="event-S11-UWC-PP-2022-07-25"
 REQUIRE_AI=false
 
 usage() {
@@ -132,7 +137,10 @@ for round in $(seq 1 "$REPEAT"); do
   check_contains health GET "/api/health" "ok"
   check_contains fleet-summary GET "/api/fleet/summary" "$VESSEL_ID"
   check_contains performance GET "/api/vessels/$VESSEL_ID/performance" "dailyFoc"
-  check_contains before-after GET "/api/vessels/$VESSEL_ID/before-after?eventId=$EVENT_ID" "paybackDays"
+  # recoveryPct, not paybackDays: every businessImpact field is null now that the cost model is gone
+  # (docs/27 — 成本是別部門管的), so asserting one of them proved only that the key still exists.
+  # recoveryPct is the payload this endpoint exists to serve, and the number the demo talks about.
+  check_contains before-after GET "/api/vessels/$VESSEL_ID/before-after?eventId=$EVENT_ID" "recoveryPct"
   check_ai_brief
   check_contains fuel-export GET "/api/fuel-consump/export" "FUEL_CONSUMP"
   if [[ "$round" -lt "$REPEAT" ]]; then
