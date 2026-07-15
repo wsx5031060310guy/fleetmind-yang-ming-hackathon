@@ -28,8 +28,16 @@ const C = {
   // 深色卡片上的 badge 用: 原 navy3/navy2 與卡底同色系會糊掉, 提亮為同家族鋼藍/板岩藍
   steel: "2F6E9E", slateBlue: "5C7B95",
 };
-const HEAD = "Microsoft JhengHei";
-const BODY = "Microsoft JhengHei";
+// Hiragino Sans — 這台 LibreOffice 唯一解析得出的 CJK 黑體, 且 W3/W6 是真的細/粗
+// 配對 (bold 不必合成)。正體字形已逐字驗過 (內/產/對/學/說 皆為 TC 形, 非日文 内/産/対/学/説)。
+//
+// 別換成 Microsoft JhengHei (Windows 字體) / PingFang TC / Heiti TC / STHeiti:
+// 這台通通解不出來, 會逐 script fallback → 中文掉 DFWaWaSC (娃娃體) 或 STSongti (宋體)、
+// 粗體中文掉 WeibeiSC (魏碑書法體)、拉丁掉 Arial-Black, 同一行三種字體。
+// fc-list / find 看不出來 (LibreOffice 走 CoreText, 不是 fontconfig) — 改字體後
+// 一律用 `pdffonts` 驗算出的 PDF: 只該有 HiraginoSans-W3/W6, 出現 Songti/Weibei/WaWa 就是壞了。
+const HEAD = "Hiragino Sans";
+const BODY = "Hiragino Sans";
 
 const pptx = new PptxGenJS();
 pptx.defineLayout({ name: "W", width: 13.333, height: 7.5 });
@@ -78,10 +86,15 @@ function pageMark(s, n) {
   ], { x: W - M - 1.5, y: 0.24, w: 1.5, h: 0.3, align: "right", valign: "middle", fontFace: BODY, fontSize: 10, charSpacing: 1, margin: 0 });
 }
 
-// 標題字寬估算 (CJK≈1em/字, 拉丁≈0.55em) → 自動選最大且不溢出的級數
+// 標題字寬估算 → 自動選最大且不溢出的級數。
+// 係數是量出來的, 不是猜的: Hiragino Sans bold 36pt 實際 render 後量 ink 寬 →
+// CJK 0.996 em/字 (取 1), 混合大小寫拉丁 0.62 em/字。
+// 拉丁曾寫 0.55 (別的字體的值): 低估 → 標題溢出換兩行 → 文字框垂直置中把第一行往上推 →
+// 鑽進右上 tierBadges 底下被切頭 (slide 5 「DynamoDB（資料驅動）」)。單行就不會撞, 所以
+// 這裡估得準比什麼都重要。改字體 = 這兩個係數要重量。
 function unitLen(t) {
   let u = 0;
-  for (const ch of t) u += ch.codePointAt(0) > 0x2e80 ? 1 : 0.55;
+  for (const ch of t) u += ch.codePointAt(0) > 0x2e80 ? 1 : 0.62;
   return u;
 }
 function head(s, eyebrow, title, titleColor = C.white) {
@@ -206,14 +219,20 @@ function tierBadges(s, cost, fit, fitColor = C.seafoam) {
 
 /* ========================= Slide 1 — 封面 (hero-dawn.jpg) ========================= */
 let s = pptx.addSlide();
-photoBg(s, "hero-dawn.jpg", { scrim: 36, topH: 0, botH: 2.6, edge: 18 });
+// botH: 0 — 底部 stats 卡 (tr 6) 與 Live 條 (tr 4) 各自幾乎不透明, 不需要下緣 band。
+// 留著的話 band 上緣 (y=4.9) 比卡片 (y=5.15) 還高, 那 0.25" 裸露的平navy 會跟晨霧船影
+// 硬碰出一條直線 (同 slide 15 的病)。
+photoBg(s, "hero-dawn.jpg", { scrim: 36, topH: 0, botH: 0, edge: 18 });
 // 左側標題群坐在半透明 navy 面板上 (船影透出, 文字全可讀)
 s.addShape(pptx.ShapeType.roundRect, { x: 0.5, y: 0.95, w: 7.8, h: 4.05, fill: { color: C.navy, transparency: 18 }, line: { type: "none" }, rectRadius: 0.12, shadow: { type: "outer", color: "04101B", opacity: 0.5, blur: 14, offset: 4, angle: 90 } });
 // 右側 hero: sonar ping + k=FOC/STW³ 公式視覺焦點
 ping(s, 10.35, 2.55, 1.35, C.navy3, C.navy3);
 ping(s, 10.35, 2.55, 0.9, C.teal, C.navy3);
 s.addShape(pptx.ShapeType.roundRect, { x: 8.35, y: 1.5, w: 4.05, h: 2.55, fill: { color: C.navy2, transparency: 4 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.12, shadow: { type: "outer", color: "05121F", opacity: 0.5, blur: 12, offset: 4, angle: 90 } });
-s.addText("k =", { x: 8.55, y: 1.5, w: 1.2, h: 2.55, align: "center", valign: "middle", fontFace: HEAD, fontSize: 40, bold: true, color: C.white, margin: 0 });
+// y 對齊分數線 (2.55) 而非卡片中線: 關係運算子要坐在數學軸上。
+// box 垂直置中 → y = 2.55 - h/2 = 1.275。用 1.5 的話 = 置中於 2.775, 比分數線低 0.225",
+// 「k =」會明顯掛在除線下面 (FOC 中線 2.13 / STW³ 中線 2.95 → 分數自身中線 2.54 ≈ 線)。
+s.addText("k =", { x: 8.55, y: 1.275, w: 1.2, h: 2.55, align: "center", valign: "middle", fontFace: HEAD, fontSize: 40, bold: true, color: C.white, margin: 0 });
 s.addText("FOC", { x: 9.65, y: 1.8, w: 2.5, h: 0.66, align: "center", valign: "middle", fontFace: HEAD, fontSize: 30, bold: true, color: C.seafoam, margin: 0 });
 s.addShape(pptx.ShapeType.line, { x: 9.75, y: 2.55, w: 2.3, h: 0, line: { color: C.white, width: 2 } });
 s.addText("STW³", { x: 9.65, y: 2.62, w: 2.5, h: 0.66, align: "center", valign: "middle", fontFace: HEAD, fontSize: 30, bold: true, color: C.amber, margin: 0 });
@@ -222,7 +241,7 @@ s.addText("ISO 19030 · 船體效能指標", { x: 8.45, y: 3.5, w: 3.85, h: 0.4,
 s.addText("FLEETMIND · AWS ARCHITECTURE", { x: M, y: 1.15, w: 7.4, h: 0.4, fontFace: BODY, fontSize: 13.5, color: C.amber, bold: true, charSpacing: 4, margin: 0 });
 s.addText("AWS 架構藍圖\n與五種上雲路徑", { x: M, y: 1.6, w: 7.5, h: 1.7, fontFace: HEAD, fontSize: 40, color: C.white, bold: true, lineSpacingMultiple: 1.02, margin: 0 });
 s.addText("一套船舶效能決策系統 — 從已上線的 Fargate demo 到全艦隊營運平台", { x: M, y: 3.45, w: 7.5, h: 0.7, fontFace: HEAD, fontSize: 15.5, color: C.seafoam, lineSpacingMultiple: 1.1, margin: 0 });
-s.addText("數字來自計算　語言來自 AI　決策留給人", { x: M, y: 4.35, w: 7.5, h: 0.5, fontFace: HEAD, fontSize: 16, color: C.amber, italic: true, margin: 0 });
+s.addText("數字來自計算　語言來自 AI　決策留給人", { x: M, y: 4.35, w: 7.5, h: 0.5, fontFace: HEAD, fontSize: 16, color: C.amber, margin: 0 });
 // 底部 資料 callout 帶 (已驗證數字) — 大字
 const cov = [
   ["15 艘 × 5 年", "同型船 · 2021–2025 正午報表"],
@@ -282,7 +301,7 @@ optsOne.forEach((o, i) => {
   s.addText(o[1], { x: x + 0.05, y: 5.66, w: owW - 0.1, h: 0.35, align: "center", fontFace: HEAD, fontSize: 12.5, bold: true, color: C.white, margin: 0 });
   s.addText(o[2], { x: x + 0.05, y: 5.99, w: owW - 0.1, h: 0.32, align: "center", fontFace: BODY, fontSize: 10, color: C.dim, margin: 0 });
 });
-s.addText("A 是已上線基準線；E 是全艦隊願景路線圖；B / C / D 是中間的取捨光譜。", { x: M, y: 6.5, w: CW, h: 0.35, align: "center", fontFace: BODY, fontSize: 11.5, italic: true, color: C.dim, margin: 0 });
+s.addText("A 是已上線基準線；E 是全艦隊願景路線圖；B / C / D 是中間的取捨光譜。", { x: M, y: 6.5, w: CW, h: 0.35, align: "center", fontFace: BODY, fontSize: 11.5, color: C.dim, margin: 0 });
 s.addNotes("這頁一次看懂：上方命題、中間現行五個核心服務、下方五種方案的定位。A 現行強化最穩、B Serverless 最雲原生、C App Runner 受帳號權限阻擋、D EC2 最省最保底、E 資料分析管線是企業級願景藍圖。");
 
 /* ================= Slide 3 — 現行架構 (deployed · server-room.jpg) ================= */
@@ -325,7 +344,8 @@ s.addText("資料流", { x: M + 0.25, y: y1 + 0.16, w: colW - 0.5, h: 0.35, font
 s.addText([
   "離線　core-calc 讀 15 船 2021–2025 正午報表，跑 ISO 19030 k 與品質旗標 → MetricsExportCli 產 real-metrics.json",
   "Build　Dockerfile COPY real-metrics.json 一起打包 jar → 推 ECR",
-  "Runtime　評審 → ALB → Fargate 回決策看板 + REST（/fleet/summary、/vessels/{id}/decision、/config/threshold…）",
+  // 用冒號不用括號: 這行剛好滿寬, 收尾的「）」會被擠到下一行獨自成行 (CJK 禁則: 閉括號不可行首)。
+  "Runtime　評審 → ALB → Fargate 回決策看板 + REST：/fleet/summary、/vessels/{id}/decision、/config/threshold…",
   "AI 簡報　/ai-brief → Bedrock Converse → guardrail 驗 cited 數值",
   "告警　門檻跨越 → /alerts/notify → SNS Publish",
 ].map((p, j, a) => ({ text: p, options: { bullet: { code: "2022", indent: 12 }, color: C.dim, breakLine: j < a.length - 1, paraSpaceAfter: 5 } })), { x: M + 0.25, y: y1 + 0.52, w: colW - 0.45, h: 1.75, fontFace: BODY, fontSize: 10.5, lineSpacingMultiple: 1.0, margin: 0 });
@@ -349,7 +369,7 @@ function optionSlide(cfg, pageNum) {
   head(sl, cfg.eyebrow, cfg.title);
   tierBadges(sl, cfg.cost, cfg.fit, cfg.fitColor);
   sl.addShape(pptx.ShapeType.roundRect, { x: M, y: 1.62, w: CW, h: 0.62, fill: { color: C.navy, transparency: 14 }, line: { type: "none" }, rectRadius: 0.07 });
-  sl.addText(cfg.summary, { x: M + 0.22, y: 1.62, w: CW - 0.44, h: 0.62, valign: "middle", fontFace: BODY, fontSize: 12, color: C.dim, italic: true, lineSpacingMultiple: 1.1, margin: 0 });
+  sl.addText(cfg.summary, { x: M + 0.22, y: 1.62, w: CW - 0.44, h: 0.62, valign: "middle", fontFace: BODY, fontSize: 12, color: C.dim, lineSpacingMultiple: 1.1, margin: 0 });
   sl.addText("服務組成", { x: M, y: 2.32, w: CW, h: 0.3, fontFace: HEAD, fontSize: 13, bold: true, color: C.seafoam, margin: 0 });
   svcRow(sl, cfg.services, 2.66, 1.0, cfg.services.length > 5 ? 0.22 : 0.3);
   prosCons(sl, 3.98, cfg.pros, cfg.cons);
@@ -470,7 +490,7 @@ photoBg(s, "security-soc.jpg", { scrim: 28 }); // SOC 螢幕牆重紋理 → scr
 pageMark(s, 9);
 head(s, "Security · 縱深防禦", "資安：VPC 隔離 + GuardDuty");
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: 1.6, w: CW, h: 0.54, fill: { color: C.navy, transparency: 14 }, line: { type: "none" }, rectRadius: 0.07 });
-s.addText("縱深防禦 (defense in depth)：邊緣擋量、VPC 最小暴露、帳號級偵測、全程加密與稽核 — 逐層收斂攻擊面，任一層被突破，下一層仍在。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.54, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, italic: true, lineSpacingMultiple: 1.12, margin: 0 });
+s.addText("縱深防禦 (defense in depth)：邊緣擋量、VPC 最小暴露、帳號級偵測、全程加密與稽核 — 逐層收斂攻擊面，任一層被突破，下一層仍在。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.54, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.12, margin: 0 });
 const secLayers = [
   { tag: "① 邊緣", note: "擋量 · L7 過濾", items: [
       { label: "AWS Shield", sub: "DDoS 防護", code: "SLD", cat: "sec" },
@@ -521,7 +541,7 @@ photoBg(s, "multi-region.jpg", { scrim: 32 });
 pageMark(s, 10);
 head(s, "Multi-Region · Active-Active", "多區域 Active-Active + 即時告警與災備");
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: 1.6, w: CW, h: 0.5, fill: { color: C.navy, transparency: 14 }, line: { type: "none" }, rectRadius: 0.07 });
-s.addText("不同國家船務端就近接入 → Route 53 智慧路由到兩個 active 區域；一區故障自動切換、跨區雙向複製，資料不丟、服務不中斷。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.5, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, italic: true, lineSpacingMultiple: 1.12, margin: 0 });
+s.addText("不同國家船務端就近接入 → Route 53 智慧路由到兩個 active 區域；一區故障自動切換、跨區雙向複製，資料不丟、服務不中斷。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.5, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.12, margin: 0 });
 // Row1 — 船務端 → Route 53
 const cliY = 2.2, cliH = 0.72;
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: cliY, w: 3.15, h: cliH, fill: { color: C.navy2, transparency: 4 }, line: { color: C.navy3, width: 1 }, rectRadius: 0.09 });
@@ -670,7 +690,7 @@ photoBg(s, "decision-lights.jpg", { scrim: 32 }); // 號誌燈重紋理/高亮 �
 pageMark(s, 13);
 head(s, "Decision Cascade", "決策級聯：正常 → 注意 → 行動");
 s.addShape(pptx.ShapeType.roundRect, { x: M, y: 1.6, w: CW, h: 0.55, fill: { color: C.navy, transparency: 14 }, line: { type: "none" }, rectRadius: 0.07 });
-s.addText("同一套已上線服務，依 Speed Loss 對可調門檻的位置，把船分成三種決策狀態 — 數字觸發流程，最後一步永遠留給人。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.55, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, italic: true, lineSpacingMultiple: 1.1, margin: 0 });
+s.addText("同一套已上線服務，依 Speed Loss 對可調門檻的位置，把船分成三種決策狀態 — 數字觸發流程，最後一步永遠留給人。", { x: M + 0.22, y: 1.6, w: CW - 0.44, h: 0.55, valign: "middle", fontFace: BODY, fontSize: 12.5, color: C.dim, lineSpacingMultiple: 1.1, margin: 0 });
 const casc = [
   { c: C.seafoam, tint: C.seafoamT, st: "正常", cond: "Speed Loss 低於門檻\n品質旗標通過", sys: ["看板綠燈、持續監測", "無需人工介入"], ex: "多數船", exSub: "常態監測中" },
   { c: C.amber, tint: C.amberT, st: "注意", cond: "接近 / 跨越門檻\n進 review 佇列", sys: ["Bedrock 產證據簡報", "看板黃燈、reviewPriority 排序"], ex: "S23 · 8.9%", exSub: "n=506 · HIGH · priority 2" },
@@ -743,7 +763,9 @@ s.addNotes("現場導覽：三個入口都掛在同一顆 Fargate 容器 / 同�
 
 /* ================= Slide 15 — 結尾 (horizon-journey.jpg) ================= */
 s = pptx.addSlide();
-photoBg(s, "horizon-journey.jpg", { scrim: 36, topH: 1.4, botH: 1.7, edge: 14 });
+// topH: 0 — 標題坐在自己的不透明面板上, 不需上緣 band; 留著的話 band 下緣 (y=1.4)
+// 會在面板左右兩側裸露, 與夕陽亮帶硬碰出一條全寬接縫。
+photoBg(s, "horizon-journey.jpg", { scrim: 36, topH: 0, botH: 1.7, edge: 14 });
 // 背景 sonar hero (畫在文字面板之前, 面板只佔左側 → 右側環與夕陽航跡留給照片)
 ping(s, 11.6, 2.7, 1.6, C.navy3, C.navy3);
 ping(s, 11.6, 2.7, 1.05, C.teal, C.navy3);
@@ -757,7 +779,7 @@ s.addText([
   { text: "http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com", options: { color: C.white } },
 ], { x: M + 0.35, y: 5.15, w: CW - 0.7, h: 0.95, valign: "middle", fontFace: BODY, fontSize: 15, margin: 0 });
 s.addText("帳號 516665228894 · us-east-1 · ECS Fargate (ARM64) + ALB + ECR + Bedrock (Claude Haiku) + SNS", { x: M, y: 6.25, w: 11.5, h: 0.4, fontFace: BODY, fontSize: 12, color: C.dim, margin: 0 });
-s.addText("FleetMind　數字來自計算　語言來自 AI　決策留給人", { x: M, y: 6.65, w: 11.5, h: 0.4, fontFace: HEAD, fontSize: 14, italic: true, color: C.seafoam, margin: 0 });
+s.addText("FleetMind　數字來自計算　語言來自 AI　決策留給人", { x: M, y: 6.65, w: 11.5, h: 0.4, fontFace: HEAD, fontSize: 14, color: C.seafoam, margin: 0 });
 s.addNotes("收尾：現行 Fargate + ALB 是穩定出賽基準線；EC2 保底、Serverless 與資料分析管線是未來營運藍圖。Live URL 可現場打開。一句話願景：讓數字站得住、決策留給人。");
 
 /* ================= 輸出 ================= */
