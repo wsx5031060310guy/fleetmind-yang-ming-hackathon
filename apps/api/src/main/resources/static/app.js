@@ -569,18 +569,133 @@ function metricButton(metricId, label, className = "citation") {
   return button;
 }
 
-function appendBriefText(host, text) {
-  const paragraph = el("p", "lead");
-  const pattern = /\[([a-z0-9_]+)\]/gi;
-  let cursor = 0, match;
+const BRIEF_TOKEN_SOURCE = "\\[([a-z0-9_]+)\\]";
+const briefTokenPattern = () => new RegExp(BRIEF_TOKEN_SOURCE, "gi");
+
+/* Footnote registry. Markers are numbered by order of first appearance in the text —
+   the way a report cites — and citedMetrics supplies each one's value and the endpoint
+   that produced it. Cited metrics the prose never references are still listed, so the
+   sources panel stays a complete account of the numbers behind the brief. */
+function buildCitationIndex(text, citedMetrics) {
+  const meta = new Map();
+  (Array.isArray(citedMetrics) ? citedMetrics : []).forEach((metric) => {
+    if (metric && metric.metricId) meta.set(String(metric.metricId), metric);
+  });
+  const order = [];
+  const pattern = briefTokenPattern();
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    if (!order.includes(match[1])) order.push(match[1]);
+  }
+  meta.forEach((_metric, metricId) => { if (!order.includes(metricId)) order.push(metricId); });
+  return { order, meta };
+}
+
+/* A superscript reference marker standing in for the raw [metric_id] token. Keeps
+   metricButton's jumpToMetric behaviour, so the number stays traceable by click. */
+function citationMarker(metricId, index) {
+  const ordinal = index.order.indexOf(metricId) + 1;
+  const metric = index.meta.get(metricId);
+  const suffix = metric && metric.value !== undefined ? ` = ${metric.value}` : "";
+  const button = metricButton(metricId, ordinal > 0 ? String(ordinal) : "?", "cite-marker");
+  button.setAttribute("aria-label", `資料來源 ${ordinal}：${metricId}${suffix}`);
+  button.title = `${metricId}${suffix} · 點擊跳至來源`;
+  const sup = el("sup", "cite-ref");
+  sup.append(button);
+  return sup;
+}
+
+/* Inline text + citation markers. The raw token never reaches the DOM; trailing space
+   before a token is dropped so the marker hugs the number it annotates. */
+function appendInline(node, text, index) {
   const source = String(text || "");
+  const pattern = briefTokenPattern();
+  let cursor = 0, match;
   while ((match = pattern.exec(source)) !== null) {
-    paragraph.append(document.createTextNode(source.slice(cursor, match.index)));
-    paragraph.append(metricButton(match[1], match[0], "inline-citation"));
+    node.append(document.createTextNode(source.slice(cursor, match.index).replace(/\s+$/, "")));
+    node.append(citationMarker(match[1], index));
     cursor = pattern.lastIndex;
   }
-  paragraph.append(document.createTextNode(source.slice(cursor)));
-  host.append(paragraph);
+  node.append(document.createTextNode(source.slice(cursor)));
+}
+
+/* Renders briefText as a report: '#'/'##' become real headings and '・' lines a real
+   list (AiBriefPrompt fixes those conventions); the deterministic fallback emits bare
+   prose, which falls through to paragraphs. Structure only — every string still lands
+   via textContent, so no markup in AI output can execute. */
+function appendBriefText(host, text, citedMetrics) {
+  const source = String(text || "").replace(/\r\n?/g, "\n");
+  const index = buildCitationIndex(source, citedMetrics);
+  const body = el("div", "brief-body");
+  let list = null, paragraph = null;
+  source.split("\n").forEach((raw) => {
+    const line = raw.trim();
+    // A blank line ends a paragraph but not a list: the model spaces its '・' bullets
+    // apart, and those are one list, not one list each.
+    if (!line) { paragraph = null; return; }
+    const heading = /^(#{1,6})\s+(.+)$/.exec(line);
+    if (heading) {
+      list = null; paragraph = null;
+      const isTitle = heading[1].length === 1;
+      const node = el(isTitle ? "h3" : "h4", isTitle ? "brief-title" : "brief-section");
+      appendInline(node, heading[2], index);
+      body.append(node);
+      return;
+    }
+    const bullet = /^(?:[・·•‧∙]|[-*]\s)\s*(.+)$/.exec(line);
+    if (bullet) {
+      paragraph = null;
+      if (!list) { list = el("ul", "brief-list"); body.append(list); }
+      const item = el("li");
+      appendInline(item, bullet[1], index);
+      list.append(item);
+      return;
+    }
+    list = null;
+    if (paragraph) paragraph.append(document.createTextNode(" "));
+    else { paragraph = el("p"); body.append(paragraph); }
+    appendInline(paragraph, line, index);
+  });
+  host.append(body);
+  return index;
+}
+
+/* href is data, not a trusted URL: only same-origin absolute paths become links —
+   never javascript: and never protocol-relative //host. */
+function isSameOriginPath(href) {
+  return typeof href === "string" && /^\/[^/\\]/.test(href);
+}
+
+/* The sources panel: each marker above resolves here to its metric id, its value and
+   the endpoint that computed it — the traceability the raw tokens used to carry. */
+function buildSourceList(index) {
+  const section = el("section", "brief-sources");
+  if (!index.order.length) return section;
+  section.append(el("h4", "brief-sources-title", "資料來源"));
+  const list = el("ol", "source-list");
+  index.order.forEach((metricId, i) => {
+    const metric = index.meta.get(metricId);
+    const item = el("li", "source-item");
+    item.append(metricButton(metricId, String(i + 1), "cite-marker source-marker"));
+    const head = el("div", "source-head");
+    head.append(metricButton(metricId, metricId, "citation"));
+    if (metric && metric.value !== undefined) head.append(el("span", "source-value", `= ${metric.value}`));
+    item.append(head);
+    const href = metric && metric.href;
+    if (isSameOriginPath(href)) {
+      const link = el("a", "source-endpoint", href);
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.title = "開啟產生此數字的 API 回應";
+      item.append(link);
+    } else if (href) {
+      item.append(el("span", "source-endpoint", String(href)));
+    }
+    list.append(item);
+  });
+  section.append(list);
+  return section;
 }
 
 function renderBrief(data) {
@@ -600,12 +715,8 @@ function renderBrief(data) {
   const modeTag = el("span", `mode-tag${isFallback ? " fallback" : ""}`, data && data.mode ? data.mode : "N/A");
   meta.append(modeTag, el("span", "", `· ${generated}`));
   host.append(meta);
-  appendBriefText(host, data && data.briefText);
-  const citations = el("div", "citations");
-  (Array.isArray(data && data.citedMetrics) ? data.citedMetrics : []).forEach((metric) => {
-    citations.append(metricButton(metric.metricId, `${metric.metricId}: ${metric.value}`));
-  });
-  host.append(citations);
+  const index = appendBriefText(host, data && data.briefText, data && data.citedMetrics);
+  host.append(buildSourceList(index));
 }
 
 /* ---------- data quality ---------- */
@@ -623,7 +734,10 @@ function renderQuality(data) {
     const count = data.flagCounts && data.flagCounts[flag] !== undefined ? data.flagCounts[flag] : 0;
     const li = el("li");
     const left = el("span", "");
-    left.append(document.createTextNode(`${description} `), el("span", "flag", flag));
+    // 只顯示中文說明。原本並列了 flag 的英文原始碼 (HIGH_WIND 等), 對船務端沒有意義。
+    // flag 仍保留在 title 屬性裡, 需要對照原始資料時 hover 得到。
+    left.append(document.createTextNode(description));
+    left.title = flag;
     li.append(left, el("b", "", fmt(count, 0)));
     list.append(li);
   });
