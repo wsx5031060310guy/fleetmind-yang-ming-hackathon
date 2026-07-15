@@ -131,6 +131,12 @@
   .chip b { color: var(--seafoam); }
 
   section { padding: clamp(30px, 5vw, 56px) 0; border-top: 1px solid var(--line-soft); }
+  /* Anchor landings must clear the sticky topbar. Its height is not fixed: the nav wraps as the
+     window narrows (64px wide → 99px at 1366/1280 → 135px at 834), while an anchored heading always
+     lands ~90px down — so from 1366px and below the topbar sat ON the heading (9px at 1366/1280,
+     59px at 834). --bar-h is measured from the real element by the script at the end of this file;
+     the fallback only applies if that never runs. */
+  section[id] { scroll-margin-top: calc(var(--bar-h, 64px) + 26px); }
   .sec-head { margin-bottom: 26px; }
   .sec-kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
   .sec-kicker .tag { padding: 2px 9px; border-radius: 6px; font-weight: 700; letter-spacing: 0.02em; }
@@ -853,6 +859,22 @@
     }
     scroll.addEventListener('pointerup', endDrag);
     scroll.addEventListener('pointercancel', endDrag);
+  })();
+
+  /* Publish the sticky topbar's real height as --bar-h, so section[id]'s scroll-margin-top can
+     clear it. The bar is not a fixed height — its nav wraps as the window narrows (64 → 99 → 135),
+     and anchored headings land at a constant ~90px, so below 1440 the bar covered the heading it
+     had just scrolled to. Measured rather than hardcoded per breakpoint: the wrap point moves
+     whenever a nav link is added. */
+  (function () {
+    var bar = document.querySelector('.topbar');
+    if (!bar) return;
+    var set = function () {
+      document.documentElement.style.setProperty('--bar-h', Math.round(bar.getBoundingClientRect().height) + 'px');
+    };
+    set();
+    if (window.ResizeObserver) new ResizeObserver(set).observe(bar);
+    else window.addEventListener('resize', set, { passive: true });
   })();
 </script>
 
