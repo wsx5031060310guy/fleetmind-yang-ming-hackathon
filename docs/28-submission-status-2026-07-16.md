@@ -41,15 +41,17 @@ $ stat -f %Sm                                → 2026-07-14 13:09
 
 ## 已知擋點
 
-1. **AWS workshop STS 憑證過期**（`ExpiredTokenException`）→ 無法部署。
-   影響：第 6 項的 URL 還不會活；`dfba810`／`b0a4cd0` 的新架構圖也還沒上線。
-   換發後：`cd <clean worktree at main> && AWS_PROFILE=workshop uv run --with boto3 python3 scripts/deploy-aws.py`
-   ⚠️ 從**乾淨的 worktree** 部署——腳本的 build context 是 repo 根，髒工作區會一起送上 prod。
-   ⚠️ 腳本內建的驗證探針是 `deck/slide-05.jpg`，對這次改動**證明不了任何事**；部署後自己比對改過的檔。
+1. ~~AWS 憑證過期~~ **已換發並部署**（`afa84d3` → 現行 image）。live 站每一頁 200，改過的檔全部與版控樹 byte-match。
+   下次要部署：`cd <乾淨 worktree at main> && AWS_PROFILE=workshop uv run --with boto3 python3 scripts/deploy-aws.py`
+   ⚠️ 一定要從**乾淨的 worktree**——腳本的 build context 是 repo 根，髒工作區會一起送上 prod。
+   ⚠️ 腳本內建驗證探針是 `deck/slide-05.jpg`，對你改的東西**證明不了任何事**；部署後自己 byte-compare 改過的檔。
 
-2. **repo 是 private**，而第 4 項要交 GitHub 連結。
+2. **repo 是 PRIVATE**，而第 4 項要交 GitHub 連結——評審點開會 404。
+   **這是還沒決定的事**：轉 public，或把評審／主辦加為協作者。
+   （轉 public 前先確認：`git ls-files data/` = 0、`real-metrics.json` 未追蹤 —— 兩項都已驗過為 0。）
 
-3. **表單規格 TBD**（`docs/18`）：deck 收 PPTX 或 PDF？影片格式／長度／上傳位置？原始資料/錄影可否留在 repo？
+3. **表單規格 TBD**（`docs/18`）：deck 收 PPTX 還是 PDF？影片格式／長度上限？原始資料/錄影可否留在 repo？
+   現場看到表單才知道。影片是 143 秒 / 7.0MB / H.264 mp4，多數平台都吃。
 
 ## 部署後必跑
 
