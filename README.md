@@ -58,10 +58,12 @@ The PPTX open in PowerPoint (the pptxgenjs chart part that PowerPoint refused wa
 native shapes). Costs/ROI are deliberately omitted per the Yang Ming engineer's request
 ([docs/27](docs/27-yang-ming-engineer-feedback.md)) — the deck reports excess-fuel tonnage only.
 
-**Open decisions for the team (not code):** the repo is still **private**, so the GitHub link
-(submission item ④) 404s for a judge until it is made public or the judges are added; and the
-prediction CSV was generated 2026-07-14 and should be regenerated on a machine that has the
-gitignored `data/` before upload (four cells look physically low — see `submission/README.md`).
+**Submission method:** the files in [`submission/`](submission/) (pptx/pdf/mp4/csv) are uploaded
+directly to the organizer's S3 — the repo stays **private** by decision, so the GitHub link
+(item ④) is not relied on for judging; organizers can be added as collaborators if they want the
+source. **One thing left before upload:** the prediction CSV was generated 2026-07-14 and should
+be regenerated on a machine that has the gitignored `data/` (four cells look physically low — see
+`submission/README.md`).
 
 Merged work log:
 

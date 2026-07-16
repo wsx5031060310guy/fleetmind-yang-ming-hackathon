@@ -23,11 +23,13 @@ pptx 已驗可在 **PowerPoint 開啟**：移除 pptxgenjs 產的 chart 部件�
 
 | 項 | 值 |
 |---|---|
-| ④ GitHub | https://github.com/wsx5031060310guy/fleetmind-yang-ming-hackathon ⚠️ **目前 private，評審點開會 404**——交件前要轉 public 或加協作者 |
+| ④ GitHub | https://github.com/wsx5031060310guy/fleetmind-yang-ming-hackathon （**維持 private**，決定：檔案改上傳主辦 S3，不靠公開連結；主辦若要看原始碼再加協作者） |
 | ⑤ Live Demo | http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com |
-| ⑥ Demo 影片 | http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com/demo/fleetmind-demo.mp4 （或直接上傳本資料夾的 `fleetmind-demo.mp4`） |
+| ⑥ Demo 影片 | 直接上傳本資料夾的 `fleetmind-demo.mp4` 到主辦 S3（線上備援 URL：http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com/demo/fleetmind-demo.mp4） |
 
 ①團隊基本資料、②提案大綱 直接在表單填。
+
+**交件方式：本資料夾的 pptx / pdf / mp4 / csv 直接上傳主辦 S3。** repo 維持 private 不影響交件。
 
 ---
 
