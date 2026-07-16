@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Mapping
@@ -61,6 +62,28 @@ def _assert_plausible_predictions(
     if violations:
         detail = "; ".join(violations)
         raise ValueError(f"refusing submission: physically implausible cell(s): {detail}")
+
+    # The bound above is one-sided: it only catches cells that are too HIGH. Every PREDICT cell
+    # is a day with >=22h at full speed (docs/22 §4), so a value far BELOW the ship's own median
+    # is just as impossible — you cannot run the main engine at full speed for 22 hours on 2.5 MT.
+    # The 2026-07-14 submission has four such cells (S21 day 960/961/962 and 1008; the lowest is
+    # 2.45 MT against a fleet median of 86.92) and they sailed straight through.
+    #
+    # A warning, not a raise: this is written without the dataset to hand, so the threshold is
+    # not calibrated and must never be able to block a submission on its own. Someone with data/
+    # should check those cells' HOURS_FULL_SPEED and decide whether the bound belongs here.
+    for ship_id, group in predictions.groupby("ship_id"):
+        med = float(group["predicted_value"].median())
+        if med <= 0:
+            continue
+        low = group[group["predicted_value"] < med * 0.25]
+        for row in low.itertuples(index=False):
+            print(
+                f"WARNING: {ship_id} day={int(row.day)} fuel={row.fuel_type} "
+                f"predicted_value={float(row.predicted_value):.2f} is under 25% of this ship's "
+                f"median ({med:.2f}) — a >=22h full-speed day cannot burn that little. Check it.",
+                file=sys.stderr,
+            )
 
 
 def attach_prediction_confidence(
