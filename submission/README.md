@@ -1,35 +1,27 @@
 # 離線提交包 · 2026-07-16（死線 14:30）
 
-繳交管道：航運物流組專屬 **surveycake** 表單（連結在命題頁）。官方 6 項見 `docs/22` §6。
-現場填表時對照 [`docs/28-submission-status-2026-07-16.md`](../docs/28-submission-status-2026-07-16.md)。
+上傳至指定成果存放平台（主辦 S3）。**官方 checklist 就是下面這 6 項**，逐項對照要交什麼。
 
-## 這個資料夾裡的檔案
+## 官方 6 項 → 交這個
 
-| 檔案 | 對應繳交項 | 說明 |
+| # | 官方項目 | 交什麼 |
 |---|---|---|
-| `fleetmind-proposal-deck.pdf` | ③ 完整提案簡報 | 16 頁。**表單若收 PDF 用這個** |
-| `fleetmind-proposal-deck.pptx` | ③ 完整提案簡報 | 同上，**若收 PPTX 用這個**。含 16 頁講者備忘稿 |
-| `fleetmind-aws-architecture.pdf` | ③ 附錄／被追問架構時 | 18 頁架構深水區 |
-| `fleetmind-aws-architecture.pptx` | 同上 | |
-| `fleetmind-demo.mp4` | ⑥ Demo 錄製影片 | 141 秒 · 1280×720 · H.264。**若表單能上傳影片檔用這個**；否則填下方 URL |
-| `submission-predictions.csv` | ⑦ 預測結果檔（陽明組限定） | 102 列。**上傳前先讀下面那段** |
+| 1 | 團隊基本資料 | 表單直接填（隊名 + 成員，見 [`docs/02-team.md`](../docs/02-team.md)） |
+| 2 | 提案大綱 | 表單直接填（可濃縮 proposal deck 第 1–3 頁：痛點 → 兩條主線 → 方法 k=FOC/STW³） |
+| 3 | 完整提案簡報（含企業數據及資料應用、技術架構） | 上傳 **`fleetmind-proposal-deck.pptx`**（或 `.pdf`）。已驗這一份**同時涵蓋三者**：企業數據（21,282 列日報 + 77 維修事件）、資料應用（ISO 19030 Speed Loss + 油耗預測模型）、技術架構（ECS Fargate + Bedrock + AWS）。**架構要更深** → 另附 `fleetmind-aws-architecture.pptx`（18 頁） |
+| 4 | GitHub 網站連結 | `https://github.com/wsx5031060310guy/fleetmind-yang-ming-hackathon`（維持 private，決定：靠 S3 交檔不靠公開連結；主辦要看原始碼再加協作者） |
+| 5 | Live Demo 網址連結 | `http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com`（免登入，`/api/health` 回 200） |
+| 6 | Demo 錄製影片連結 | 上傳 **`fleetmind-demo.mp4`**（141 秒 · 1280×720 · H.264）；線上備援 URL：`…/demo/fleetmind-demo.mp4` |
 
-**三個 deliverable 都在這個資料夾了：pptx/pdf（③）、mp4（⑥）、csv（⑦）** —— 表單若收檔案就直接上傳這裡的，若只收連結就用下方 URL。
+**上傳的檔案（本資料夾）：** `fleetmind-proposal-deck.pptx` + `.pdf`（③）、`fleetmind-aws-architecture.pptx` + `.pdf`（③ 架構深水區）、`fleetmind-demo.mp4`（⑥）。
 
-字體已驗：`pdffonts` 兩份 PDF 皆 **HiraginoSans-W6/W3 + PingFangTC**，0 個 fallback 壞字體、0 個未嵌入。
-pptx 已驗可在 **PowerPoint 開啟**：移除 pptxgenjs 產的 chart 部件（原本 PowerPoint 拒開報損毀）與空目錄條目，0 chart / 0 dir-entry / CRC OK / python-pptx OPC 載入通過。
+已驗：pptx 可在 **PowerPoint 開啟**（移除 pptxgenjs chart 部件與空目錄，0 chart / 0 dir / CRC OK / python-pptx OPC 通過）；兩份 PDF 字體皆 **HiraginoSans + PingFangTC**，0 fallback、0 未嵌入。
 
-## 連結類的項（表單若收 URL 就填這些）
+> ⚠️ **若之前壓過 `.zip` 上傳包，重壓一次** —— 舊 zip 的 deck 早於最新修正（PowerPoint 可開 + slide 6/10 評審答案補強）。直接上傳本資料夾的個別檔最保險。
 
-| 項 | 值 |
-|---|---|
-| ④ GitHub | https://github.com/wsx5031060310guy/fleetmind-yang-ming-hackathon （**維持 private**，決定：檔案改上傳主辦 S3，不靠公開連結；主辦若要看原始碼再加協作者） |
-| ⑤ Live Demo | http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com |
-| ⑥ Demo 影片 | 直接上傳本資料夾的 `fleetmind-demo.mp4` 到主辦 S3（線上備援 URL：http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com/demo/fleetmind-demo.mp4） |
+## 不在這 6 項裡：預測結果 CSV（陽明組限定）
 
-①團隊基本資料、②提案大綱 直接在表單填。
-
-**交件方式：本資料夾的 pptx / pdf / mp4 / csv 直接上傳主辦 S3。** repo 維持 private 不影響交件。
+`submission-predictions.csv`（102 列）**不在上面的官方 6 項 checklist**——它是陽明命題的評分檔，走**命題資料平台的另一管道**（非這個 6 項成果表）。確認該管道後再交。上傳前務必在有 `data/` 的機器重跑比對，見下方「⚠️ 上傳前務必看這段」。
 
 ---
 
