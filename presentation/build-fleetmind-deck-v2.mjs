@@ -13,6 +13,10 @@ const C = {
   navy: "0A2540", navy2: "12385C", teal: "1C7293", seafoam: "2A9D8F",
   amber: "F4A72B", coral: "E76F51", white: "FFFFFF", ink: "18293B",
   mute: "5A6B7B", panel: "F2F6F9", panel2: "E8EFF4", line: "CBD8E2",
+  // seafoam only clears 4.5:1 on FLAT navy (4.67) — any photo behind it drops it under.
+  // Measured on the cover backdrop: 2A9D8F = 2.46:1, 6FE7CF = 5.46:1. This is the same
+  // lift architecture.html already uses for hero text over its port-dusk photo.
+  seafoamOnPhoto: "6FE7CF",
 };
 // Hiragino Sans — 這台 LibreOffice 唯一解析得出的 CJK 黑體, 且 W3/W6 是真的細/粗
 // 配對 (bold 不必合成)。正體字形已驗過為 TC 形, 非日文字形。
@@ -39,6 +43,19 @@ const W = 13.333, H = 7.5, M = 0.7;
 function darkBg(s) { s.background = { color: C.navy }; }
 function lightBg(s) { s.background = { color: C.white }; }
 
+/* Full-bleed photo + navy scrim. The images are 1280x720 and the slide is 13.333x7.5 —
+   both 16:9, so nothing crops. `transparency` is how see-through the scrim is, so a
+   HIGHER number means a more visible photo and less contrast for the text on top.
+   Callers pass a value measured from the rendered slide. */
+function photoBg(s, file, scrimTransparency) {
+  s.addImage({ path: path.join(__dirname, "img", file), x: 0, y: 0, w: W, h: H });
+  s.addShape(pptx.ShapeType.rect, {
+    x: 0, y: 0, w: W, h: H,
+    fill: { color: C.navy, transparency: scrimTransparency },
+    line: { type: "none" },
+  });
+}
+
 // eyebrow + title block on light slides
 function head(s, eyebrow, title, titleColor = C.navy) {
   s.addText(eyebrow.toUpperCase(), { x: M, y: 0.5, w: W - 2 * M, h: 0.3, fontFace: BODY, fontSize: 12, color: C.teal, bold: true, charSpacing: 2, margin: 0 });
@@ -55,12 +72,19 @@ function chip(s, x, y, w, txt, fill, tc = C.white) {
 
 // ---------- Slide 1: cover ----------
 let s = pptx.addSlide(); darkBg(s);
-s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: W, h: H, fill: { color: C.navy } });
-// subtle deep panel
-s.addShape(pptx.ShapeType.rect, { x: 0, y: H - 2.5, w: W, h: 2.5, fill: { color: C.navy2 } });
+/* Photography only on the three dark slides. The light content slides keep their white
+   ground: the numbers are the point there, and a photo behind a stat card only fights it.
+   Assets are grok-generated and deliberately text-free (`no text, no logos` in the prompt)
+   — every figure in this deck stays real vector text a judge can check against the live
+   site. A number rendered as AI pixels could not be grepped, corrected, or trusted, and
+   this deck's whole claim is 「數字不是 AI 掰的」.
+   The ship sits right-of-frame and the sky is empty on the left, which is where the title
+   block lands. Scrim transparency was set by measuring the rendered JPG, not by eye. */
+photoBg(s, "cover-ship-dusk.jpg", 42);
+s.addShape(pptx.ShapeType.rect, { x: 0, y: H - 2.5, w: W, h: 2.5, fill: { color: C.navy2, transparency: 22 } });
 s.addText("FLEETMIND", { x: M, y: 1.55, w: 9, h: 0.5, fontFace: BODY, fontSize: 15, color: C.amber, bold: true, charSpacing: 6, margin: 0 });
 s.addText("AI 船舶效能分析與\n節能決策支援系統", { x: M, y: 2.05, w: 11.4, h: 2.0, fontFace: HEAD, fontSize: 46, color: C.white, bold: true, lineSpacingMultiple: 1.02, margin: 0 });
-s.addText("數字來自計算　語言來自 AI　決策留給人", { x: M, y: 4.35, w: 11, h: 0.5, fontFace: HEAD, fontSize: 19, color: C.seafoam, margin: 0 });
+s.addText("數字來自計算　語言來自 AI　決策留給人", { x: M, y: 4.35, w: 11, h: 0.5, fontFace: HEAD, fontSize: 19, color: C.seafoamOnPhoto, margin: 0 });
 s.addText([
   { text: "陽明海運 · 航運物流組", options: { bold: true, color: C.white } },
   { text: "    |    AWS Summit Taipei 2026 百工百業瘋 AI — AI Everywhere Hackathon", options: { color: "AEC4D6" } },
@@ -343,6 +367,10 @@ s.addNotes(`[4:25–5:25] 誠實 —— baseline 勝出
 // 依 docs/27 工程師回饋第 9 點：成本由別部門管，他們只負責「發現問題、通知需要清洗」
 // → 主線移除金額與投資回收模型。第 10 點允許估「多耗燃油噸數（噸，不談金額）」但須明標粗估。
 s = pptx.addSlide(); darkBg(s);
+// A content-dense slide, so the photo is texture rather than subject: a heavy scrim (22)
+// keeps the tonnage figures the thing you read. The wake and exhaust are on-message here —
+// this page is about the fuel a fouled hull burns.
+photoBg(s, "wake-exhaust.jpg", 22);
 s.addText("商務決策價值", { x: M, y: 0.5, w: 11, h: 0.3, fontFace: BODY, fontSize: 12, color: C.amber, bold: true, charSpacing: 2, margin: 0 });
 s.addText("同一個模型回答：污損正在多燒多少油？", { x: M, y: 0.8, w: 11.8, h: 0.7, fontFace: HEAD, fontSize: 30, bold: true, color: C.white, margin: 0 });
 s.addText("反事實推論：把污損時鐘歸零重新預測，得到同航速下每天多耗的燃油噸數。只談噸數，不談金額。", { x: M, y: 1.65, w: 9.1, h: 0.5, fontFace: BODY, fontSize: 14, color: "AEC4D6", margin: 0 });
@@ -357,7 +385,7 @@ const cols = [1.5, 2.6, 3.4, 3.6];
 const cx = [M, M + 1.5, M + 4.1, M + 7.5];
 const hd = ["船", "可省比例", "每日多耗燃油", "信心"];
 card(s, M, 2.4, W - 2 * M, 3.6, C.navy2);
-hd.forEach((h2, i) => s.addText(h2, { x: cx[i] + 0.2, y: 2.6, w: cols[i], h: 0.4, fontFace: BODY, fontSize: 13, bold: true, color: C.seafoam, margin: 0 }));
+hd.forEach((h2, i) => s.addText(h2, { x: cx[i] + 0.2, y: 2.6, w: cols[i], h: 0.4, fontFace: BODY, fontSize: 13, bold: true, color: C.seafoamOnPhoto, margin: 0 }));
 roi.forEach((r, ri) => {
   const y = 3.15 + ri * 0.86;
   r.forEach((cell, ci) => {
@@ -467,7 +495,9 @@ s.addNotes(`[6:55–7:35] 架構
 
 // ---------- Slide 11: close ----------
 s = pptx.addSlide(); darkBg(s);
-s.addShape(pptx.ShapeType.rect, { x: 0, y: H - 2.2, w: W, h: 2.2, fill: { color: C.navy2 } });
+// bookends the cover: same ocean, first light instead of dusk, ship small and far off.
+photoBg(s, "horizon-dawn.jpg", 18);   // measured: 40 left the amber kicker at 2.79:1
+s.addShape(pptx.ShapeType.rect, { x: 0, y: H - 2.2, w: W, h: 2.2, fill: { color: C.navy2, transparency: 20 } });
 s.addText("FLEETMIND", { x: M, y: 1.5, w: 9, h: 0.4, fontFace: BODY, fontSize: 13, color: C.amber, bold: true, charSpacing: 5, margin: 0 });
 s.addText("把船隊的效能衰退，變成可計算、\n可歸因、人可拍板的節能決策", { x: M, y: 2.0, w: 11.6, h: 1.6, fontFace: HEAD, fontSize: 33, bold: true, color: C.white, lineSpacingMultiple: 1.05, margin: 0 });
 const closeItems = [
@@ -477,7 +507,7 @@ const closeItems = [
 ];
 closeItems.forEach((c, i) => {
   const w = (W - 2 * M - 0.6) / 3, x = M + i * (w + 0.3);
-  s.addText(c[0], { x, y: 5.35, w, h: 0.4, fontFace: HEAD, fontSize: 15, bold: true, color: C.seafoam, margin: 0 });
+  s.addText(c[0], { x, y: 5.35, w, h: 0.4, fontFace: HEAD, fontSize: 15, bold: true, color: C.seafoamOnPhoto, margin: 0 });
   s.addText(c[1], { x, y: 5.75, w, h: 0.7, fontFace: BODY, fontSize: 11.5, color: "AEC4D6", lineSpacingMultiple: 1.1, margin: 0 });
 });
 s.addText("謝謝聆聽　·　FleetMind × 陽明海運", { x: M, y: 6.7, w: 11, h: 0.4, fontFace: BODY, fontSize: 13, color: "8FA8BD", margin: 0 });
