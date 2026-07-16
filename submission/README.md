@@ -11,17 +11,21 @@
 | `fleetmind-proposal-deck.pptx` | ③ 完整提案簡報 | 同上，**若收 PPTX 用這個**。含 16 頁講者備忘稿 |
 | `fleetmind-aws-architecture.pdf` | ③ 附錄／被追問架構時 | 18 頁架構深水區 |
 | `fleetmind-aws-architecture.pptx` | 同上 | |
+| `fleetmind-demo.mp4` | ⑥ Demo 錄製影片 | 141 秒 · 1280×720 · H.264。**若表單能上傳影片檔用這個**；否則填下方 URL |
 | `submission-predictions.csv` | ⑦ 預測結果檔（陽明組限定） | 102 列。**上傳前先讀下面那段** |
 
-字體已驗：`pdffonts` 兩份 PDF 皆 **HiraginoSans-W6/W3 + PingFangTC**，0 個 fallback 壞字體、0 個未嵌入。
+**三個 deliverable 都在這個資料夾了：pptx/pdf（③）、mp4（⑥）、csv（⑦）** —— 表單若收檔案就直接上傳這裡的，若只收連結就用下方 URL。
 
-## 連結類的三項（不在這個資料夾，填網址）
+字體已驗：`pdffonts` 兩份 PDF 皆 **HiraginoSans-W6/W3 + PingFangTC**，0 個 fallback 壞字體、0 個未嵌入。
+pptx 已驗可在 **PowerPoint 開啟**：移除 pptxgenjs 產的 chart 部件（原本 PowerPoint 拒開報損毀）與空目錄條目，0 chart / 0 dir-entry / CRC OK / python-pptx OPC 載入通過。
+
+## 連結類的項（表單若收 URL 就填這些）
 
 | 項 | 值 |
 |---|---|
 | ④ GitHub | https://github.com/wsx5031060310guy/fleetmind-yang-ming-hackathon ⚠️ **目前 private，評審點開會 404**——交件前要轉 public 或加協作者 |
 | ⑤ Live Demo | http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com |
-| ⑥ Demo 影片 | http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com/demo/fleetmind-demo.mp4 |
+| ⑥ Demo 影片 | http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com/demo/fleetmind-demo.mp4 （或直接上傳本資料夾的 `fleetmind-demo.mp4`） |
 
 ①團隊基本資料、②提案大綱 直接在表單填。
 

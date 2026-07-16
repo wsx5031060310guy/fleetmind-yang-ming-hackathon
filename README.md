@@ -29,19 +29,39 @@ For AI agents:
 
 ## Current Status
 
-Status as of 2026-07-10:
+Status as of 2026-07-16 (Day 3, submission day):
 
-- `main` has the implementation starter kit, CI, API skeleton, AI guardrails, business-impact calculator, Day1 ops runbook, editable proposal deck skeleton, enterprise data application draft, Day3 submission control sheet, technical architecture submission draft, submission audit script, Day1 schema inventory pack, demo freeze snapshot script, FUEL_CONSUMP validator, live demo warm-up script, Day2 stretch gate, AI fallback demo, and environment template merged.
-- Pre-race hardening round (PR #27-#32, from a three-way adversarial review) is merged: crash-proof FUEL_CONSUMP export with submission-profile flags, full Speed Loss aggregation pipeline in `core-calc` with golden tests, interactive SVG dashboard (vessel switching + citation click-back), Bedrock client skeleton with a guardrail-gated fallback ladder, event-day ops hardening (curl timeouts, strict Day3 checks, macOS CI), and entry-doc/compliance sync (Yang Ming screenshots removed from tracking).
-- GitHub Actions checks pass on `main`: core-calc + speed-loss golden checks, local demo smoke, submission audit, shellcheck, Day3 dev check, Maven package, API smoke, Markdown links, diff hygiene, and a macOS compatibility job.
-- Merged feature branches were cleaned up from GitHub after merge; keep future branches short-lived and delete them after PR merge.
-- Proposal deck skeleton is ready at [presentation/fleetmind-proposal-deck.pptx](presentation/fleetmind-proposal-deck.pptx): 9 main slides + 15 Q&A backup slides. Day2/Day3 work is to replace demo scenario values and screenshots with frozen real data.
-- Enterprise data application draft is ready at [docs/17-enterprise-data-application.md](docs/17-enterprise-data-application.md); Day1/Day2 work is to fill real schema values, row counts, file names, and screenshot/data-retention constraints.
-- Day3 upload control sheet is ready at [docs/18-submission-control-sheet.md](docs/18-submission-control-sheet.md); Day1 work is to fill platform field names and file/link limits.
-- Technical architecture submission draft is ready at [docs/19-technical-architecture-submission.md](docs/19-technical-architecture-submission.md); Day3 work is to fill actual region, URL, bucket/table names, model id, and commit SHA.
-- Day1 schema inventory flow is ready at [docs/20-day1-schema-inventory.md](docs/20-day1-schema-inventory.md), backed by `scripts/schema-inventory.sh` and `samples/schema-map.template.csv`.
-- Remaining human work: run the skeleton in the real AWS/event account, connect real data/DynamoDB, set `AWS_REGION` + `FLEETMIND_BEDROCK_MODEL_ID` and smoke Bedrock on Day1 (client code is pre-built), swap final demo numbers/screenshots into the deck, fill Day1 placeholders in docs/17 using docs/20, and fill platform placeholders in docs/18.
-- Team decision pending: the removed Yang Ming screenshots still exist in old git history; rewriting history (filter-repo + everyone re-clones) is a team call.
+**Live and deployed.** The whole product runs at
+`http://fleetmind-alb-330672315.us-east-1.elb.amazonaws.com` on the workshop account
+(516665228894, us-east-1): a single Spring Boot container on ECS Fargate (ARM64) behind an
+ALB, serving the vanilla-JS dashboard and the REST API from one image, with Bedrock (Claude
+Haiku) for the AI decision brief, SNS/SES for alerts, and CloudWatch for logs. Real data
+(15 vessels, 21,282 noon-report rows, 77 maintenance events) is baked into the image at build
+time — no data store on the request path. `/api/health` returns 200 to anyone, no login.
+
+**What is built** (all on `main`, all verified against the live site):
+
+- Speed Loss dashboard — fleet ranking, threshold, per-vessel trend with event markers,
+  before/after, hull-vs-propeller attribution, and a Bedrock AI decision brief whose every
+  number is a click-back citation to the API that produced it. Speed Loss uses an ISO 19030
+  practical adaptation: `k = FOC / STW³`, compared only within a ±1 kn band, Theil-Sen trend.
+- Fuel prediction model (`predict/`, Python/sklearn) — physics baseline (k·STW³) → HistGBM →
+  best-of, leakage-guarded (simulated masking + GroupKFold), predicting the 102 masked PREDICT
+  cells. Measured best is the plain GBM baseline, RMSE 3.51 MT / MAPE 5.22%.
+- AI is Explainable Decision Support, not a Prediction Engine: every number comes from the
+  deterministic `core-calc`; Bedrock only turns computed metrics into operations language and
+  a guardrail rejects any brief whose figure does not trace to a cited source. Engineer decides.
+
+**Deliverables** are assembled in [`submission/`](submission/): both decks as PPTX + PDF, the
+102-row prediction CSV, and the demo MP4. See [`submission/README.md`](submission/README.md).
+The PPTX open in PowerPoint (the pptxgenjs chart part that PowerPoint refused was replaced with
+native shapes). Costs/ROI are deliberately omitted per the Yang Ming engineer's request
+([docs/27](docs/27-yang-ming-engineer-feedback.md)) — the deck reports excess-fuel tonnage only.
+
+**Open decisions for the team (not code):** the repo is still **private**, so the GitHub link
+(submission item ④) 404s for a judge until it is made public or the judges are added; and the
+prediction CSV was generated 2026-07-14 and should be regenerated on a machine that has the
+gitignored `data/` before upload (four cells look physically low — see `submission/README.md`).
 
 Merged work log:
 
