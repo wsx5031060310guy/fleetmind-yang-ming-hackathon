@@ -302,7 +302,14 @@ s.addText([
   { text: "螺旋槳僅佔 4%", options: { color: "AEC4D6", breakLine: true } },
   { text: "→ 建議優先安排水下清潔（UWC），拋光次之", options: { color: C.seafoam } },
 ], { x: M + 0.35, y: 4.15, w: 4.9, h: 0.9, fontFace: BODY, fontSize: 13, lineSpacingMultiple: 1.2, margin: 0 });
-s.addText("方法：以隔離區段（只影響螺旋槳 / 只影響船殼的窗口）各自量 k 漂移率拆分；區段稀疏時退回標記過的 50/50，不假裝精準。", { x: M + 0.35, y: 5.2, w: 4.9, h: 1.0, fontFace: BODY, fontSize: 11, color: "8FA8BD", lineSpacingMultiple: 1.12, margin: 0 });
+/* Answers the judge's sharpest question head-on — 「為什麼你知道是船殼，不是海流/天氣/引擎？」
+   The honest limit of Noon-Report-only data, stated plainly, reads as strength not weakness,
+   and sets up the 「給更多資料 → 真正的 Attribution Model」 forward hook the reviewer wanted. */
+s.addText([
+  { text: "為何歸因船殼？", options: { bold: true, color: C.amber, breakLine: true, paraSpaceAfter: 3 } },
+  { text: "單靠 Noon Report 無法物理拆分海流／天氣／引擎老化；我們以 Speed Loss 與維修事件的時間關聯推估主因，並用隔離區段量 k 漂移率拆船殼／螺旋槳（區段稀疏時退回標記過的 50/50，不假裝精準）。", options: { color: "8FA8BD", breakLine: true, paraSpaceAfter: 3 } },
+  { text: "給更多感測資料（天氣／扭矩／軸功率）→ 可升級為真正的 Attribution Model。", options: { color: C.seafoam } },
+], { x: M + 0.35, y: 5.0, w: 4.95, h: 1.55, fontFace: BODY, fontSize: 10.5, lineSpacingMultiple: 1.14, margin: 0 });
 // right: UWI honesty
 card(s, 6.75, 1.9, W - M - 6.75, 4.5, C.panel);
 s.addText("誠實處理「純檢查」事件（UWI）", { x: 7.05, y: 2.15, w: 5.4, h: 0.4, fontFace: HEAD, fontSize: 16, bold: true, color: C.navy, margin: 0 });
@@ -487,7 +494,13 @@ flow.forEach((f, i) => {
 s.addText("部署　ECS Fargate（ARM64）· ALB · ECR · Bedrock（Claude Haiku）· SNS · CloudWatch · us-east-1 · Day1 已實測上線", { x: M, y: 3.7, w: W - 2 * M, h: 0.4, fontFace: BODY, fontSize: 12.5, color: C.mute, margin: 0 });
 // AI role
 card(s, M, 4.3, W - 2 * M, 2.05, C.panel);
-s.addText("AI 的角色：數字來自計算，語言來自 AI，決策留給人", { x: M + 0.35, y: 4.5, w: W - 2 * M - 0.7, h: 0.4, fontFace: HEAD, fontSize: 16, bold: true, color: C.navy, margin: 0 });
+/* The reviewer's other point-loser: AI read as chat/summary. Name the positioning on the
+   slide face — Explainable Decision Support, explicitly NOT a Prediction Engine. */
+s.addText([
+  { text: "AI 定位：Explainable Decision Support", options: { color: C.navy } },
+  { text: "，不是 Prediction Engine", options: { color: C.coral } },
+  { text: " —— 數字來自計算，語言來自 AI，工程師拍板。", options: { color: C.navy } },
+], { x: M + 0.35, y: 4.5, w: W - 2 * M - 0.7, h: 0.4, fontFace: HEAD, fontSize: 15, bold: true, margin: 0 });
 s.addText([
   { text: "Bedrock(Claude) 只把已算好的指標改寫成營運語言；guardrail 逐一比對每個數字的引用來源，未引用或引錯即攔下——AI 無法發明數字。", options: { color: C.ink, breakLine: true, paraSpaceAfter: 6 } },
   { text: "失敗降級：Bedrock 不可用 → 該船快取簡報 → deterministic 模板；dashboard 與所有計算數字完全不受影響。開發全程以 Kiro 為 AI 助手。", options: { color: C.ink } },
