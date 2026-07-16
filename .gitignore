@@ -28,3 +28,7 @@ data/
 # deck QA render artifacts (regenerable)
 presentation/slide-*.jpg
 presentation/*.pdf
+
+# user local S3-upload bundles (large, not versioned)
+submission/fleetmind_*_*.zip
+submission/fleetmind_*_*/
