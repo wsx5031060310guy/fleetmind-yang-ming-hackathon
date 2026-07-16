@@ -216,14 +216,28 @@ head(s, "官方必含 ①　Speed Loss Dashboard", "船隊即時盤點：誰在�
 const fleet = [
   ["S11", 21.8], ["S23", 8.9], ["S6", 8.8], ["S4", 8.7], ["S12", 8.4], ["S8", 8.4], ["S9", 6.4], ["S5", 4.3],
 ];
-s.addChart(pptx.ChartType.bar, [{ name: "Speed Loss %", labels: fleet.map(f => f[0]), values: fleet.map(f => f[1]) }], {
-  x: M, y: 1.9, w: 7.0, h: 4.6, barDir: "col",
-  chartColors: [C.teal], showTitle: false, showLegend: false,
-  showValue: true, dataLabelPosition: "outEnd", dataLabelColor: C.ink, dataLabelFontSize: 11, dataLabelFontBold: true, dataLabelFormatCode: '0.0"%"',
-  catAxisLabelColor: C.ink, catAxisLabelFontSize: 12, catAxisLabelFontBold: true,
-  valAxisHidden: true, valGridLine: { style: "none" }, catGridLine: { style: "none" },
-  valAxisMinVal: 0, valAxisMaxVal: 25,
-});
+/* Native shapes, not addChart. pptxgenjs writes a ppt/charts/chart1.xml + an embedded xlsx,
+   and PowerPoint (unlike LibreOffice, python-pptx and the XSD, which all accepted this deck)
+   refuses to open some of those chart parts and reports the whole file as corrupt — the exact
+   "download it and it says broken" symptom. Eight bars is trivially a set of rectangles, and
+   the value labels stay real vector text a judge can read against the live dashboard. */
+{
+  const cx = M, cy = 1.9, cw = 7.0, ch = 4.6;
+  const axisY = cy + ch - 0.5;           // baseline for the columns
+  const plotH = ch - 0.9;                 // room above baseline for the tallest bar + its label
+  const maxV = 25;
+  const slot = cw / fleet.length;
+  const barW = slot * 0.56;
+  fleet.forEach(([label, val], i) => {
+    const h = plotH * (val / maxV);
+    const bx = cx + i * slot + (slot - barW) / 2;
+    const by = axisY - h;
+    s.addShape(pptx.ShapeType.rect, { x: bx, y: by, w: barW, h, fill: { color: i === 0 ? C.coral : C.teal }, line: { type: "none" } });
+    s.addText(val.toFixed(1) + "%", { x: bx - 0.2, y: by - 0.38, w: barW + 0.4, h: 0.34, align: "center", fontFace: HEAD, fontSize: 11, bold: true, color: i === 0 ? C.coral : C.ink, margin: 0 });
+    s.addText(label, { x: bx - 0.2, y: axisY + 0.06, w: barW + 0.4, h: 0.34, align: "center", fontFace: BODY, fontSize: 12, bold: true, color: C.ink, margin: 0 });
+  });
+  s.addShape(pptx.ShapeType.line, { x: cx, y: axisY, w: cw, h: 0, line: { color: C.line, width: 1 } });
+}
 s.addText("依 Speed Loss 排序的船隊優先盤點（前 8 名）", { x: M, y: 6.55, w: 7, h: 0.3, fontFace: BODY, fontSize: 11, color: C.mute, margin: 0 });
 // right feature list
 const feats = [
@@ -530,7 +544,45 @@ Q&A 路由：
 
 答不出來時的誠信收尾句：
 「正午報表粒度下這是最誠實的做法；給我們軸功率／對水速度計資料，
- 框架直接升級 ISO 19030 全合規。」`);
+ 框架直接升級 ISO 19030 全合規。」
+
+════════ 評審 5 項標準 · 上台口頭答法（Q&A 端出這幾段） ════════
+評審資深顧問點名三個弱點：油耗預測講太淺、歸因沒答「為何是船殼不是海流/引擎」、
+AI 太像聊天。下面每段直接可念，結尾都有「給更多資料 → 能做什麼」的鉤子。
+
+① 互動介面 · Speed Loss
+ 「介面讓工程師逐船、逐航段檢視 Speed Loss；ISO 19030 務實改編，算 k=FOC/STW³，
+  只在 ±1 節同速帶比較，再用 Theil-Sen 抓長期趨勢。加入 AIS、天氣與對水速度，
+  就能更準確校正外部干擾。」
+
+② 油耗預測模型（最危險，要證明「這是真模型不只是指標」）
+ 「這是真正的 sklearn 預測 pipeline：物理基線 k·STW³ 接 HistGradientBoosting 擇優，
+  納入污損時鐘、船型與燃料熱值，經模擬遮蔽及 GroupKFold 防漏驗證，RMSE 3.51 MT，
+  預測 102 個被遮蔽的格子。**單靠 Noon Report 無法物理拆分原因**，目前僅依 Speed Loss
+  與維修時間關聯推估主因為船殼污損。加入天氣、引擎、螺旋槳檢查與 AIS，
+  就能建立完整油耗歸因模型。」
+
+③ 未盡之處 · 商業價值
+ 「限制是缺少天氣、海流、引擎感測、扭矩與軸功率，所以結論是可追溯的關聯推估，
+  不冒充物理因果。我們也不虛報金額，只指出 S23 同航速每日多耗約 16.4 MT。
+  補齊營運成本與感測資料，就能支援清洗、維修及船期決策。」
+
+④ 分析架構 · 演算法（評審問「用什麼算法」）
+ 「架構由確定性 core-calc 打底：同速帶 k 指標、Theil-Sen 趨勢、維修隔離區段歸因，
+  再接 sklearn 預測與 Bedrock 解讀；區段不足時明確標 50/50，不隱藏不確定性。
+  增加高頻感測資料，就能升級為時序模型與多因子因果分析。」
+ 一句話流程：Noon Report → 清洗 → ISO 19030 k → 趨勢偵測 → 決策排序 → Bedrock 摘要。
+
+⑤ AI 角色（第二危險，定位成 Decision Support 不是 Prediction Engine）
+ 「我們今天不是讓 AI 做判斷，而是讓 AI 幫助工程師更快做判斷。數字全由 core-calc 產生，
+  Claude Haiku 只負責解讀與決策簡報；guardrail 逐項核對來源，對不上就整篇打回，
+  最後由工程師拍板。**FleetMind 核心是 Explainable AI Decision Support，不是 Prediction
+  Engine，更不是 ChatGPT。**」
+
+三句一定要講：
+ 1「今天不是讓 AI 做判斷，而是讓 AI 幫工程師更快做判斷。」
+ 2「加入 Weather / Engine Sensor / Propeller Inspection / AIS，就能建真正的油耗歸因模型。」
+ 3「核心不是 ChatGPT，是把 ISO19030 + 維修紀錄 + AWS AI 結合成 Explainable Decision Support Platform。」`);
 
 // ---------- Q&A backup slides (full 20, from docs/07) ----------
 function qaSlide(title, qas) {
