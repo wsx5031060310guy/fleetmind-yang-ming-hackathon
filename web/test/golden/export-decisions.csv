@@ -1,0 +1,4 @@
+vesselId,status,recommendedAction,latestSpeedLossPct,thresholdPct,forecastDaysToThreshold,activeFuelType,reviewPriority,computedAt
+YM-DEMO-01,NORMAL,OBSERVE,4.76,10.0,66,VLSFO,1,2026-08-06T10:03:55.103649Z
+YM-DEMO-02,NORMAL,OBSERVE,2.1,10.0,395,HFO,2,2026-08-06T10:03:55.103649Z
+YM-DEMO-03,NORMAL,OBSERVE,0.0,10.0,,BLSF,3,2026-08-06T10:03:55.103649Z

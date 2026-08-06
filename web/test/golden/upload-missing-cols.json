@@ -1,0 +1,1 @@
+{"batchId":"batch-f8b065b0-78e7-425d-880c-61461429abf7","mode":"rejected","message":"缺少必填欄位：stwKn, dailyFocMt","detectedEncoding":null,"totalRows":0,"accepted":0,"rejected":0,"overwrites":0,"missingColumns":["stwKn","dailyFocMt"],"rowErrors":[]}

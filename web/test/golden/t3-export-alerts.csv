@@ -1,0 +1,2 @@
+vesselId,status,currentSpeedLossPct,thresholdPct,forecastDaysToThreshold,recommendedAction,confidence,generatedAt
+YM-DEMO-01,ACT,4.76,3.0,0,SCHEDULE_UWILD,HIGH,2026-08-06T10:03:55.550179Z

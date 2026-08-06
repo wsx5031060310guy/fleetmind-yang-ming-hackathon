@@ -1,0 +1,16 @@
+{
+  "name": "fleetmind-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build-public.mjs",
+    "dev": "node test/local-server.mjs",
+    "test": "node test/parity.mjs",
+    "deploy": "npm run build && npm test && vercel deploy",
+    "deploy:prod": "npm run build && npm test && vercel deploy --prod"
+  }
+}

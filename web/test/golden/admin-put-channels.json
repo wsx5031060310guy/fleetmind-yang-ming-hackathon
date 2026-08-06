@@ -1,0 +1,1 @@
+{"thresholdPct":10.0,"alertHorizonDays":45,"channels":["email","webhook"],"emailRecipients":["ops@example.com"],"snsTopicArn":"","notifySchedule":"30 12 * * *","fuelTypeMapping":{"VLSFO":"VLSFO","LSFO":"VLSFO","MGO":"MGO","LSMGO":"MGO","HSFO":"HSFO"},"fuelTypeDefault":"VLSFO","dataSourceMode":"baked","snsConfigured":false,"sesConfigured":false,"webhookConfigured":false}
